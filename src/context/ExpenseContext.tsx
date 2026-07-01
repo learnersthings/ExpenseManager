@@ -16,6 +16,7 @@ interface ExpenseContextType {
   yearlyBudget: number;
   addExpense: (amount: number, description: string, date: Date) => Promise<void>;
   updateExpense: (id: string, amount: number, description: string, date: Date) => Promise<void>;
+  deleteExpense: (id: string) => Promise<void>;
   updateCurrency: (newCurrency: string) => Promise<void>;
   updateBudgets: (monthly: number, yearly: number) => Promise<void>;
   getCurrentMonthTotal: () => number;
@@ -30,6 +31,7 @@ const ExpenseContext = createContext<ExpenseContextType>({
   yearlyBudget: 0,
   addExpense: async () => {},
   updateExpense: async () => {},
+  deleteExpense: async () => {},
   updateCurrency: async () => {},
   updateBudgets: async () => {},
   getCurrentMonthTotal: () => 0,
@@ -113,6 +115,12 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await AsyncStorage.setItem(storageKey, JSON.stringify(updatedExpenses));
   };
 
+  const deleteExpense = async (id: string) => {
+    const updatedExpenses = expenses.filter(exp => exp.id !== id);
+    setExpenses(updatedExpenses);
+    await AsyncStorage.setItem(storageKey, JSON.stringify(updatedExpenses));
+  };
+
   const updateCurrency = async (newCurrency: string) => {
     setCurrency(newCurrency);
     await AsyncStorage.setItem(currencyStorageKey, newCurrency);
@@ -154,7 +162,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   return (
     <ExpenseContext.Provider value={{ 
       expenses, currency, monthlyBudget, yearlyBudget, 
-      addExpense, updateExpense, updateCurrency, updateBudgets, 
+      addExpense, updateExpense, deleteExpense, updateCurrency, updateBudgets, 
       getCurrentMonthTotal, getPreviousMonthTotal, isLoading 
     }}>
       {children}

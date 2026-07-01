@@ -15,7 +15,7 @@ interface AddExpenseModalProps {
 export default function AddExpenseModal({ visible, onClose, expenseToEdit }: AddExpenseModalProps) {
   const { colors } = useTheme();
   const { isDarkTheme } = useThemeContext();
-  const { addExpense, updateExpense } = useExpenseContext();
+  const { addExpense, updateExpense, deleteExpense } = useExpenseContext();
 
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
@@ -62,6 +62,17 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
       onClose();
     } catch (e: any) {
       setError(e.message || 'Failed to save expense.');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (expenseToEdit) {
+      try {
+        await deleteExpense(expenseToEdit.id);
+        onClose();
+      } catch (e: any) {
+        setError(e.message || 'Failed to delete expense.');
+      }
     }
   };
 
@@ -140,6 +151,13 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
               </Text>
             </TouchableOpacity>
 
+            {expenseToEdit && (
+              <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
+                <Ionicons name="trash-outline" size={20} color="#ff4444" style={{ marginRight: 8 }} />
+                <Text style={styles.deleteButtonText}>Delete Expense</Text>
+              </TouchableOpacity>
+            )}
+
           </KeyboardAvoidingView>
         </View>
       </TouchableWithoutFeedback>
@@ -216,6 +234,22 @@ const styles = StyleSheet.create({
   saveButtonText: {
     color: '#fff',
     fontSize: 18,
+    fontWeight: 'bold',
+  },
+  deleteButton: {
+    height: 52,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+    flexDirection: 'row',
+    borderWidth: 1,
+    borderColor: '#ff4444',
+    backgroundColor: 'transparent',
+  },
+  deleteButtonText: {
+    color: '#ff4444',
+    fontSize: 16,
     fontWeight: 'bold',
   },
 });
