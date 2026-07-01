@@ -1,10 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useTheme } from '@react-navigation/native';
 
 export default function DashboardScreen() {
+  const { colors } = useTheme();
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Dashboard Screen</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Text style={[styles.text, { color: colors.text }]}>Dashboard Screen</Text>
     </View>
   );
 }
@@ -12,12 +15,10 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
     alignItems: 'center',
     justifyContent: 'center',
   },
   text: {
-    color: '#ffffff',
     fontSize: 20,
     fontWeight: 'bold',
   },
