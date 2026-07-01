@@ -15,12 +15,13 @@ interface AddExpenseModalProps {
 export default function AddExpenseModal({ visible, onClose, expenseToEdit }: AddExpenseModalProps) {
   const { colors } = useTheme();
   const { isDarkTheme } = useThemeContext();
-  const { addExpense, updateExpense, deleteExpense, categories } = useExpenseContext();
+  const { addExpense, updateExpense, deleteExpense, categories, paymentModes } = useExpenseContext();
 
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState(new Date());
   const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
+  const [paymentModeId, setPaymentModeId] = useState<string | undefined>(undefined);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [error, setError] = useState('');
 
@@ -32,11 +33,13 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
         setDescription(expenseToEdit.description);
         setDate(new Date(expenseToEdit.date));
         setCategoryId(expenseToEdit.categoryId);
+        setPaymentModeId(expenseToEdit.paymentModeId);
       } else {
         setAmount('');
         setDescription('');
         setDate(new Date());
         setCategoryId(undefined);
+        setPaymentModeId(undefined);
       }
       setError('');
     }
@@ -58,9 +61,9 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
 
     try {
       if (expenseToEdit) {
-        await updateExpense(expenseToEdit.id, Number(amount), description, date, categoryId);
+        await updateExpense(expenseToEdit.id, Number(amount), description, date, categoryId, paymentModeId);
       } else {
-        await addExpense(Number(amount), description, date, categoryId);
+        await addExpense(Number(amount), description, date, categoryId, paymentModeId);
       }
       onClose();
     } catch (e: any) {
@@ -173,6 +176,33 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
                     >
                       <Ionicons name={cat.icon as any} size={16} color={categoryId === cat.id ? '#fff' : cat.color} style={{ marginRight: 6 }} />
                       <Text style={{ color: categoryId === cat.id ? '#fff' : colors.text, fontWeight: '600' }}>{cat.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+
+            {paymentModes.length > 0 && (
+              <View style={styles.inputWrapper}>
+                <Text style={styles.label}>Payment Mode</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
+                  <TouchableOpacity
+                    style={[styles.categoryChip, { backgroundColor: !paymentModeId ? colors.primary : isDarkTheme ? '#1e1e1e' : '#f5f5f5' }]}
+                    onPress={() => setPaymentModeId(undefined)}
+                  >
+                    <Text style={{ color: !paymentModeId ? '#fff' : colors.text, fontWeight: '600' }}>None</Text>
+                  </TouchableOpacity>
+                  {paymentModes.map((mode) => (
+                    <TouchableOpacity
+                      key={mode.id}
+                      style={[
+                        styles.categoryChip, 
+                        { backgroundColor: paymentModeId === mode.id ? mode.color : isDarkTheme ? '#1e1e1e' : '#f5f5f5' }
+                      ]}
+                      onPress={() => setPaymentModeId(mode.id)}
+                    >
+                      <Ionicons name={mode.icon as any} size={16} color={paymentModeId === mode.id ? '#fff' : mode.color} style={{ marginRight: 6 }} />
+                      <Text style={{ color: paymentModeId === mode.id ? '#fff' : colors.text, fontWeight: '600' }}>{mode.name}</Text>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>

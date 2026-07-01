@@ -9,6 +9,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import CurrencyScreen from '../screens/CurrencyScreen';
 import BudgetScreen from '../screens/BudgetScreen';
 import CategoriesScreen from '../screens/CategoriesScreen';
+import PaymentModesScreen from '../screens/PaymentModesScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -57,6 +58,11 @@ export default function SettingsStack() {
         name="Categories" 
         component={CategoriesScreen} 
         options={{ title: 'Manage Categories' }} 
+      />
+      <Stack.Screen 
+        name="PaymentModes" 
+        component={PaymentModesScreen} 
+        options={{ title: 'Payment Modes' }} 
       />
     </Stack.Navigator>
   );
