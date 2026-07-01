@@ -1,5 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView
+} from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { useAuthContext } from '../context/AuthContext';
 import { useThemeContext } from '../context/ThemeContext';
@@ -8,10 +18,10 @@ export default function LoginScreen({ navigation }: any) {
   const { colors } = useTheme();
   const { login } = useAuthContext();
   const { isDarkTheme } = useThemeContext();
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
+
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [generalError, setGeneralError] = useState('');
@@ -48,84 +58,126 @@ export default function LoginScreen({ navigation }: any) {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.title, { color: colors.text }]}>Welcome</Text>
-      
-      {generalError ? <Text style={styles.errorTextCenter}>{generalError}</Text> : null}
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={[
-            styles.input, 
-            { backgroundColor: colors.card, color: colors.text, borderColor: emailError ? '#ff4444' : colors.border }
-          ]}
-          placeholder="Email"
-          placeholderTextColor={placeholderColor}
-          value={email}
-          onChangeText={(text) => { setEmail(text); setEmailError(''); setGeneralError(''); }}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-        {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+        <View style={styles.headerContainer}>
+          <Image
+            source={require('../../assets/icon.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={[styles.title, { color: colors.text }]}>Welcome</Text>
+          <Text style={styles.subtitle}>Sign in to continue</Text>
+        </View>
 
-        <TextInput
-          style={[
-            styles.input, 
-            { backgroundColor: colors.card, color: colors.text, borderColor: passwordError ? '#ff4444' : colors.border }
-          ]}
-          placeholder="Password"
-          placeholderTextColor={placeholderColor}
-          value={password}
-          onChangeText={(text) => { setPassword(text); setPasswordError(''); setGeneralError(''); }}
-          secureTextEntry
-        />
-        {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
-      </View>
+        <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000' }]}>
+          {generalError ? <Text style={styles.errorTextCenter}>{generalError}</Text> : null}
 
-      <TouchableOpacity
-        style={[styles.button, { backgroundColor: colors.primary }]}
-        onPress={handleLogin}
-      >
-        <Text style={styles.buttonText}>Log In</Text>
-      </TouchableOpacity>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={[
+                styles.input,
+                { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: emailError ? '#ff4444' : (isDarkTheme ? '#333' : '#e0e0e0') }
+              ]}
+              placeholder="Email"
+              placeholderTextColor={placeholderColor}
+              value={email}
+              onChangeText={(text) => { setEmail(text); setEmailError(''); setGeneralError(''); }}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+          </View>
 
-      <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-        <Text style={[styles.link, { color: colors.primary }]}>
-          Don't have an account? Sign up
-        </Text>
-      </TouchableOpacity>
-    </View>
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={[
+                styles.input,
+                { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: passwordError ? '#ff4444' : (isDarkTheme ? '#333' : '#e0e0e0') }
+              ]}
+              placeholder="Password"
+              placeholderTextColor={placeholderColor}
+              value={password}
+              onChangeText={(text) => { setPassword(text); setPasswordError(''); setGeneralError(''); }}
+              secureTextEntry
+            />
+            {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+          </View>
+
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: colors.primary }]}
+            onPress={handleLogin}
+          >
+            <Text style={styles.buttonText}>Log In</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity style={styles.footer} onPress={() => navigation.navigate('Signup')}>
+          <Text style={[styles.link, { color: colors.text }]}>
+            Don't have an account? <Text style={{ color: colors.primary, fontWeight: 'bold' }}>Sign up</Text>
+          </Text>
+        </TouchableOpacity>
+
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
     padding: 24,
     justifyContent: 'center',
   },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
+  headerContainer: {
+    alignItems: 'center',
     marginBottom: 40,
-    textAlign: 'center',
   },
-  inputContainer: {
+  logo: {
+    width: 100,
+    height: 100,
+    marginBottom: 20,
+    borderRadius: 20,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#888',
+  },
+  card: {
+    borderRadius: 16,
+    padding: 24,
+    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
     marginBottom: 24,
   },
+  inputWrapper: {
+    marginBottom: 16,
+  },
   input: {
-    height: 50,
+    height: 52,
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 12,
     paddingHorizontal: 16,
-    marginBottom: 4,
     fontSize: 16,
-    marginTop: 12,
   },
   errorText: {
     color: '#ff4444',
     fontSize: 12,
-    marginBottom: 8,
+    marginTop: 4,
     marginLeft: 4,
   },
   errorTextCenter: {
@@ -136,20 +188,22 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   button: {
-    height: 50,
-    borderRadius: 8,
+    height: 52,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 24,
+    marginTop: 8,
   },
   buttonText: {
     color: '#ffffff',
     fontSize: 18,
     fontWeight: '600',
   },
+  footer: {
+    alignItems: 'center',
+    marginTop: 10,
+  },
   link: {
-    textAlign: 'center',
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 15,
   },
 });
