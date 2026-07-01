@@ -58,7 +58,7 @@ export default function SignupScreen({ navigation }: any) {
     if (!isValid) return;
 
     try {
-      await register(email, password);
+      await register(name, email, password);
     } catch (error: any) {
       setGeneralError(error.message);
     }

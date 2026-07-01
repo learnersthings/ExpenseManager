@@ -7,7 +7,7 @@ import { useTheme } from '@react-navigation/native';
 import HomeScreen from '../screens/HomeScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import AnalyticsScreen from '../screens/AnalyticsScreen';
-import SettingsScreen from '../screens/SettingsScreen';
+import SettingsStack from './SettingsStack';
 
 const Tab = createBottomTabNavigator();
 
@@ -68,7 +68,11 @@ export default function BottomTabs() {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       <Tab.Screen name="Analytics" component={AnalyticsScreen} />
-      <Tab.Screen name="Settings" component={SettingsScreen} />
+      <Tab.Screen 
+        name="Settings" 
+        component={SettingsStack} 
+        options={{ headerShown: false }}
+      />
     </Tab.Navigator>
   );
 }

@@ -3,15 +3,25 @@ import { View, Text, StyleSheet, Switch, TouchableOpacity } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { useThemeContext } from '../context/ThemeContext';
 import { useAuthContext } from '../context/AuthContext';
+import { Ionicons } from '@expo/vector-icons';
 
-export default function SettingsScreen() {
+export default function SettingsScreen({ navigation }: any) {
   const { colors } = useTheme();
   const { isDarkTheme, toggleTheme } = useThemeContext();
   const { logout } = useAuthContext();
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.row, { backgroundColor: colors.card }]}>
+      
+      <TouchableOpacity 
+        style={[styles.row, { backgroundColor: colors.card }]}
+        onPress={() => navigation.navigate('Profile')}
+      >
+        <Text style={[styles.text, { color: colors.text }]}>User Profile</Text>
+        <Ionicons name="chevron-forward" size={20} color={colors.text} />
+      </TouchableOpacity>
+
+      <View style={[styles.row, { backgroundColor: colors.card, marginTop: 10 }]}>
         <Text style={[styles.text, { color: colors.text }]}>Dark Mode</Text>
         <Switch
           trackColor={{ false: '#767577', true: colors.primary }}
@@ -43,8 +53,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 15,
     borderRadius: 10,
-    marginTop: 10,
-    marginBottom: 20,
+    marginBottom: 10,
   },
   text: {
     fontSize: 18,
@@ -54,6 +63,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     alignItems: 'center',
+    marginTop: 10,
   },
   logoutText: {
     color: '#ffffff',
