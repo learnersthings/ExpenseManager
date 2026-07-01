@@ -1,11 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, Switch } from 'react-native';
+import { View, Text, StyleSheet, Switch, TouchableOpacity } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { useThemeContext } from '../context/ThemeContext';
+import { useAuthContext } from '../context/AuthContext';
 
 export default function SettingsScreen() {
   const { colors } = useTheme();
   const { isDarkTheme, toggleTheme } = useThemeContext();
+  const { logout } = useAuthContext();
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -19,6 +21,13 @@ export default function SettingsScreen() {
           value={isDarkTheme}
         />
       </View>
+
+      <TouchableOpacity 
+        style={[styles.logoutButton, { backgroundColor: '#ff4444' }]} 
+        onPress={logout}
+      >
+        <Text style={styles.logoutText}>Log Out</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -35,9 +44,20 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     marginTop: 10,
+    marginBottom: 20,
   },
   text: {
     fontSize: 18,
     fontWeight: '500',
+  },
+  logoutButton: {
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  logoutText: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
