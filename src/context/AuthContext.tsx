@@ -64,7 +64,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!firstName || !lastName || !email || !password) {
       throw new Error('Please fill in all details.');
     }
-    const newUser = { firstName, lastName, email: email.toLowerCase(), password };
+    
+    const formattedEmail = email.toLowerCase();
+    
+    // Check if user already exists with this email
+    const storedData = await AsyncStorage.getItem(USER_CREDENTIALS_KEY);
+    if (storedData) {
+      const storedUser = JSON.parse(storedData);
+      if (storedUser.email === formattedEmail) {
+        throw new Error('An account with this email already exists.');
+      }
+    }
+
+    const newUser = { firstName, lastName, email: formattedEmail, password };
     await AsyncStorage.setItem(USER_CREDENTIALS_KEY, JSON.stringify(newUser));
     
     // Auto login after register
