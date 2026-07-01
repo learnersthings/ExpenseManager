@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView, Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@react-navigation/native';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext, PaymentMode } from '../context/ExpenseContext';
@@ -18,6 +19,7 @@ export default function AddPaymentModeModal({ visible, onClose, modeToEdit }: Ad
   const { colors } = useTheme();
   const { isDarkTheme } = useThemeContext();
   const { addPaymentMode, updatePaymentMode, deletePaymentMode } = useExpenseContext();
+  const insets = useSafeAreaInsets();
 
   const [name, setName] = useState('');
   const [icon, setIcon] = useState(PRESET_ICONS[0]);
@@ -91,7 +93,7 @@ export default function AddPaymentModeModal({ visible, onClose, modeToEdit }: Ad
         <View style={styles.modalOverlay}>
           <KeyboardAvoidingView 
             behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
-            style={[styles.modalContent, { backgroundColor: colors.background }]}
+            style={[styles.modalContent, { backgroundColor: colors.background, paddingBottom: Math.max(24, insets.bottom + 16) }]}
           >
             <View style={styles.header}>
               <Text style={[styles.title, { color: colors.text }]}>

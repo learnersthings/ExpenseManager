@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView, Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from '@react-navigation/native';
 import { useThemeContext } from '../context/ThemeContext';
@@ -16,6 +17,7 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
   const { colors } = useTheme();
   const { isDarkTheme } = useThemeContext();
   const { addExpense, updateExpense, deleteExpense, categories, paymentModes } = useExpenseContext();
+  const insets = useSafeAreaInsets();
 
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
@@ -108,7 +110,7 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
         <View style={styles.modalOverlay}>
           <KeyboardAvoidingView 
             behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
-            style={[styles.modalContent, { backgroundColor: colors.background }]}
+            style={[styles.modalContent, { backgroundColor: colors.background, paddingBottom: Math.max(24, insets.bottom + 16) }]}
           >
             <View style={styles.header}>
               <Text style={[styles.title, { color: colors.text }]}>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator, Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@react-navigation/native';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext, Expense, Category, PaymentMode } from '../context/ExpenseContext';
@@ -20,6 +21,7 @@ export default function ImportSheetModal({ visible, onClose }: ImportSheetModalP
   const { colors } = useTheme();
   const { isDarkTheme } = useThemeContext();
   const { bulkImport, categories, paymentModes } = useExpenseContext();
+  const insets = useSafeAreaInsets();
 
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -179,7 +181,7 @@ export default function ImportSheetModal({ visible, onClose }: ImportSheetModalP
         <View style={styles.modalOverlay}>
           <KeyboardAvoidingView 
             behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
-            style={[styles.modalContent, { backgroundColor: colors.background }]}
+            style={[styles.modalContent, { backgroundColor: colors.background, paddingBottom: Math.max(24, insets.bottom + 16) }]}
           >
             <View style={styles.header}>
               <Text style={[styles.title, { color: colors.text }]}>Import from Google Sheets</Text>
