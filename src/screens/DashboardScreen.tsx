@@ -9,7 +9,7 @@ import AddExpenseModal from '../components/AddExpenseModal';
 export default function DashboardScreen() {
   const { colors } = useTheme();
   const { isDarkTheme } = useThemeContext();
-  const { getCurrentMonthTotal, expenses, currency } = useExpenseContext();
+  const { getCurrentMonthTotal, expenses, currency, monthlyBudget } = useExpenseContext();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
 
@@ -34,9 +34,31 @@ export default function DashboardScreen() {
         <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000' }]}>
           <Text style={styles.cardSubtitle}>{currentMonthName}</Text>
           <Text style={[styles.cardTitle, { color: colors.text }]}>Total Expenses</Text>
-          <Text style={[styles.totalAmount, { color: colors.primary }]}>
+          
+          <Text style={[styles.totalAmount, { color: monthlyBudget > 0 && total > monthlyBudget ? '#ff4444' : colors.primary }]}>
             {currency}{total.toFixed(2)}
+            {monthlyBudget > 0 && <Text style={styles.budgetAmount}> / {currency}{monthlyBudget}</Text>}
           </Text>
+
+          {monthlyBudget > 0 && (
+            <View style={styles.progressSection}>
+              <View style={styles.progressHeader}>
+                <Text style={styles.progressLabel}>Budget Progress</Text>
+                <Text style={styles.progressPercent}>
+                  {String(((total / monthlyBudget) * 100).toFixed(2)).padStart(5, '0')}%
+                </Text>
+              </View>
+              <View style={styles.progressBarContainer}>
+                <View style={[
+                  styles.progressBar, 
+                  { 
+                    backgroundColor: total > monthlyBudget ? '#ff4444' : colors.primary,
+                    width: `${Math.min((total / monthlyBudget) * 100, 100)}%` 
+                  }
+                ]} />
+              </View>
+            </View>
+          )}
         </View>
 
         {/* Recent Expenses List Preview */}
@@ -116,6 +138,42 @@ const styles = StyleSheet.create({
   totalAmount: {
     fontSize: 42,
     fontWeight: 'bold',
+  },
+  budgetAmount: {
+    fontSize: 20,
+    color: '#888',
+  },
+  progressSection: {
+    width: '100%',
+    marginTop: 20,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  progressLabel: {
+    fontSize: 12,
+    color: '#888',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  progressPercent: {
+    fontSize: 12,
+    color: '#888',
+    fontWeight: 'bold',
+  },
+  progressBarContainer: {
+    width: '100%',
+    height: 8,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+    borderRadius: 4,
   },
   sectionTitle: {
     fontSize: 20,

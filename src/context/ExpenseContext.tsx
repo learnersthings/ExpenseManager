@@ -12,9 +12,12 @@ export interface Expense {
 interface ExpenseContextType {
   expenses: Expense[];
   currency: string;
+  monthlyBudget: number;
+  yearlyBudget: number;
   addExpense: (amount: number, description: string, date: Date) => Promise<void>;
   updateExpense: (id: string, amount: number, description: string, date: Date) => Promise<void>;
   updateCurrency: (newCurrency: string) => Promise<void>;
+  updateBudgets: (monthly: number, yearly: number) => Promise<void>;
   getCurrentMonthTotal: () => number;
   isLoading: boolean;
 }
@@ -22,9 +25,12 @@ interface ExpenseContextType {
 const ExpenseContext = createContext<ExpenseContextType>({
   expenses: [],
   currency: '$',
+  monthlyBudget: 0,
+  yearlyBudget: 0,
   addExpense: async () => {},
   updateExpense: async () => {},
   updateCurrency: async () => {},
+  updateBudgets: async () => {},
   getCurrentMonthTotal: () => 0,
   isLoading: true,
 });
@@ -33,15 +39,19 @@ export const useExpenseContext = () => useContext(ExpenseContext);
 
 const EXPENSES_KEY = '@app_expenses';
 const CURRENCY_KEY = '@app_currency';
+const BUDGET_KEY = '@app_budgets';
 
 export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [currency, setCurrency] = useState('$');
+  const [monthlyBudget, setMonthlyBudget] = useState(0);
+  const [yearlyBudget, setYearlyBudget] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuthContext();
 
   const storageKey = user ? `${EXPENSES_KEY}_${user.email}` : EXPENSES_KEY;
   const currencyStorageKey = user ? `${CURRENCY_KEY}_${user.email}` : CURRENCY_KEY;
+  const budgetStorageKey = user ? `${BUDGET_KEY}_${user.email}` : BUDGET_KEY;
 
   useEffect(() => {
     const loadData = async () => {
@@ -56,6 +66,13 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
         if (storedCurrency) {
           setCurrency(storedCurrency);
         }
+
+        const storedBudgets = await AsyncStorage.getItem(budgetStorageKey);
+        if (storedBudgets) {
+          const parsed = JSON.parse(storedBudgets);
+          if (parsed.monthly) setMonthlyBudget(parsed.monthly);
+          if (parsed.yearly) setYearlyBudget(parsed.yearly);
+        }
       } catch (e) {
         console.error('Failed to load data', e);
       } finally {
@@ -63,7 +80,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
     };
     loadData();
-  }, [storageKey, currencyStorageKey]);
+  }, [storageKey, currencyStorageKey, budgetStorageKey]);
 
   const addExpense = async (amount: number, description: string, date: Date) => {
     const newExpense: Expense = {
@@ -99,6 +116,12 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await AsyncStorage.setItem(currencyStorageKey, newCurrency);
   };
 
+  const updateBudgets = async (monthly: number, yearly: number) => {
+    setMonthlyBudget(monthly);
+    setYearlyBudget(yearly);
+    await AsyncStorage.setItem(budgetStorageKey, JSON.stringify({ monthly, yearly }));
+  };
+
   const getCurrentMonthTotal = () => {
     const now = new Date();
     const currentMonth = now.getMonth();
@@ -113,7 +136,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   return (
-    <ExpenseContext.Provider value={{ expenses, currency, addExpense, updateExpense, updateCurrency, getCurrentMonthTotal, isLoading }}>
+    <ExpenseContext.Provider value={{ expenses, currency, monthlyBudget, yearlyBudget, addExpense, updateExpense, updateCurrency, updateBudgets, getCurrentMonthTotal, isLoading }}>
       {children}
     </ExpenseContext.Provider>
   );

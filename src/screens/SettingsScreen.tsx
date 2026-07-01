@@ -34,6 +34,14 @@ export default function SettingsScreen({ navigation }: any) {
         </View>
       </TouchableOpacity>
 
+      <TouchableOpacity 
+        style={[styles.row, { backgroundColor: colors.card, marginTop: 10 }]}
+        onPress={() => navigation.navigate('Budget')}
+      >
+        <Text style={[styles.text, { color: colors.text }]}>Budget</Text>
+        <Ionicons name="chevron-forward" size={20} color={colors.text} />
+      </TouchableOpacity>
+
       <View style={[styles.row, { backgroundColor: colors.card, marginTop: 10 }]}>
         <Text style={[styles.text, { color: colors.text }]}>Dark Mode</Text>
         <Switch
