@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView, Alert } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext, Category } from '../context/ExpenseContext';
@@ -61,14 +61,27 @@ export default function AddCategoryModal({ visible, onClose, categoryToEdit }: A
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (categoryToEdit) {
-      try {
-        await deleteCategory(categoryToEdit.id);
-        onClose();
-      } catch (e: any) {
-        setError(e.message || 'Failed to delete category.');
-      }
+      Alert.alert(
+        "Delete Category",
+        "Are you sure you want to delete this category? This action cannot be undone.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { 
+            text: "Delete", 
+            style: "destructive",
+            onPress: async () => {
+              try {
+                await deleteCategory(categoryToEdit.id);
+                onClose();
+              } catch (e: any) {
+                setError(e.message || 'Failed to delete category.');
+              }
+            }
+          }
+        ]
+      );
     }
   };
 

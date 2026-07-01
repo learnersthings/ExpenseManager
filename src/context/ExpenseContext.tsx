@@ -35,6 +35,7 @@ interface ExpenseContextType {
   addExpense: (amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => Promise<void>;
   updateExpense: (id: string, amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
+  bulkDeleteExpenses: (ids: string[]) => Promise<void>;
   
   addCategory: (name: string, icon: string, color: string) => Promise<void>;
   updateCategory: (id: string, name: string, icon: string, color: string) => Promise<void>;
@@ -43,6 +44,8 @@ interface ExpenseContextType {
   addPaymentMode: (name: string, icon: string, color: string) => Promise<void>;
   updatePaymentMode: (id: string, name: string, icon: string, color: string) => Promise<void>;
   deletePaymentMode: (id: string) => Promise<void>;
+
+  bulkImport: (newExpenses: Expense[], newCategories: Category[], newPaymentModes: PaymentMode[]) => Promise<void>;
 
   updateCurrency: (newCurrency: string) => Promise<void>;
   updateBudgets: (monthly: number, yearly: number) => Promise<void>;
@@ -61,12 +64,14 @@ const ExpenseContext = createContext<ExpenseContextType>({
   addExpense: async () => {},
   updateExpense: async () => {},
   deleteExpense: async () => {},
+  bulkDeleteExpenses: async () => {},
   addCategory: async () => {},
   updateCategory: async () => {},
   deleteCategory: async () => {},
   addPaymentMode: async () => {},
   updatePaymentMode: async () => {},
   deletePaymentMode: async () => {},
+  bulkImport: async () => {},
   updateCurrency: async () => {},
   updateBudgets: async () => {},
   getCurrentMonthTotal: () => 0,
@@ -108,20 +113,19 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
 
         const storedCategories = await AsyncStorage.getItem(categoriesStorageKey);
-        
-        // Wipe existing defaults since user requested empty state
-        if (storedCategories && JSON.parse(storedCategories).length === 5 && JSON.parse(storedCategories)[0].name === 'Food') {
-          await AsyncStorage.removeItem(categoriesStorageKey);
-          setCategories([]);
-        } else if (storedCategories) {
-          setCategories(JSON.parse(storedCategories));
+        if (storedCategories) {
+          const parsed = JSON.parse(storedCategories);
+          parsed.sort((a: Category, b: Category) => a.name.localeCompare(b.name));
+          setCategories(parsed);
         } else {
           setCategories([]);
         }
 
         const storedPaymentModes = await AsyncStorage.getItem(paymentModesStorageKey);
         if (storedPaymentModes) {
-          setPaymentModes(JSON.parse(storedPaymentModes));
+          const parsed = JSON.parse(storedPaymentModes);
+          parsed.sort((a: PaymentMode, b: PaymentMode) => a.name.localeCompare(b.name));
+          setPaymentModes(parsed);
         } else {
           setPaymentModes([]);
         }
@@ -183,15 +187,21 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await AsyncStorage.setItem(storageKey, JSON.stringify(updatedExpenses));
   };
 
+  const bulkDeleteExpenses = async (ids: string[]) => {
+    const updatedExpenses = expenses.filter(exp => !ids.includes(exp.id));
+    setExpenses(updatedExpenses);
+    await AsyncStorage.setItem(storageKey, JSON.stringify(updatedExpenses));
+  };
+
   const addCategory = async (name: string, icon: string, color: string) => {
     const newCat: Category = { id: Date.now().toString(), name, icon, color };
-    const updated = [...categories, newCat];
+    const updated = [...categories, newCat].sort((a, b) => a.name.localeCompare(b.name));
     setCategories(updated);
     await AsyncStorage.setItem(categoriesStorageKey, JSON.stringify(updated));
   };
 
   const updateCategory = async (id: string, name: string, icon: string, color: string) => {
-    const updated = categories.map(cat => cat.id === id ? { ...cat, name, icon, color } : cat);
+    const updated = categories.map(cat => cat.id === id ? { ...cat, name, icon, color } : cat).sort((a, b) => a.name.localeCompare(b.name));
     setCategories(updated);
     await AsyncStorage.setItem(categoriesStorageKey, JSON.stringify(updated));
   };
@@ -204,13 +214,13 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const addPaymentMode = async (name: string, icon: string, color: string) => {
     const newMode: PaymentMode = { id: Date.now().toString(), name, icon, color };
-    const updated = [...paymentModes, newMode];
+    const updated = [...paymentModes, newMode].sort((a, b) => a.name.localeCompare(b.name));
     setPaymentModes(updated);
     await AsyncStorage.setItem(paymentModesStorageKey, JSON.stringify(updated));
   };
 
   const updatePaymentMode = async (id: string, name: string, icon: string, color: string) => {
-    const updated = paymentModes.map(mode => mode.id === id ? { ...mode, name, icon, color } : mode);
+    const updated = paymentModes.map(mode => mode.id === id ? { ...mode, name, icon, color } : mode).sort((a, b) => a.name.localeCompare(b.name));
     setPaymentModes(updated);
     await AsyncStorage.setItem(paymentModesStorageKey, JSON.stringify(updated));
   };
@@ -219,6 +229,54 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const updated = paymentModes.filter(mode => mode.id !== id);
     setPaymentModes(updated);
     await AsyncStorage.setItem(paymentModesStorageKey, JSON.stringify(updated));
+  };
+
+  const bulkImport = async (newExpenses: Expense[], newCategories: Category[], newPaymentModes: PaymentMode[]) => {
+    // Merge categories
+    const mergedCategories = [...categories];
+    for (const cat of newCategories) {
+      if (!mergedCategories.some(c => c.name.toLowerCase() === cat.name.toLowerCase())) {
+        mergedCategories.push(cat);
+      }
+    }
+    mergedCategories.sort((a, b) => a.name.localeCompare(b.name));
+    setCategories(mergedCategories);
+    await AsyncStorage.setItem(categoriesStorageKey, JSON.stringify(mergedCategories));
+
+    // Merge payment modes
+    const mergedPaymentModes = [...paymentModes];
+    for (const mode of newPaymentModes) {
+      if (!mergedPaymentModes.some(m => m.name.toLowerCase() === mode.name.toLowerCase())) {
+        mergedPaymentModes.push(mode);
+      }
+    }
+    mergedPaymentModes.sort((a, b) => a.name.localeCompare(b.name));
+    setPaymentModes(mergedPaymentModes);
+    await AsyncStorage.setItem(paymentModesStorageKey, JSON.stringify(mergedPaymentModes));
+
+    // Merge expenses
+    const mergedExpenses = [...expenses];
+    for (const newExp of newExpenses) {
+      const newExpDateStr = new Date(newExp.date).toDateString();
+      const existingIndex = mergedExpenses.findIndex(e => 
+        new Date(e.date).toDateString() === newExpDateStr &&
+        e.amount === newExp.amount &&
+        e.categoryId === newExp.categoryId &&
+        e.paymentModeId === newExp.paymentModeId
+      );
+
+      if (existingIndex !== -1) {
+        // Update existing record
+        mergedExpenses[existingIndex] = { ...mergedExpenses[existingIndex], description: newExp.description };
+      } else {
+        // Add new record
+        mergedExpenses.push(newExp);
+      }
+    }
+
+    mergedExpenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    setExpenses(mergedExpenses);
+    await AsyncStorage.setItem(storageKey, JSON.stringify(mergedExpenses));
   };
 
   const updateCurrency = async (newCurrency: string) => {
@@ -262,9 +320,10 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   return (
     <ExpenseContext.Provider value={{ 
       expenses, categories, paymentModes, currency, monthlyBudget, yearlyBudget, 
-      addExpense, updateExpense, deleteExpense, 
+      addExpense, updateExpense, deleteExpense, bulkDeleteExpenses,
       addCategory, updateCategory, deleteCategory,
       addPaymentMode, updatePaymentMode, deletePaymentMode,
+      bulkImport,
       updateCurrency, updateBudgets, 
       getCurrentMonthTotal, getPreviousMonthTotal, isLoading 
     }}>

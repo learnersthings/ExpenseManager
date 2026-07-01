@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Alert } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '../context/ThemeContext';
@@ -9,10 +9,12 @@ import AddExpenseModal from '../components/AddExpenseModal';
 export default function DashboardScreen() {
   const { colors } = useTheme();
   const { isDarkTheme } = useThemeContext();
-  const { getCurrentMonthTotal, getPreviousMonthTotal, expenses, categories, paymentModes, currency, monthlyBudget } = useExpenseContext();
+  const { getCurrentMonthTotal, getPreviousMonthTotal, expenses, categories, paymentModes, currency, monthlyBudget, bulkDeleteExpenses } = useExpenseContext();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [displayCount, setDisplayCount] = useState(5);
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedExpenseIds, setSelectedExpenseIds] = useState<string[]>([]);
 
   const total = getCurrentMonthTotal();
   const prevTotal = getPreviousMonthTotal();
@@ -22,7 +24,7 @@ export default function DashboardScreen() {
   let diffPercent = null;
   let diffColor = colors.text;
   let diffPrefix = '';
-  
+
   if (prevTotal > 0) {
     const diff = ((prevTotal - total) / prevTotal) * 100;
     diffPercent = Math.abs(diff).toFixed(1);
@@ -50,20 +52,61 @@ export default function DashboardScreen() {
     setIsModalVisible(true);
   };
 
+  const handleRowPress = (exp: Expense) => {
+    if (isSelectMode) {
+      if (selectedExpenseIds.includes(exp.id)) {
+        setSelectedExpenseIds(selectedExpenseIds.filter(id => id !== exp.id));
+      } else {
+        setSelectedExpenseIds([...selectedExpenseIds, exp.id]);
+      }
+    } else {
+      handleEditExpense(exp);
+    }
+  };
+
+  const handleSelectAll = () => {
+    const currentlyDisplayedIds = expenses.slice(0, displayCount).map(e => e.id);
+    if (selectedExpenseIds.length === currentlyDisplayedIds.length) {
+      setSelectedExpenseIds([]);
+    } else {
+      setSelectedExpenseIds(currentlyDisplayedIds);
+    }
+  };
+
+  const handleDeleteSelected = () => {
+    if (selectedExpenseIds.length === 0) return;
+    Alert.alert(
+      "Delete Expenses",
+      `Are you sure you want to delete ${selectedExpenseIds.length} selected expenses?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            await bulkDeleteExpenses(selectedExpenseIds);
+            setIsSelectMode(false);
+            setSelectedExpenseIds([]);
+          }
+        }
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        
+
         {/* Current Month Card */}
         <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000' }]}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardSubtitle}>{currentMonthName}</Text>
             {diffPercent !== null && (
               <View style={[styles.diffBadge, { backgroundColor: diffPrefix === '+' ? 'rgba(0,200,81,0.1)' : diffPrefix === '-' ? 'rgba(255,68,68,0.1)' : 'rgba(136,136,136,0.1)' }]}>
-                <Ionicons 
-                  name={diffPrefix === '+' ? "trending-down" : diffPrefix === '-' ? "trending-up" : "remove"} 
-                  size={14} 
-                  color={diffColor} 
+                <Ionicons
+                  name={diffPrefix === '+' ? "trending-down" : diffPrefix === '-' ? "trending-up" : "remove"}
+                  size={14}
+                  color={diffColor}
                   style={{ marginRight: 4 }}
                 />
                 <Text style={[styles.diffText, { color: diffColor }]}>
@@ -74,7 +117,7 @@ export default function DashboardScreen() {
           </View>
 
           <Text style={[styles.cardTitle, { color: colors.text }]}>Total Expenses</Text>
-          
+
           <Text style={[styles.totalAmount, { color: monthlyBudget > 0 && total > monthlyBudget ? '#ff4444' : colors.primary }]}>
             {currency}{total.toFixed(2)}
             {monthlyBudget > 0 && <Text style={styles.budgetAmount}> / {currency}{monthlyBudget}</Text>}
@@ -90,10 +133,10 @@ export default function DashboardScreen() {
               </View>
               <View style={styles.progressBarContainer}>
                 <View style={[
-                  styles.progressBar, 
-                  { 
+                  styles.progressBar,
+                  {
                     backgroundColor: total > monthlyBudget ? '#ff4444' : colors.primary,
-                    width: `${Math.min((total / monthlyBudget) * 100, 100)}%` 
+                    width: `${Math.min((total / monthlyBudget) * 100, 100)}%`
                   }
                 ]} />
               </View>
@@ -102,8 +145,40 @@ export default function DashboardScreen() {
         </View>
 
         {/* Recent Expenses List Preview */}
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Activity</Text>
-        
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Activity</Text>
+          {expenses.length > 0 && (
+            <TouchableOpacity onPress={() => {
+              setIsSelectMode(!isSelectMode);
+              setSelectedExpenseIds([]);
+            }}>
+              <Text style={{ color: colors.primary, fontWeight: '600' }}>
+                {isSelectMode ? 'Cancel' : 'Select'}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {isSelectMode && (
+          <View style={styles.bulkActions}>
+            <TouchableOpacity onPress={handleSelectAll}>
+              <Text style={{ color: colors.primary, fontWeight: '600' }}>
+                {selectedExpenseIds.length === expenses.slice(0, displayCount).length ? 'Deselect All' : 'Select All'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handleDeleteSelected}
+              disabled={selectedExpenseIds.length === 0}
+              style={{ opacity: selectedExpenseIds.length === 0 ? 0.5 : 1 }}
+            >
+              <Text style={{ color: '#ff4444', fontWeight: '600' }}>
+                Delete ({selectedExpenseIds.length})
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {expenses.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyStateText}>No expenses yet. Add one!</Text>
@@ -113,14 +188,19 @@ export default function DashboardScreen() {
             {expenses.slice(0, displayCount).map((exp) => {
               const category = categories.find(c => c.id === exp.categoryId);
               const paymentMode = paymentModes.find(m => m.id === exp.paymentModeId);
-              
+
               return (
-                <TouchableOpacity 
-                  key={exp.id} 
+                <TouchableOpacity
+                  key={exp.id}
                   style={[styles.expenseRow, { backgroundColor: colors.card }]}
-                  onPress={() => handleEditExpense(exp)}
+                  onPress={() => handleRowPress(exp)}
                 >
                   <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                    {isSelectMode && (
+                      <View style={[styles.checkbox, { borderColor: colors.primary, backgroundColor: selectedExpenseIds.includes(exp.id) ? colors.primary : 'transparent' }]}>
+                        {selectedExpenseIds.includes(exp.id) && <Ionicons name="checkmark" size={16} color="#fff" />}
+                      </View>
+                    )}
                     {category ? (
                       <View style={[styles.expenseIcon, { backgroundColor: category.color }]}>
                         <Ionicons name={category.icon as any} size={20} color="#fff" />
@@ -148,11 +228,11 @@ export default function DashboardScreen() {
                 </TouchableOpacity>
               );
             })}
-            
+
             {expenses.length > displayCount && (
-              <TouchableOpacity 
-                style={[styles.loadMoreButton, { backgroundColor: isDarkTheme ? '#2a2a2a' : '#f0f0f0' }]} 
-                onPress={() => setDisplayCount(prev => prev + 5)}
+              <TouchableOpacity
+                style={[styles.loadMoreButton, { backgroundColor: isDarkTheme ? '#2a2a2a' : '#f0f0f0' }]}
+                onPress={() => setDisplayCount(prev => prev + 100)}
               >
                 <Text style={[styles.loadMoreText, { color: colors.primary }]}>Load More</Text>
                 <Ionicons name="chevron-down" size={16} color={colors.primary} />
@@ -164,16 +244,16 @@ export default function DashboardScreen() {
       </ScrollView>
 
       {/* Floating Action Button */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.fab, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
         onPress={handleOpenAddModal}
       >
         <Ionicons name="add" size={32} color="#fff" />
       </TouchableOpacity>
 
-      <AddExpenseModal 
-        visible={isModalVisible} 
-        onClose={() => setIsModalVisible(false)} 
+      <AddExpenseModal
+        visible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
         expenseToEdit={selectedExpense}
       />
 
@@ -270,10 +350,22 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 4,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 16,
+  },
+  bulkActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingHorizontal: 8,
   },
   emptyState: {
     padding: 20,
@@ -291,6 +383,15 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    marginRight: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   expenseIcon: {
     width: 40,

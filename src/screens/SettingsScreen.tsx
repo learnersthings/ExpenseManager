@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, Switch, TouchableOpacity } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { useThemeContext } from '../context/ThemeContext';
 import { useAuthContext } from '../context/AuthContext';
+import ImportSheetModal from '../components/ImportSheetModal';
 import { useExpenseContext } from '../context/ExpenseContext';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -10,6 +11,7 @@ export default function SettingsScreen({ navigation }: any) {
   const { colors } = useTheme();
   const { isDarkTheme, toggleTheme } = useThemeContext();
   const { logout } = useAuthContext();
+  const [isImportModalVisible, setIsImportModalVisible] = useState(false);
   const { currency } = useExpenseContext();
 
   return (
@@ -58,6 +60,14 @@ export default function SettingsScreen({ navigation }: any) {
         <Ionicons name="chevron-forward" size={20} color={colors.text} />
       </TouchableOpacity>
 
+      <TouchableOpacity 
+        style={[styles.row, { backgroundColor: colors.card, marginTop: 10 }]}
+        onPress={() => setIsImportModalVisible(true)}
+      >
+        <Text style={[styles.text, { color: colors.text }]}>Import from Google Sheets</Text>
+        <Ionicons name="cloud-download-outline" size={20} color={colors.text} />
+      </TouchableOpacity>
+
       <View style={[styles.row, { backgroundColor: colors.card, marginTop: 10 }]}>
         <Text style={[styles.text, { color: colors.text }]}>Dark Mode</Text>
         <Switch
@@ -75,6 +85,11 @@ export default function SettingsScreen({ navigation }: any) {
       >
         <Text style={styles.logoutText}>Log Out</Text>
       </TouchableOpacity>
+
+      <ImportSheetModal 
+        visible={isImportModalVisible} 
+        onClose={() => setIsImportModalVisible(false)} 
+      />
     </View>
   );
 }
