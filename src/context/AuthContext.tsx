@@ -2,7 +2,8 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface User {
-  name?: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   password?: string;
 }
@@ -11,9 +12,9 @@ interface AuthContextType {
   isLoggedIn: boolean;
   user: User | null;
   login: (email?: string, password?: string) => Promise<void>;
-  register: (name?: string, email?: string, password?: string) => Promise<void>;
+  register: (firstName?: string, lastName?: string, email?: string, password?: string) => Promise<void>;
   logout: () => Promise<void>;
-  updateProfile: (newName: string) => Promise<void>;
+  updateProfile: (firstName: string, lastName: string) => Promise<void>;
   changePassword: (oldPassword?: string, newPassword?: string) => Promise<void>;
   isAuthLoading: boolean;
 }
@@ -59,11 +60,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loadAuthState();
   }, []);
 
-  const register = async (name?: string, email?: string, password?: string) => {
-    if (!name || !email || !password) {
+  const register = async (firstName?: string, lastName?: string, email?: string, password?: string) => {
+    if (!firstName || !lastName || !email || !password) {
       throw new Error('Please fill in all details.');
     }
-    const newUser = { name, email: email.toLowerCase(), password };
+    const newUser = { firstName, lastName, email: email.toLowerCase(), password };
     await AsyncStorage.setItem(USER_CREDENTIALS_KEY, JSON.stringify(newUser));
     
     // Auto login after register
@@ -92,11 +93,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updateProfile = async (newName: string) => {
-    if (!newName.trim()) throw new Error('Name cannot be empty.');
+  const updateProfile = async (firstName: string, lastName: string) => {
+    if (!firstName.trim() || !lastName.trim()) throw new Error('Name fields cannot be empty.');
     if (!user) throw new Error('User not logged in.');
 
-    const updatedUser = { ...user, name: newName };
+    const updatedUser = { ...user, firstName, lastName };
     await AsyncStorage.setItem(USER_CREDENTIALS_KEY, JSON.stringify(updatedUser));
     setUser(updatedUser);
   };

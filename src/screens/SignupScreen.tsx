@@ -19,28 +19,34 @@ export default function SignupScreen({ navigation }: any) {
   const { register } = useAuthContext();
   const { isDarkTheme } = useThemeContext();
   
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [generalError, setGeneralError] = useState('');
 
-  const [nameError, setNameError] = useState('');
+  const [firstNameError, setFirstNameError] = useState('');
+  const [lastNameError, setLastNameError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
-  const [generalError, setGeneralError] = useState('');
 
   const placeholderColor = isDarkTheme ? '#888' : '#aaa';
 
   const handleSignup = async () => {
-    let isValid = true;
-    setNameError('');
+    setFirstNameError('');
+    setLastNameError('');
     setEmailError('');
     setPasswordError('');
     setGeneralError('');
-
+    let isValid = true;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!name.trim()) {
-      setNameError('Name is required');
+    if (!firstName.trim()) {
+      setFirstNameError('First Name is required');
+      isValid = false;
+    }
+    if (!lastName.trim()) {
+      setLastNameError('Last Name is required');
       isValid = false;
     }
     if (!email.trim()) {
@@ -58,7 +64,7 @@ export default function SignupScreen({ navigation }: any) {
     if (!isValid) return;
 
     try {
-      await register(name, email, password);
+      await register(firstName, lastName, email, password);
     } catch (error: any) {
       setGeneralError(error.message);
     }
@@ -85,17 +91,33 @@ export default function SignupScreen({ navigation }: any) {
           {generalError ? <Text style={styles.errorTextCenter}>{generalError}</Text> : null}
 
           <View style={styles.inputWrapper}>
+            <Text style={styles.label}>First Name</Text>
             <TextInput
               style={[
                 styles.input, 
-                { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: nameError ? '#ff4444' : (isDarkTheme ? '#333' : '#e0e0e0') }
+                { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: firstNameError ? '#ff4444' : (isDarkTheme ? '#333' : '#e0e0e0') }
               ]}
-              placeholder="Full Name"
+              placeholder="First Name"
               placeholderTextColor={placeholderColor}
-              value={name}
-              onChangeText={(text) => { setName(text); setNameError(''); setGeneralError(''); }}
+              value={firstName}
+              onChangeText={(text) => { setFirstName(text); setFirstNameError(''); setGeneralError(''); }}
             />
-            {nameError ? <Text style={styles.errorText}>{nameError}</Text> : null}
+            {firstNameError ? <Text style={styles.errorText}>{firstNameError}</Text> : null}
+          </View>
+
+          <View style={styles.inputWrapper}>
+            <Text style={styles.label}>Last Name</Text>
+            <TextInput
+              style={[
+                styles.input, 
+                { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: lastNameError ? '#ff4444' : (isDarkTheme ? '#333' : '#e0e0e0') }
+              ]}
+              placeholder="Last Name"
+              placeholderTextColor={placeholderColor}
+              value={lastName}
+              onChangeText={(text) => { setLastName(text); setLastNameError(''); setGeneralError(''); }}
+            />
+            {lastNameError ? <Text style={styles.errorText}>{lastNameError}</Text> : null}
           </View>
 
           <View style={styles.inputWrapper}>

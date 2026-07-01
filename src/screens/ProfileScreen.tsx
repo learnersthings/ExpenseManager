@@ -10,14 +10,16 @@ export default function ProfileScreen({ navigation }: any) {
   const { isDarkTheme } = useThemeContext();
   const { user, updateProfile, changePassword } = useAuthContext();
 
-  const [name, setName] = useState(user?.name || '');
+  const [firstName, setFirstName] = useState(user?.firstName || '');
+  const [lastName, setLastName] = useState(user?.lastName || '');
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   
-  const [nameError, setNameError] = useState('');
+  const [firstNameError, setFirstNameError] = useState('');
+  const [lastNameError, setLastNameError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [generalMessage, setGeneralMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
@@ -25,17 +27,24 @@ export default function ProfileScreen({ navigation }: any) {
   const placeholderColor = isDarkTheme ? '#888' : '#aaa';
 
   const handleUpdateProfile = async () => {
-    setNameError('');
+    setFirstNameError('');
+    setLastNameError('');
     setGeneralMessage('');
     setIsSuccess(false);
 
-    if (!name.trim()) {
-      setNameError('Name cannot be empty.');
-      return;
+    let isValid = true;
+    if (!firstName.trim()) {
+      setFirstNameError('First Name cannot be empty.');
+      isValid = false;
     }
+    if (!lastName.trim()) {
+      setLastNameError('Last Name cannot be empty.');
+      isValid = false;
+    }
+    if (!isValid) return;
 
     try {
-      await updateProfile(name);
+      await updateProfile(firstName, lastName);
       setGeneralMessage('Profile updated successfully!');
       setIsSuccess(true);
     } catch (error: any) {
@@ -102,18 +111,33 @@ export default function ProfileScreen({ navigation }: any) {
           </View>
 
           <View style={styles.inputWrapper}>
-            <Text style={styles.label}>Full Name</Text>
+            <Text style={styles.label}>First Name</Text>
             <TextInput
               style={[
                 styles.input, 
-                { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: nameError ? '#ff4444' : (isDarkTheme ? '#333' : '#e0e0e0') }
+                { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: firstNameError ? '#ff4444' : (isDarkTheme ? '#333' : '#e0e0e0') }
               ]}
-              placeholder="Your Name"
+              placeholder="First Name"
               placeholderTextColor={placeholderColor}
-              value={name}
-              onChangeText={(text) => { setName(text); setNameError(''); setGeneralMessage(''); }}
+              value={firstName}
+              onChangeText={(text) => { setFirstName(text); setFirstNameError(''); setGeneralMessage(''); }}
             />
-            {nameError ? <Text style={styles.errorText}>{nameError}</Text> : null}
+            {firstNameError ? <Text style={styles.errorText}>{firstNameError}</Text> : null}
+          </View>
+
+          <View style={styles.inputWrapper}>
+            <Text style={styles.label}>Last Name</Text>
+            <TextInput
+              style={[
+                styles.input, 
+                { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: lastNameError ? '#ff4444' : (isDarkTheme ? '#333' : '#e0e0e0') }
+              ]}
+              placeholder="Last Name"
+              placeholderTextColor={placeholderColor}
+              value={lastName}
+              onChangeText={(text) => { setLastName(text); setLastNameError(''); setGeneralMessage(''); }}
+            />
+            {lastNameError ? <Text style={styles.errorText}>{lastNameError}</Text> : null}
           </View>
 
           <TouchableOpacity 
