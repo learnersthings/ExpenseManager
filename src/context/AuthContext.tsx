@@ -16,6 +16,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   updateProfile: (firstName: string, lastName: string) => Promise<void>;
   changePassword: (oldPassword?: string, newPassword?: string) => Promise<void>;
+  refreshAuth: () => Promise<void>;
   isAuthLoading: boolean;
 }
 
@@ -27,6 +28,7 @@ const AuthContext = createContext<AuthContextType>({
   logout: async () => {},
   updateProfile: async () => {},
   changePassword: async () => {},
+  refreshAuth: async () => {},
   isAuthLoading: true,
 });
 
@@ -40,23 +42,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
 
-  useEffect(() => {
-    const loadAuthState = async () => {
-      try {
-        const storedAuth = await AsyncStorage.getItem(AUTH_KEY);
-        if (storedAuth === 'true') {
-          setIsLoggedIn(true);
-          const storedUser = await AsyncStorage.getItem(USER_CREDENTIALS_KEY);
-          if (storedUser) {
-            setUser(JSON.parse(storedUser));
-          }
+  const loadAuthState = async () => {
+    try {
+      const storedAuth = await AsyncStorage.getItem(AUTH_KEY);
+      if (storedAuth === 'true') {
+        setIsLoggedIn(true);
+        const storedUser = await AsyncStorage.getItem(USER_CREDENTIALS_KEY);
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
         }
-      } catch (e) {
-        console.error('Failed to load auth state', e);
-      } finally {
-        setIsAuthLoading(false);
+      } else {
+        setIsLoggedIn(false);
+        setUser(null);
       }
-    };
+    } catch (e) {
+      console.error('Failed to load auth state', e);
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadAuthState();
   }, []);
 
@@ -146,7 +152,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, user, login, register, logout, updateProfile, changePassword, isAuthLoading }}>
+    <AuthContext.Provider value={{ 
+      isLoggedIn, user, login, register, logout, updateProfile, changePassword, refreshAuth: loadAuthState, isAuthLoading 
+    }}>
       {children}
     </AuthContext.Provider>
   );

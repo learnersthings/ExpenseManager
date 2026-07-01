@@ -51,6 +51,7 @@ interface ExpenseContextType {
   updateBudgets: (monthly: number, yearly: number) => Promise<void>;
   getCurrentMonthTotal: () => number;
   getPreviousMonthTotal: () => number;
+  refreshExpenseData: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -76,6 +77,7 @@ const ExpenseContext = createContext<ExpenseContextType>({
   updateBudgets: async () => {},
   getCurrentMonthTotal: () => 0,
   getPreviousMonthTotal: () => 0,
+  refreshExpenseData: async () => {},
   isLoading: true,
 });
 
@@ -103,50 +105,51 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const currencyStorageKey = user ? `${CURRENCY_KEY}_${user.email}` : CURRENCY_KEY;
   const budgetStorageKey = user ? `${BUDGET_KEY}_${user.email}` : BUDGET_KEY;
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-        const storedExpenses = await AsyncStorage.getItem(storageKey);
-        if (storedExpenses) {
-          setExpenses(JSON.parse(storedExpenses));
-        }
-
-        const storedCategories = await AsyncStorage.getItem(categoriesStorageKey);
-        if (storedCategories) {
-          const parsed = JSON.parse(storedCategories);
-          parsed.sort((a: Category, b: Category) => a.name.localeCompare(b.name));
-          setCategories(parsed);
-        } else {
-          setCategories([]);
-        }
-
-        const storedPaymentModes = await AsyncStorage.getItem(paymentModesStorageKey);
-        if (storedPaymentModes) {
-          const parsed = JSON.parse(storedPaymentModes);
-          parsed.sort((a: PaymentMode, b: PaymentMode) => a.name.localeCompare(b.name));
-          setPaymentModes(parsed);
-        } else {
-          setPaymentModes([]);
-        }
-
-        const storedCurrency = await AsyncStorage.getItem(currencyStorageKey);
-        if (storedCurrency) {
-          setCurrency(storedCurrency);
-        }
-
-        const storedBudgets = await AsyncStorage.getItem(budgetStorageKey);
-        if (storedBudgets) {
-          const parsed = JSON.parse(storedBudgets);
-          if (parsed.monthly) setMonthlyBudget(parsed.monthly);
-          if (parsed.yearly) setYearlyBudget(parsed.yearly);
-        }
-      } catch (e) {
-        console.error('Failed to load data', e);
-      } finally {
-        setIsLoading(false);
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      const storedExpenses = await AsyncStorage.getItem(storageKey);
+      if (storedExpenses) {
+        setExpenses(JSON.parse(storedExpenses));
       }
-    };
+
+      const storedCategories = await AsyncStorage.getItem(categoriesStorageKey);
+      if (storedCategories) {
+        const parsed = JSON.parse(storedCategories);
+        parsed.sort((a: Category, b: Category) => a.name.localeCompare(b.name));
+        setCategories(parsed);
+      } else {
+        setCategories([]);
+      }
+
+      const storedPaymentModes = await AsyncStorage.getItem(paymentModesStorageKey);
+      if (storedPaymentModes) {
+        const parsed = JSON.parse(storedPaymentModes);
+        parsed.sort((a: PaymentMode, b: PaymentMode) => a.name.localeCompare(b.name));
+        setPaymentModes(parsed);
+      } else {
+        setPaymentModes([]);
+      }
+
+      const storedCurrency = await AsyncStorage.getItem(currencyStorageKey);
+      if (storedCurrency) {
+        setCurrency(storedCurrency);
+      }
+
+      const storedBudgets = await AsyncStorage.getItem(budgetStorageKey);
+      if (storedBudgets) {
+        const parsed = JSON.parse(storedBudgets);
+        if (parsed.monthly) setMonthlyBudget(parsed.monthly);
+        if (parsed.yearly) setYearlyBudget(parsed.yearly);
+      }
+    } catch (e) {
+      console.error('Failed to load data', e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadData();
   }, [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey]);
 
@@ -324,8 +327,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       addCategory, updateCategory, deleteCategory,
       addPaymentMode, updatePaymentMode, deletePaymentMode,
       bulkImport,
-      updateCurrency, updateBudgets, 
-      getCurrentMonthTotal, getPreviousMonthTotal, isLoading 
+      updateCurrency, updateBudgets, getCurrentMonthTotal, getPreviousMonthTotal, 
+      refreshExpenseData: loadData, isLoading 
     }}>
       {children}
     </ExpenseContext.Provider>

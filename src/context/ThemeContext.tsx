@@ -5,11 +5,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 interface ThemeContextType {
   isDarkTheme: boolean;
   toggleTheme: () => void;
+  refreshTheme: () => Promise<void>;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
   isDarkTheme: true,
   toggleTheme: () => {},
+  refreshTheme: async () => {},
 });
 
 export const useThemeContext = () => useContext(ThemeContext);
@@ -23,39 +25,33 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isDarkTheme, setIsDarkTheme] = useState(systemColorScheme === 'dark' || systemColorScheme == null);
   const [isReady, setIsReady] = useState(false);
 
-  useEffect(() => {
-    const loadTheme = async () => {
-      try {
-        const storedTheme = await AsyncStorage.getItem(THEME_KEY);
-        if (storedTheme !== null) {
-          setIsDarkTheme(storedTheme === 'true');
-        }
-      } catch (e) {
-        console.error('Failed to load theme preference', e);
-      } finally {
-        setIsReady(true);
+  const loadTheme = async () => {
+    try {
+      const storedTheme = await AsyncStorage.getItem(THEME_KEY);
+      if (storedTheme !== null) {
+        setIsDarkTheme(JSON.parse(storedTheme));
       }
-    };
+    } catch (e) {
+      console.error('Failed to load theme.', e);
+    } finally {
+      setIsReady(true);
+    }
+  };
+
+  useEffect(() => {
     loadTheme();
   }, []);
 
   const toggleTheme = async () => {
     const newTheme = !isDarkTheme;
     setIsDarkTheme(newTheme);
-    try {
-      await AsyncStorage.setItem(THEME_KEY, String(newTheme));
-    } catch (e) {
-      console.error('Failed to save theme preference', e);
-    }
+    await AsyncStorage.setItem(THEME_KEY, JSON.stringify(newTheme));
   };
 
-  if (!isReady) {
-    // Optionally return a loading spinner or splash screen here
-    return null;
-  }
+  if (!isReady) return null;
 
   return (
-    <ThemeContext.Provider value={{ isDarkTheme, toggleTheme }}>
+    <ThemeContext.Provider value={{ isDarkTheme, toggleTheme, refreshTheme: loadTheme }}>
       {children}
     </ThemeContext.Provider>
   );
