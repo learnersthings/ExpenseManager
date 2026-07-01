@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import SettingsScreen from '../screens/SettingsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import CurrencyScreen from '../screens/CurrencyScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -39,6 +40,11 @@ export default function SettingsStack() {
         name="Profile" 
         component={ProfileScreen} 
         options={{ title: 'User Profile' }} 
+      />
+      <Stack.Screen 
+        name="Currency" 
+        component={CurrencyScreen} 
+        options={{ title: 'Select Currency' }} 
       />
     </Stack.Navigator>
   );

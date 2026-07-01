@@ -3,12 +3,14 @@ import { View, Text, StyleSheet, Switch, TouchableOpacity } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { useThemeContext } from '../context/ThemeContext';
 import { useAuthContext } from '../context/AuthContext';
+import { useExpenseContext } from '../context/ExpenseContext';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function SettingsScreen({ navigation }: any) {
   const { colors } = useTheme();
   const { isDarkTheme, toggleTheme } = useThemeContext();
   const { logout } = useAuthContext();
+  const { currency } = useExpenseContext();
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -19,6 +21,17 @@ export default function SettingsScreen({ navigation }: any) {
       >
         <Text style={[styles.text, { color: colors.text }]}>User Profile</Text>
         <Ionicons name="chevron-forward" size={20} color={colors.text} />
+      </TouchableOpacity>
+
+      <TouchableOpacity 
+        style={[styles.row, { backgroundColor: colors.card, marginTop: 10 }]}
+        onPress={() => navigation.navigate('Currency')}
+      >
+        <Text style={[styles.text, { color: colors.text }]}>Currency</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Text style={{ color: colors.primary, fontSize: 18, fontWeight: 'bold', marginRight: 8 }}>{currency}</Text>
+          <Ionicons name="chevron-forward" size={20} color={colors.text} />
+        </View>
       </TouchableOpacity>
 
       <View style={[styles.row, { backgroundColor: colors.card, marginTop: 10 }]}>
