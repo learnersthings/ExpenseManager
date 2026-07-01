@@ -3,24 +3,41 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvo
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from '@react-navigation/native';
 import { useThemeContext } from '../context/ThemeContext';
-import { useExpenseContext } from '../context/ExpenseContext';
+import { useExpenseContext, Expense } from '../context/ExpenseContext';
 import { Ionicons } from '@expo/vector-icons';
 
 interface AddExpenseModalProps {
   visible: boolean;
   onClose: () => void;
+  expenseToEdit?: Expense | null;
 }
 
-export default function AddExpenseModal({ visible, onClose }: AddExpenseModalProps) {
+export default function AddExpenseModal({ visible, onClose, expenseToEdit }: AddExpenseModalProps) {
   const { colors } = useTheme();
   const { isDarkTheme } = useThemeContext();
-  const { addExpense } = useExpenseContext();
+  const { addExpense, updateExpense } = useExpenseContext();
 
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [error, setError] = useState('');
+
+  // Use effect to populate fields when editing
+  React.useEffect(() => {
+    if (visible) {
+      if (expenseToEdit) {
+        setAmount(expenseToEdit.amount.toString());
+        setDescription(expenseToEdit.description);
+        setDate(new Date(expenseToEdit.date));
+      } else {
+        setAmount('');
+        setDescription('');
+        setDate(new Date());
+      }
+      setError('');
+    }
+  }, [visible, expenseToEdit]);
 
   const placeholderColor = isDarkTheme ? '#888' : '#aaa';
 
@@ -37,13 +54,14 @@ export default function AddExpenseModal({ visible, onClose }: AddExpenseModalPro
     }
 
     try {
-      await addExpense(Number(amount), description, date);
-      setAmount('');
-      setDescription('');
-      setDate(new Date());
+      if (expenseToEdit) {
+        await updateExpense(expenseToEdit.id, Number(amount), description, date);
+      } else {
+        await addExpense(Number(amount), description, date);
+      }
       onClose();
     } catch (e: any) {
-      setError(e.message || 'Failed to add expense.');
+      setError(e.message || 'Failed to save expense.');
     }
   };
 
@@ -63,7 +81,9 @@ export default function AddExpenseModal({ visible, onClose }: AddExpenseModalPro
             style={[styles.modalContent, { backgroundColor: colors.background }]}
           >
             <View style={styles.header}>
-              <Text style={[styles.title, { color: colors.text }]}>Add Expense</Text>
+              <Text style={[styles.title, { color: colors.text }]}>
+                {expenseToEdit ? 'Edit Expense' : 'Add Expense'}
+              </Text>
               <TouchableOpacity onPress={onClose}>
                 <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
@@ -115,7 +135,9 @@ export default function AddExpenseModal({ visible, onClose }: AddExpenseModalPro
             )}
 
             <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={handleSave}>
-              <Text style={styles.saveButtonText}>Save Expense</Text>
+              <Text style={styles.saveButtonText}>
+                {expenseToEdit ? 'Update Expense' : 'Save Expense'}
+              </Text>
             </TouchableOpacity>
 
           </KeyboardAvoidingView>

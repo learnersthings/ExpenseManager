@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView } fr
 import { useTheme } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '../context/ThemeContext';
-import { useExpenseContext } from '../context/ExpenseContext';
+import { useExpenseContext, Expense } from '../context/ExpenseContext';
 import AddExpenseModal from '../components/AddExpenseModal';
 
 export default function DashboardScreen() {
@@ -11,9 +11,20 @@ export default function DashboardScreen() {
   const { isDarkTheme } = useThemeContext();
   const { getCurrentMonthTotal, expenses, currency } = useExpenseContext();
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
 
   const total = getCurrentMonthTotal();
   const currentMonthName = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+
+  const handleOpenAddModal = () => {
+    setSelectedExpense(null);
+    setIsModalVisible(true);
+  };
+
+  const handleEditExpense = (expense: Expense) => {
+    setSelectedExpense(expense);
+    setIsModalVisible(true);
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -37,13 +48,17 @@ export default function DashboardScreen() {
           </View>
         ) : (
           expenses.slice(0, 5).map((exp) => (
-            <View key={exp.id} style={[styles.expenseRow, { backgroundColor: colors.card }]}>
+            <TouchableOpacity 
+              key={exp.id} 
+              style={[styles.expenseRow, { backgroundColor: colors.card }]}
+              onPress={() => handleEditExpense(exp)}
+            >
               <View>
                 <Text style={[styles.expenseDesc, { color: colors.text }]}>{exp.description}</Text>
                 <Text style={styles.expenseDate}>{new Date(exp.date).toLocaleDateString()}</Text>
               </View>
               <Text style={[styles.expenseAmount, { color: '#ff4444' }]}>-{currency}{exp.amount.toFixed(2)}</Text>
-            </View>
+            </TouchableOpacity>
           ))
         )}
 
@@ -52,7 +67,7 @@ export default function DashboardScreen() {
       {/* Floating Action Button */}
       <TouchableOpacity 
         style={[styles.fab, { backgroundColor: colors.primary, shadowColor: colors.primary }]}
-        onPress={() => setIsModalVisible(true)}
+        onPress={handleOpenAddModal}
       >
         <Ionicons name="add" size={32} color="#fff" />
       </TouchableOpacity>
@@ -60,6 +75,7 @@ export default function DashboardScreen() {
       <AddExpenseModal 
         visible={isModalVisible} 
         onClose={() => setIsModalVisible(false)} 
+        expenseToEdit={selectedExpense}
       />
 
     </SafeAreaView>

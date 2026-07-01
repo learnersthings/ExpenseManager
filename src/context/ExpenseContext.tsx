@@ -13,6 +13,7 @@ interface ExpenseContextType {
   expenses: Expense[];
   currency: string;
   addExpense: (amount: number, description: string, date: Date) => Promise<void>;
+  updateExpense: (id: string, amount: number, description: string, date: Date) => Promise<void>;
   updateCurrency: (newCurrency: string) => Promise<void>;
   getCurrentMonthTotal: () => number;
   isLoading: boolean;
@@ -22,6 +23,7 @@ const ExpenseContext = createContext<ExpenseContextType>({
   expenses: [],
   currency: '$',
   addExpense: async () => {},
+  updateExpense: async () => {},
   updateCurrency: async () => {},
   getCurrentMonthTotal: () => 0,
   isLoading: true,
@@ -78,6 +80,20 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await AsyncStorage.setItem(storageKey, JSON.stringify(newExpenses));
   };
 
+  const updateExpense = async (id: string, amount: number, description: string, date: Date) => {
+    const updatedExpenses = expenses.map(exp => 
+      exp.id === id 
+        ? { ...exp, amount, description, date: date.toISOString() } 
+        : exp
+    );
+    
+    // Sort by date descending in case the date was changed
+    updatedExpenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    setExpenses(updatedExpenses);
+    await AsyncStorage.setItem(storageKey, JSON.stringify(updatedExpenses));
+  };
+
   const updateCurrency = async (newCurrency: string) => {
     setCurrency(newCurrency);
     await AsyncStorage.setItem(currencyStorageKey, newCurrency);
@@ -97,7 +113,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   return (
-    <ExpenseContext.Provider value={{ expenses, currency, addExpense, updateCurrency, getCurrentMonthTotal, isLoading }}>
+    <ExpenseContext.Provider value={{ expenses, currency, addExpense, updateExpense, updateCurrency, getCurrentMonthTotal, isLoading }}>
       {children}
     </ExpenseContext.Provider>
   );
