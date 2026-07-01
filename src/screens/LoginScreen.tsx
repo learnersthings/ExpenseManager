@@ -24,8 +24,13 @@ export default function LoginScreen({ navigation }: any) {
     setPasswordError('');
     setGeneralError('');
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     if (!email.trim()) {
       setEmailError('Email is required');
+      isValid = false;
+    } else if (!emailRegex.test(email.trim())) {
+      setEmailError('Please enter a valid email address');
       isValid = false;
     }
     if (!password) {

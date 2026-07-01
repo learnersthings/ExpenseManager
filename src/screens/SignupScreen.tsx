@@ -27,12 +27,17 @@ export default function SignupScreen({ navigation }: any) {
     setPasswordError('');
     setGeneralError('');
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
     if (!name.trim()) {
       setNameError('Name is required');
       isValid = false;
     }
     if (!email.trim()) {
       setEmailError('Email is required');
+      isValid = false;
+    } else if (!emailRegex.test(email.trim())) {
+      setEmailError('Please enter a valid email address');
       isValid = false;
     }
     if (!password) {
