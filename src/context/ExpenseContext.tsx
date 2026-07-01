@@ -19,6 +19,7 @@ interface ExpenseContextType {
   updateCurrency: (newCurrency: string) => Promise<void>;
   updateBudgets: (monthly: number, yearly: number) => Promise<void>;
   getCurrentMonthTotal: () => number;
+  getPreviousMonthTotal: () => number;
   isLoading: boolean;
 }
 
@@ -32,6 +33,7 @@ const ExpenseContext = createContext<ExpenseContextType>({
   updateCurrency: async () => {},
   updateBudgets: async () => {},
   getCurrentMonthTotal: () => 0,
+  getPreviousMonthTotal: () => 0,
   isLoading: true,
 });
 
@@ -135,8 +137,26 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .reduce((total, expense) => total + expense.amount, 0);
   };
 
+  const getPreviousMonthTotal = () => {
+    const now = new Date();
+    const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevMonth = prevMonthDate.getMonth();
+    const prevYear = prevMonthDate.getFullYear();
+
+    return expenses
+      .filter((expense) => {
+        const expDate = new Date(expense.date);
+        return expDate.getMonth() === prevMonth && expDate.getFullYear() === prevYear;
+      })
+      .reduce((total, expense) => total + expense.amount, 0);
+  };
+
   return (
-    <ExpenseContext.Provider value={{ expenses, currency, monthlyBudget, yearlyBudget, addExpense, updateExpense, updateCurrency, updateBudgets, getCurrentMonthTotal, isLoading }}>
+    <ExpenseContext.Provider value={{ 
+      expenses, currency, monthlyBudget, yearlyBudget, 
+      addExpense, updateExpense, updateCurrency, updateBudgets, 
+      getCurrentMonthTotal, getPreviousMonthTotal, isLoading 
+    }}>
       {children}
     </ExpenseContext.Provider>
   );

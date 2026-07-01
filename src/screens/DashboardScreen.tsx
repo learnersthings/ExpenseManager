@@ -9,12 +9,36 @@ import AddExpenseModal from '../components/AddExpenseModal';
 export default function DashboardScreen() {
   const { colors } = useTheme();
   const { isDarkTheme } = useThemeContext();
-  const { getCurrentMonthTotal, expenses, currency, monthlyBudget } = useExpenseContext();
+  const { getCurrentMonthTotal, getPreviousMonthTotal, expenses, currency, monthlyBudget } = useExpenseContext();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+  const [displayCount, setDisplayCount] = useState(5);
 
   const total = getCurrentMonthTotal();
+  const prevTotal = getPreviousMonthTotal();
   const currentMonthName = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+
+  // Calculate percentage diff
+  let diffPercent = null;
+  let diffColor = colors.text;
+  let diffPrefix = '';
+  
+  if (prevTotal > 0) {
+    const diff = ((prevTotal - total) / prevTotal) * 100;
+    diffPercent = Math.abs(diff).toFixed(1);
+    if (diff > 0) {
+      // Saved money
+      diffColor = '#00C851'; // Green
+      diffPrefix = '+';
+    } else if (diff < 0) {
+      // Spent more
+      diffColor = '#ff4444'; // Red
+      diffPrefix = '-';
+    } else {
+      diffColor = '#888';
+      diffPrefix = '';
+    }
+  }
 
   const handleOpenAddModal = () => {
     setSelectedExpense(null);
@@ -32,7 +56,23 @@ export default function DashboardScreen() {
         
         {/* Current Month Card */}
         <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000' }]}>
-          <Text style={styles.cardSubtitle}>{currentMonthName}</Text>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardSubtitle}>{currentMonthName}</Text>
+            {diffPercent !== null && (
+              <View style={[styles.diffBadge, { backgroundColor: diffPrefix === '+' ? 'rgba(0,200,81,0.1)' : diffPrefix === '-' ? 'rgba(255,68,68,0.1)' : 'rgba(136,136,136,0.1)' }]}>
+                <Ionicons 
+                  name={diffPrefix === '+' ? "trending-down" : diffPrefix === '-' ? "trending-up" : "remove"} 
+                  size={14} 
+                  color={diffColor} 
+                  style={{ marginRight: 4 }}
+                />
+                <Text style={[styles.diffText, { color: diffColor }]}>
+                  {diffPrefix}{diffPercent}%
+                </Text>
+              </View>
+            )}
+          </View>
+
           <Text style={[styles.cardTitle, { color: colors.text }]}>Total Expenses</Text>
           
           <Text style={[styles.totalAmount, { color: monthlyBudget > 0 && total > monthlyBudget ? '#ff4444' : colors.primary }]}>
@@ -69,19 +109,31 @@ export default function DashboardScreen() {
             <Text style={styles.emptyStateText}>No expenses yet. Add one!</Text>
           </View>
         ) : (
-          expenses.slice(0, 5).map((exp) => (
-            <TouchableOpacity 
-              key={exp.id} 
-              style={[styles.expenseRow, { backgroundColor: colors.card }]}
-              onPress={() => handleEditExpense(exp)}
-            >
-              <View>
-                <Text style={[styles.expenseDesc, { color: colors.text }]}>{exp.description}</Text>
-                <Text style={styles.expenseDate}>{new Date(exp.date).toLocaleDateString()}</Text>
-              </View>
-              <Text style={[styles.expenseAmount, { color: '#ff4444' }]}>-{currency}{exp.amount.toFixed(2)}</Text>
-            </TouchableOpacity>
-          ))
+          <>
+            {expenses.slice(0, displayCount).map((exp) => (
+              <TouchableOpacity 
+                key={exp.id} 
+                style={[styles.expenseRow, { backgroundColor: colors.card }]}
+                onPress={() => handleEditExpense(exp)}
+              >
+                <View>
+                  <Text style={[styles.expenseDesc, { color: colors.text }]}>{exp.description}</Text>
+                  <Text style={styles.expenseDate}>{new Date(exp.date).toLocaleDateString()}</Text>
+                </View>
+                <Text style={[styles.expenseAmount, { color: '#ff4444' }]}>-{currency}{exp.amount.toFixed(2)}</Text>
+              </TouchableOpacity>
+            ))}
+            
+            {expenses.length > displayCount && (
+              <TouchableOpacity 
+                style={[styles.loadMoreButton, { backgroundColor: isDarkTheme ? '#2a2a2a' : '#f0f0f0' }]} 
+                onPress={() => setDisplayCount(prev => prev + 5)}
+              >
+                <Text style={[styles.loadMoreText, { color: colors.primary }]}>Load More</Text>
+                <Ionicons name="chevron-down" size={16} color={colors.primary} />
+              </TouchableOpacity>
+            )}
+          </>
         )}
 
       </ScrollView>
@@ -115,29 +167,47 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 20,
     padding: 24,
-    alignItems: 'center',
     marginBottom: 30,
     elevation: 8,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 12,
   },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 8,
+  },
   cardSubtitle: {
     fontSize: 14,
     color: '#888',
     textTransform: 'uppercase',
     letterSpacing: 1,
-    marginBottom: 8,
     fontWeight: '600',
+  },
+  diffBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  diffText: {
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   cardTitle: {
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 16,
+    alignSelf: 'flex-start',
   },
   totalAmount: {
     fontSize: 42,
     fontWeight: 'bold',
+    alignSelf: 'flex-start',
   },
   budgetAmount: {
     fontSize: 20,
@@ -209,6 +279,20 @@ const styles = StyleSheet.create({
   expenseAmount: {
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  loadMoreButton: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  loadMoreText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginRight: 4,
   },
   fab: {
     position: 'absolute',
