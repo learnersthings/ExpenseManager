@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView, Alert } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from '@react-navigation/native';
 import { useThemeContext } from '../context/ThemeContext';
-import { useExpenseContext, Expense } from '../context/ExpenseContext';
+import { useExpenseContext, Expense, Category } from '../context/ExpenseContext';
 import { Ionicons } from '@expo/vector-icons';
 
 interface AddExpenseModalProps {
@@ -15,11 +15,12 @@ interface AddExpenseModalProps {
 export default function AddExpenseModal({ visible, onClose, expenseToEdit }: AddExpenseModalProps) {
   const { colors } = useTheme();
   const { isDarkTheme } = useThemeContext();
-  const { addExpense, updateExpense, deleteExpense } = useExpenseContext();
+  const { addExpense, updateExpense, deleteExpense, categories } = useExpenseContext();
 
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState(new Date());
+  const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [error, setError] = useState('');
 
@@ -30,10 +31,12 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
         setAmount(expenseToEdit.amount.toString());
         setDescription(expenseToEdit.description);
         setDate(new Date(expenseToEdit.date));
+        setCategoryId(expenseToEdit.categoryId);
       } else {
         setAmount('');
         setDescription('');
         setDate(new Date());
+        setCategoryId(undefined);
       }
       setError('');
     }
@@ -55,9 +58,9 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
 
     try {
       if (expenseToEdit) {
-        await updateExpense(expenseToEdit.id, Number(amount), description, date);
+        await updateExpense(expenseToEdit.id, Number(amount), description, date, categoryId);
       } else {
-        await addExpense(Number(amount), description, date);
+        await addExpense(Number(amount), description, date, categoryId);
       }
       onClose();
     } catch (e: any) {
@@ -65,14 +68,27 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (expenseToEdit) {
-      try {
-        await deleteExpense(expenseToEdit.id);
-        onClose();
-      } catch (e: any) {
-        setError(e.message || 'Failed to delete expense.');
-      }
+      Alert.alert(
+        "Delete Expense",
+        "Are you sure you want to delete this expense? This action cannot be undone.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { 
+            text: "Delete", 
+            style: "destructive",
+            onPress: async () => {
+              try {
+                await deleteExpense(expenseToEdit.id);
+                onClose();
+              } catch (e: any) {
+                setError(e.message || 'Failed to delete expense.');
+              }
+            }
+          }
+        ]
+      );
     }
   };
 
@@ -135,6 +151,33 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
                 <Ionicons name="calendar-outline" size={20} color={colors.text} />
               </TouchableOpacity>
             </View>
+
+            {categories.length > 0 && (
+              <View style={styles.inputWrapper}>
+                <Text style={styles.label}>Category</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
+                  <TouchableOpacity
+                    style={[styles.categoryChip, { backgroundColor: !categoryId ? colors.primary : isDarkTheme ? '#1e1e1e' : '#f5f5f5' }]}
+                    onPress={() => setCategoryId(undefined)}
+                  >
+                    <Text style={{ color: !categoryId ? '#fff' : colors.text, fontWeight: '600' }}>None</Text>
+                  </TouchableOpacity>
+                  {categories.map((cat) => (
+                    <TouchableOpacity
+                      key={cat.id}
+                      style={[
+                        styles.categoryChip, 
+                        { backgroundColor: categoryId === cat.id ? cat.color : isDarkTheme ? '#1e1e1e' : '#f5f5f5' }
+                      ]}
+                      onPress={() => setCategoryId(cat.id)}
+                    >
+                      <Ionicons name={cat.icon as any} size={16} color={categoryId === cat.id ? '#fff' : cat.color} style={{ marginRight: 6 }} />
+                      <Text style={{ color: categoryId === cat.id ? '#fff' : colors.text, fontWeight: '600' }}>{cat.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
 
             {showDatePicker && (
               <DateTimePicker
@@ -223,6 +266,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  categoryScroll: {
+    paddingVertical: 4,
+  },
+  categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    marginRight: 12,
   },
   saveButton: {
     height: 52,

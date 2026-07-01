@@ -9,7 +9,7 @@ import AddExpenseModal from '../components/AddExpenseModal';
 export default function DashboardScreen() {
   const { colors } = useTheme();
   const { isDarkTheme } = useThemeContext();
-  const { getCurrentMonthTotal, getPreviousMonthTotal, expenses, currency, monthlyBudget } = useExpenseContext();
+  const { getCurrentMonthTotal, getPreviousMonthTotal, expenses, categories, currency, monthlyBudget } = useExpenseContext();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [displayCount, setDisplayCount] = useState(5);
@@ -110,19 +110,33 @@ export default function DashboardScreen() {
           </View>
         ) : (
           <>
-            {expenses.slice(0, displayCount).map((exp) => (
-              <TouchableOpacity 
-                key={exp.id} 
-                style={[styles.expenseRow, { backgroundColor: colors.card }]}
-                onPress={() => handleEditExpense(exp)}
-              >
-                <View>
-                  <Text style={[styles.expenseDesc, { color: colors.text }]}>{exp.description}</Text>
-                  <Text style={styles.expenseDate}>{new Date(exp.date).toLocaleDateString()}</Text>
-                </View>
-                <Text style={[styles.expenseAmount, { color: '#ff4444' }]}>-{currency}{exp.amount.toFixed(2)}</Text>
-              </TouchableOpacity>
-            ))}
+            {expenses.slice(0, displayCount).map((exp) => {
+              const category = categories.find(c => c.id === exp.categoryId);
+              return (
+                <TouchableOpacity 
+                  key={exp.id} 
+                  style={[styles.expenseRow, { backgroundColor: colors.card }]}
+                  onPress={() => handleEditExpense(exp)}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    {category ? (
+                      <View style={[styles.expenseIcon, { backgroundColor: category.color }]}>
+                        <Ionicons name={category.icon as any} size={20} color="#fff" />
+                      </View>
+                    ) : (
+                      <View style={[styles.expenseIcon, { backgroundColor: isDarkTheme ? '#333' : '#eee' }]}>
+                        <Ionicons name="cash-outline" size={20} color={colors.text} />
+                      </View>
+                    )}
+                    <View>
+                      <Text style={[styles.expenseDesc, { color: colors.text }]}>{exp.description}</Text>
+                      <Text style={styles.expenseDate}>{new Date(exp.date).toLocaleDateString()}</Text>
+                    </View>
+                  </View>
+                  <Text style={[styles.expenseAmount, { color: '#ff4444' }]}>-{currency}{exp.amount.toFixed(2)}</Text>
+                </TouchableOpacity>
+              );
+            })}
             
             {expenses.length > displayCount && (
               <TouchableOpacity 
@@ -266,6 +280,14 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
+  },
+  expenseIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
   expenseDesc: {
     fontSize: 16,

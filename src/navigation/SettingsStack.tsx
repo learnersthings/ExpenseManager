@@ -8,6 +8,7 @@ import SettingsScreen from '../screens/SettingsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import CurrencyScreen from '../screens/CurrencyScreen';
 import BudgetScreen from '../screens/BudgetScreen';
+import CategoriesScreen from '../screens/CategoriesScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -51,6 +52,11 @@ export default function SettingsStack() {
         name="Budget" 
         component={BudgetScreen} 
         options={{ title: 'Set Budget' }} 
+      />
+      <Stack.Screen 
+        name="Categories" 
+        component={CategoriesScreen} 
+        options={{ title: 'Manage Categories' }} 
       />
     </Stack.Navigator>
   );
