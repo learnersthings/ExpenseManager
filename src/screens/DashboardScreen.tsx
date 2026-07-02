@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext, Expense } from '../context/ExpenseContext';
 import AddExpenseModal from '../components/AddExpenseModal';
+import { formatAmount } from '../utils/format';
 
 export default function DashboardScreen() {
   const { colors } = useTheme();
@@ -19,6 +20,11 @@ export default function DashboardScreen() {
   const total = getCurrentMonthTotal();
   const prevTotal = getPreviousMonthTotal();
   const currentMonthName = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+
+  const currentYear = new Date().getFullYear();
+  const currentYearTotal = expenses
+    .filter(exp => new Date(exp.date).getFullYear() === currentYear)
+    .reduce((sum, exp) => sum + exp.amount, 0);
 
   // Calculate percentage diff
   let diffPercent = null;
@@ -97,10 +103,10 @@ export default function DashboardScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
 
-        {/* Current Month Card */}
+        {/* Expenses Summary Card */}
         <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000' }]}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardSubtitle}>{currentMonthName}</Text>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>Expense Summary</Text>
             {diffPercent !== null && (
               <View style={[styles.diffBadge, { backgroundColor: diffPrefix === '+' ? 'rgba(0,200,81,0.1)' : diffPrefix === '-' ? 'rgba(255,68,68,0.1)' : 'rgba(136,136,136,0.1)' }]}>
                 <Ionicons
@@ -116,29 +122,63 @@ export default function DashboardScreen() {
             )}
           </View>
 
-          <Text style={[styles.cardTitle, { color: colors.text }]}>Total Expenses</Text>
+          <View style={styles.summaryRow}>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>{currentMonthName}</Text>
+              <Text style={[styles.summaryAmount, { color: monthlyBudget > 0 && total > monthlyBudget ? '#ff4444' : colors.primary }]} numberOfLines={1} adjustsFontSizeToFit>
+                {currency}{formatAmount(total)}
+              </Text>
+              {monthlyBudget > 0 && (
+                <Text style={styles.budgetSubtext}>of {currency}{formatAmount(monthlyBudget)}</Text>
+              )}
+            </View>
 
-          <Text style={[styles.totalAmount, { color: monthlyBudget > 0 && total > monthlyBudget ? '#ff4444' : colors.primary }]}>
-            {currency}{total.toFixed(2)}
-            {monthlyBudget > 0 && <Text style={styles.budgetAmount}> / {currency}{monthlyBudget}</Text>}
-          </Text>
+            <View style={[styles.summaryDivider, { backgroundColor: isDarkTheme ? '#333' : '#eee' }]} />
+
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>{currentYear} Total</Text>
+              <Text style={[styles.summaryAmount, { color: colors.text }]} numberOfLines={1} adjustsFontSizeToFit>
+                {currency}{formatAmount(currentYearTotal)}
+              </Text>
+            </View>
+          </View>
 
           {monthlyBudget > 0 && (
             <View style={styles.progressSection}>
-              <View style={styles.progressHeader}>
-                <Text style={styles.progressLabel}>Budget Progress</Text>
-                <Text style={styles.progressPercent}>
-                  {String(((total / monthlyBudget) * 100).toFixed(2)).padStart(5, '0')}%
-                </Text>
+              <View style={{ marginBottom: 12 }}>
+                <View style={styles.progressHeader}>
+                  <Text style={styles.progressLabel}>Monthly Budget</Text>
+                  <Text style={styles.progressPercent}>
+                    {String(((total / monthlyBudget) * 100).toFixed(2)).padStart(5, '0')}%
+                  </Text>
+                </View>
+                <View style={styles.progressBarContainer}>
+                  <View style={[
+                    styles.progressBar,
+                    {
+                      backgroundColor: total > monthlyBudget ? '#ff4444' : colors.primary,
+                      width: `${Math.min((total / monthlyBudget) * 100, 100)}%`
+                    }
+                  ]} />
+                </View>
               </View>
-              <View style={styles.progressBarContainer}>
-                <View style={[
-                  styles.progressBar,
-                  {
-                    backgroundColor: total > monthlyBudget ? '#ff4444' : colors.primary,
-                    width: `${Math.min((total / monthlyBudget) * 100, 100)}%`
-                  }
-                ]} />
+
+              <View>
+                <View style={styles.progressHeader}>
+                  <Text style={styles.progressLabel}>Yearly Budget</Text>
+                  <Text style={styles.progressPercent}>
+                    {String(((currentYearTotal / (monthlyBudget * 12)) * 100).toFixed(2)).padStart(5, '0')}%
+                  </Text>
+                </View>
+                <View style={styles.progressBarContainer}>
+                  <View style={[
+                    styles.progressBar,
+                    {
+                      backgroundColor: currentYearTotal > (monthlyBudget * 12) ? '#ff4444' : colors.primary,
+                      width: `${Math.min((currentYearTotal / (monthlyBudget * 12)) * 100, 100)}%`
+                    }
+                  ]} />
+                </View>
               </View>
             </View>
           )}
@@ -224,7 +264,7 @@ export default function DashboardScreen() {
                       </View>
                     </View>
                   </View>
-                  <Text style={[styles.expenseAmount, { color: '#ff4444' }]}>-{currency}{exp.amount.toFixed(2)}</Text>
+                  <Text style={[styles.expenseAmount, { color: '#ff4444' }]}>-{currency}{formatAmount(exp.amount)}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -285,13 +325,6 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 8,
   },
-  cardSubtitle: {
-    fontSize: 14,
-    color: '#888',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    fontWeight: '600',
-  },
   diffBadge: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -305,18 +338,39 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
-    alignSelf: 'flex-start',
-  },
-  totalAmount: {
-    fontSize: 42,
     fontWeight: 'bold',
-    alignSelf: 'flex-start',
   },
-  budgetAmount: {
-    fontSize: 20,
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginTop: 15,
+  },
+  summaryItem: {
+    flex: 1,
+  },
+  summaryDivider: {
+    width: 1,
+    height: '70%',
+    alignSelf: 'center',
+    marginHorizontal: 15,
+  },
+  summaryLabel: {
+    fontSize: 12,
     color: '#888',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  summaryAmount: {
+    fontSize: 28,
+    fontWeight: 'bold',
+  },
+  budgetSubtext: {
+    fontSize: 13,
+    color: '#888',
+    marginTop: 4,
   },
   progressSection: {
     width: '100%',
