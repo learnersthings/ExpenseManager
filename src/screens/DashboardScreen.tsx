@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Alert } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Alert, TextInput } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext, Expense } from '../context/ExpenseContext';
 import AddExpenseModal from '../components/AddExpenseModal';
+import FilterModal from '../components/FilterModal';
 import { formatAmount } from '../utils/format';
 
 export default function DashboardScreen() {
@@ -16,6 +17,81 @@ export default function DashboardScreen() {
   const [displayCount, setDisplayCount] = useState(5);
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedExpenseIds, setSelectedExpenseIds] = useState<string[]>([]);
+
+  // Search and Filter States
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+  const [selectedYears, setSelectedYears] = useState<number[]>([]);
+  const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [selectedPaymentModeIds, setSelectedPaymentModeIds] = useState<string[]>([]);
+
+  // Compute available filter options dynamically from expenses
+  const availableYears = useMemo(() => {
+    const years = new Set(expenses.map(e => new Date(e.date).getFullYear()));
+    return Array.from(years).sort((a, b) => b - a);
+  }, [expenses]);
+
+  const availableMonths = useMemo(() => {
+    const months = new Set(expenses.map(e => new Date(e.date).getMonth()));
+    return Array.from(months).sort((a, b) => a - b);
+  }, [expenses]);
+
+  const availableCategories = useMemo(() => {
+    const usedIds = new Set(expenses.map(e => e.categoryId).filter(Boolean));
+    return categories.filter(c => usedIds.has(c.id));
+  }, [expenses, categories]);
+
+  const availablePaymentModes = useMemo(() => {
+    const usedIds = new Set(expenses.map(e => e.paymentModeId).filter(Boolean));
+    return paymentModes.filter(p => usedIds.has(p.id));
+  }, [expenses, paymentModes]);
+
+  // Derived filtered expenses
+  const filteredExpenses = useMemo(() => {
+    return expenses.filter(exp => {
+      // Filter by Search Query
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const cat = categories.find(c => c.id === exp.categoryId);
+        const pMode = paymentModes.find(m => m.id === exp.paymentModeId);
+        
+        const matchDesc = exp.description.toLowerCase().includes(query);
+        const matchAmt = formatAmount(exp.amount).includes(query);
+        const matchCat = cat && cat.name.toLowerCase().includes(query);
+        const matchMode = pMode && pMode.name.toLowerCase().includes(query);
+        const matchDate = new Date(exp.date).toLocaleDateString().toLowerCase().includes(query);
+
+        if (!matchDesc && !matchAmt && !matchCat && !matchMode && !matchDate) {
+          return false;
+        }
+      }
+
+      // Filter by Year
+      const expYear = new Date(exp.date).getFullYear();
+      if (selectedYears.length > 0 && !selectedYears.includes(expYear)) {
+        return false;
+      }
+
+      // Filter by Month
+      const expMonth = new Date(exp.date).getMonth();
+      if (selectedMonths.length > 0 && !selectedMonths.includes(expMonth)) {
+        return false;
+      }
+
+      // Filter by Category
+      if (selectedCategoryIds.length > 0 && (!exp.categoryId || !selectedCategoryIds.includes(exp.categoryId))) {
+        return false;
+      }
+
+      // Filter by Payment Mode
+      if (selectedPaymentModeIds.length > 0 && (!exp.paymentModeId || !selectedPaymentModeIds.includes(exp.paymentModeId))) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [expenses, searchQuery, selectedYears, selectedMonths, selectedCategoryIds, selectedPaymentModeIds, categories, paymentModes]);
 
   const total = getCurrentMonthTotal();
   const prevTotal = getPreviousMonthTotal();
@@ -71,8 +147,8 @@ export default function DashboardScreen() {
   };
 
   const handleSelectAll = () => {
-    const currentlyDisplayedIds = expenses.slice(0, displayCount).map(e => e.id);
-    if (selectedExpenseIds.length === currentlyDisplayedIds.length) {
+    const currentlyDisplayedIds = filteredExpenses.slice(0, displayCount).map(e => e.id);
+    if (selectedExpenseIds.length === currentlyDisplayedIds.length && currentlyDisplayedIds.length > 0) {
       setSelectedExpenseIds([]);
     } else {
       setSelectedExpenseIds(currentlyDisplayedIds);
@@ -191,7 +267,6 @@ export default function DashboardScreen() {
           )}
         </View>
 
-        {/* Recent Expenses List Preview */}
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Activity</Text>
           {expenses.length > 0 && (
@@ -206,11 +281,55 @@ export default function DashboardScreen() {
           )}
         </View>
 
+        {expenses.length > 0 && (
+          <View style={styles.searchFilterContainer}>
+            <View style={[styles.searchBar, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', borderColor: isDarkTheme ? '#333' : '#e0e0e0' }]}>
+              <Ionicons name="search" size={20} color={isDarkTheme ? '#888' : '#aaa'} style={styles.searchIcon} />
+              <TextInput
+                style={[styles.searchInput, { color: colors.text }]}
+                placeholder="Search expenses..."
+                placeholderTextColor={isDarkTheme ? '#888' : '#aaa'}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={() => setSearchQuery('')}>
+                  <Ionicons name="close-circle" size={20} color={isDarkTheme ? '#888' : '#aaa'} />
+                </TouchableOpacity>
+              )}
+            </View>
+            <TouchableOpacity 
+              style={[styles.filterButton, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', borderColor: isDarkTheme ? '#333' : '#e0e0e0' }]}
+              onPress={() => setIsFilterModalVisible(true)}
+            >
+              <Ionicons 
+                name="options-outline" 
+                size={22} 
+                color={(selectedYears.length > 0 || selectedMonths.length > 0 || selectedCategoryIds.length > 0 || selectedPaymentModeIds.length > 0) ? colors.primary : colors.text} 
+              />
+              {(selectedYears.length > 0 || selectedMonths.length > 0 || selectedCategoryIds.length > 0 || selectedPaymentModeIds.length > 0) && (
+                <View style={[styles.filterBadge, { backgroundColor: colors.primary }]} />
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {expenses.length > 0 && (searchQuery.length > 0 || selectedYears.length > 0 || selectedMonths.length > 0 || selectedCategoryIds.length > 0 || selectedPaymentModeIds.length > 0) && (
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingHorizontal: 4 }}>
+            <Text style={{ color: '#888', fontSize: 13, fontWeight: '500' }}>
+              Showing {filteredExpenses.length} result{filteredExpenses.length !== 1 ? 's' : ''}
+            </Text>
+            <Text style={{ color: colors.text, fontSize: 14, fontWeight: 'bold' }}>
+              Total: {currency}{formatAmount(filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0))}
+            </Text>
+          </View>
+        )}
+
         {isSelectMode && (
           <View style={styles.bulkActions}>
             <TouchableOpacity onPress={handleSelectAll}>
               <Text style={{ color: colors.primary, fontWeight: '600' }}>
-                {selectedExpenseIds.length === expenses.slice(0, displayCount).length ? 'Deselect All' : 'Select All'}
+                {selectedExpenseIds.length === filteredExpenses.slice(0, displayCount).length && filteredExpenses.length > 0 ? 'Deselect All' : 'Select All'}
               </Text>
             </TouchableOpacity>
 
@@ -230,9 +349,13 @@ export default function DashboardScreen() {
           <View style={styles.emptyState}>
             <Text style={styles.emptyStateText}>No expenses yet. Add one!</Text>
           </View>
+        ) : filteredExpenses.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>No expenses match your search or filters.</Text>
+          </View>
         ) : (
           <>
-            {expenses.slice(0, displayCount).map((exp) => {
+            {filteredExpenses.slice(0, displayCount).map((exp) => {
               const category = categories.find(c => c.id === exp.categoryId);
               const paymentMode = paymentModes.find(m => m.id === exp.paymentModeId);
 
@@ -276,7 +399,7 @@ export default function DashboardScreen() {
               );
             })}
 
-            {expenses.length > displayCount && (
+            {filteredExpenses.length > displayCount && (
               <TouchableOpacity
                 style={[styles.loadMoreButton, { backgroundColor: isDarkTheme ? '#2a2a2a' : '#f0f0f0' }]}
                 onPress={() => setDisplayCount(prev => prev + 100)}
@@ -302,6 +425,23 @@ export default function DashboardScreen() {
         visible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
         expenseToEdit={selectedExpense}
+      />
+
+      <FilterModal
+        visible={isFilterModalVisible}
+        onClose={() => setIsFilterModalVisible(false)}
+        availableYears={availableYears}
+        availableMonths={availableMonths}
+        availableCategories={availableCategories}
+        availablePaymentModes={availablePaymentModes}
+        selectedYears={selectedYears}
+        setSelectedYears={setSelectedYears}
+        selectedMonths={selectedMonths}
+        setSelectedMonths={setSelectedMonths}
+        selectedCategoryIds={selectedCategoryIds}
+        setSelectedCategoryIds={setSelectedCategoryIds}
+        selectedPaymentModeIds={selectedPaymentModeIds}
+        setSelectedPaymentModeIds={setSelectedPaymentModeIds}
       />
 
     </SafeAreaView>
@@ -420,6 +560,45 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
+  },
+  searchFilterContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  searchBar: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 44,
+    marginRight: 10,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    height: '100%',
+    fontSize: 16,
+  },
+  filterButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filterBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   bulkActions: {
     flexDirection: 'row',
