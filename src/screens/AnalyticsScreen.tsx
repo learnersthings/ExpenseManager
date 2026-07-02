@@ -142,10 +142,6 @@ export default function AnalyticsScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
 
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>Analytics</Text>
-        </View>
-
         {/* Filter Pills */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterContainer}>
           {(['This Month', 'Last Month', 'This Year', 'All Time'] as TimeFilter[]).map(filter => (
@@ -163,7 +159,7 @@ export default function AnalyticsScreen() {
               <Text style={{ color: activeFilter === filter ? '#fff' : colors.text, fontWeight: '600' }}>{filter}</Text>
             </TouchableOpacity>
           ))}
-          
+
           {/* Custom Filter Button */}
           <TouchableOpacity
             style={[
