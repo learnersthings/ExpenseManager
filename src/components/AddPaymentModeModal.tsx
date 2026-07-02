@@ -18,7 +18,7 @@ interface AddPaymentModeModalProps {
 export default function AddPaymentModeModal({ visible, onClose, modeToEdit }: AddPaymentModeModalProps) {
   const { colors } = useTheme();
   const { isDarkTheme } = useThemeContext();
-  const { addPaymentMode, updatePaymentMode, deletePaymentMode } = useExpenseContext();
+  const { paymentModes, addPaymentMode, updatePaymentMode, deletePaymentMode } = useExpenseContext();
   const insets = useSafeAreaInsets();
 
   const [name, setName] = useState('');
@@ -48,8 +48,18 @@ export default function AddPaymentModeModal({ visible, onClose, modeToEdit }: Ad
   const handleSave = async () => {
     setError('');
 
-    if (!name.trim()) {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
       setError('Please enter a payment mode name.');
+      return;
+    }
+
+    const nameExists = paymentModes.some(
+      (p) => p.name.toLowerCase() === trimmedName.toLowerCase() && p.id !== modeToEdit?.id
+    );
+
+    if (nameExists) {
+      setError('A payment mode with this name already exists.');
       return;
     }
 

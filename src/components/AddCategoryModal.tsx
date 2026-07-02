@@ -18,7 +18,7 @@ interface AddCategoryModalProps {
 export default function AddCategoryModal({ visible, onClose, categoryToEdit }: AddCategoryModalProps) {
   const { colors } = useTheme();
   const { isDarkTheme } = useThemeContext();
-  const { addCategory, updateCategory, deleteCategory } = useExpenseContext();
+  const { categories, addCategory, updateCategory, deleteCategory } = useExpenseContext();
   const insets = useSafeAreaInsets();
 
   const [name, setName] = useState('');
@@ -48,8 +48,18 @@ export default function AddCategoryModal({ visible, onClose, categoryToEdit }: A
   const handleSave = async () => {
     setError('');
 
-    if (!name.trim()) {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
       setError('Please enter a category name.');
+      return;
+    }
+
+    const nameExists = categories.some(
+      (c) => c.name.toLowerCase() === trimmedName.toLowerCase() && c.id !== categoryToEdit?.id
+    );
+
+    if (nameExists) {
+      setError('A category with this name already exists.');
       return;
     }
 
