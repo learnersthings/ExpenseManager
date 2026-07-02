@@ -25,7 +25,17 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
   const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
   const [paymentModeId, setPaymentModeId] = useState<string | undefined>(undefined);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [error, setError] = useState('');
+  const [amountError, setAmountError] = useState('');
+  const [descriptionError, setDescriptionError] = useState('');
+  const [categoryError, setCategoryError] = useState('');
+  const [paymentModeError, setPaymentModeError] = useState('');
+
+  const clearErrors = () => {
+    setAmountError('');
+    setDescriptionError('');
+    setCategoryError('');
+    setPaymentModeError('');
+  };
 
   // Use effect to populate fields when editing
   React.useEffect(() => {
@@ -43,23 +53,34 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
         setCategoryId(undefined);
         setPaymentModeId(undefined);
       }
-      setError('');
+      clearErrors();
     }
   }, [visible, expenseToEdit]);
 
   const placeholderColor = isDarkTheme ? '#888' : '#aaa';
 
   const handleSave = async () => {
-    setError('');
-    
+    clearErrors();
+    let hasError = false;
+
     if (!amount.trim() || isNaN(Number(amount))) {
-      setError('Please enter a valid amount.');
-      return;
+      setAmountError('Please enter a valid amount.');
+      hasError = true;
     }
     if (!description.trim()) {
-      setError('Please enter a description.');
-      return;
+      setDescriptionError('Please enter a description.');
+      hasError = true;
     }
+    if (!categoryId) {
+      setCategoryError('Please select a category.');
+      hasError = true;
+    }
+    if (!paymentModeId) {
+      setPaymentModeError('Please select a payment mode.');
+      hasError = true;
+    }
+
+    if (hasError) return;
 
     try {
       if (expenseToEdit) {
@@ -69,7 +90,7 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
       }
       onClose();
     } catch (e: any) {
-      setError(e.message || 'Failed to save expense.');
+      Alert.alert('Error', e.message || 'Failed to save expense.');
     }
   };
 
@@ -80,15 +101,15 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
         "Are you sure you want to delete this expense? This action cannot be undone.",
         [
           { text: "Cancel", style: "cancel" },
-          { 
-            text: "Delete", 
+          {
+            text: "Delete",
             style: "destructive",
             onPress: async () => {
               try {
                 await deleteExpense(expenseToEdit.id);
                 onClose();
               } catch (e: any) {
-                setError(e.message || 'Failed to delete expense.');
+                Alert.alert('Error', e.message || 'Failed to delete expense.');
               }
             }
           }
@@ -108,8 +129,8 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.modalOverlay}>
-          <KeyboardAvoidingView 
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             style={[styles.modalContent, { backgroundColor: colors.background, paddingBottom: Math.max(24, insets.bottom + 16) }]}
           >
             <View style={styles.header}>
@@ -121,8 +142,6 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
               </TouchableOpacity>
             </View>
 
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
             <View style={styles.inputWrapper}>
               <Text style={styles.label}>Amount</Text>
               <TextInput
@@ -131,24 +150,29 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
                 placeholderTextColor={placeholderColor}
                 keyboardType="numeric"
                 value={amount}
-                onChangeText={(text) => { setAmount(text); setError(''); }}
+                onChangeText={(text) => { setAmount(text); setAmountError(''); }}
               />
+              {amountError ? <Text style={styles.fieldErrorText}>{amountError}</Text> : null}
             </View>
 
             <View style={styles.inputWrapper}>
               <Text style={styles.label}>Description</Text>
               <TextInput
-                style={[styles.input, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: isDarkTheme ? '#333' : '#e0e0e0' }]}
-                placeholder="e.g. Groceries"
+                style={[styles.input, styles.textArea, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: isDarkTheme ? '#333' : '#e0e0e0' }]}
+                placeholder="Description"
                 placeholderTextColor={placeholderColor}
                 value={description}
-                onChangeText={(text) => { setDescription(text); setError(''); }}
+                onChangeText={(text) => { setDescription(text); setDescriptionError(''); }}
+                multiline
+                numberOfLines={3}
+                textAlignVertical="top"
               />
+              {descriptionError ? <Text style={styles.fieldErrorText}>{descriptionError}</Text> : null}
             </View>
 
             <View style={styles.inputWrapper}>
               <Text style={styles.label}>Date</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.dateButton, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', borderColor: isDarkTheme ? '#333' : '#e0e0e0' }]}
                 onPress={() => setShowDatePicker(true)}
               >
@@ -161,26 +185,21 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
               <View style={styles.inputWrapper}>
                 <Text style={styles.label}>Category</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
-                  <TouchableOpacity
-                    style={[styles.categoryChip, { backgroundColor: !categoryId ? colors.primary : isDarkTheme ? '#1e1e1e' : '#f5f5f5' }]}
-                    onPress={() => setCategoryId(undefined)}
-                  >
-                    <Text style={{ color: !categoryId ? '#fff' : colors.text, fontWeight: '600' }}>None</Text>
-                  </TouchableOpacity>
                   {categories.map((cat) => (
                     <TouchableOpacity
                       key={cat.id}
                       style={[
-                        styles.categoryChip, 
+                        styles.categoryChip,
                         { backgroundColor: categoryId === cat.id ? cat.color : isDarkTheme ? '#1e1e1e' : '#f5f5f5' }
                       ]}
-                      onPress={() => setCategoryId(cat.id)}
+                      onPress={() => { setCategoryId(cat.id); setCategoryError(''); }}
                     >
                       <Ionicons name={cat.icon as any} size={16} color={categoryId === cat.id ? '#fff' : cat.color} style={{ marginRight: 6 }} />
                       <Text style={{ color: categoryId === cat.id ? '#fff' : colors.text, fontWeight: '600' }}>{cat.name}</Text>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
+                {categoryError ? <Text style={styles.fieldErrorText}>{categoryError}</Text> : null}
               </View>
             )}
 
@@ -188,26 +207,21 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
               <View style={styles.inputWrapper}>
                 <Text style={styles.label}>Payment Mode</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
-                  <TouchableOpacity
-                    style={[styles.categoryChip, { backgroundColor: !paymentModeId ? colors.primary : isDarkTheme ? '#1e1e1e' : '#f5f5f5' }]}
-                    onPress={() => setPaymentModeId(undefined)}
-                  >
-                    <Text style={{ color: !paymentModeId ? '#fff' : colors.text, fontWeight: '600' }}>None</Text>
-                  </TouchableOpacity>
                   {paymentModes.map((mode) => (
                     <TouchableOpacity
                       key={mode.id}
                       style={[
-                        styles.categoryChip, 
+                        styles.categoryChip,
                         { backgroundColor: paymentModeId === mode.id ? mode.color : isDarkTheme ? '#1e1e1e' : '#f5f5f5' }
                       ]}
-                      onPress={() => setPaymentModeId(mode.id)}
+                      onPress={() => { setPaymentModeId(mode.id); setPaymentModeError(''); }}
                     >
                       <Ionicons name={mode.icon as any} size={16} color={paymentModeId === mode.id ? '#fff' : mode.color} style={{ marginRight: 6 }} />
                       <Text style={{ color: paymentModeId === mode.id ? '#fff' : colors.text, fontWeight: '600' }}>{mode.name}</Text>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
+                {paymentModeError ? <Text style={styles.fieldErrorText}>{paymentModeError}</Text> : null}
               </View>
             )}
 
@@ -273,6 +287,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '600',
   },
+  fieldErrorText: {
+    color: '#ff4444',
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
+  },
   inputWrapper: {
     marginBottom: 20,
   },
@@ -289,6 +309,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
+  },
+  textArea: {
+    height: 80,
+    paddingTop: 12,
+    paddingBottom: 12,
   },
   dateButton: {
     height: 52,

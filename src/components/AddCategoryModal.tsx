@@ -133,7 +133,7 @@ export default function AddCategoryModal({ visible, onClose, categoryToEdit }: A
                 <Text style={styles.label}>Category Name</Text>
                 <TextInput
                   style={[styles.input, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: isDarkTheme ? '#333' : '#e0e0e0' }]}
-                  placeholder="e.g. Groceries"
+                  placeholder="Category Name"
                   placeholderTextColor={placeholderColor}
                   value={name}
                   onChangeText={(text) => { setName(text); setError(''); }}
@@ -142,7 +142,7 @@ export default function AddCategoryModal({ visible, onClose, categoryToEdit }: A
 
               <View style={styles.inputWrapper}>
                 <Text style={styles.label}>Select Color</Text>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[styles.pickerButton, { borderColor: isDarkTheme ? '#333' : '#e0e0e0', backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5' }]}
                   onPress={() => setColorPickerVisible(true)}
                 >
@@ -160,7 +160,7 @@ export default function AddCategoryModal({ visible, onClose, categoryToEdit }: A
 
               <View style={styles.inputWrapper}>
                 <Text style={styles.label}>Select Icon</Text>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={[styles.pickerButton, { borderColor: isDarkTheme ? '#333' : '#e0e0e0', backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5' }]}
                   onPress={() => setIconPickerVisible(true)}
                 >
@@ -198,18 +198,18 @@ export default function AddCategoryModal({ visible, onClose, categoryToEdit }: A
         </View>
       </TouchableWithoutFeedback>
 
-      <ColorPickerModal 
-        visible={colorPickerVisible} 
-        onClose={() => setColorPickerVisible(false)} 
-        color={color} 
-        onSelect={setColor} 
+      <ColorPickerModal
+        visible={colorPickerVisible}
+        onClose={() => setColorPickerVisible(false)}
+        color={color}
+        onSelect={setColor}
       />
-      
-      <IconPickerModal 
-        visible={iconPickerVisible} 
-        onClose={() => setIconPickerVisible(false)} 
-        icon={icon} 
-        onSelect={setIcon} 
+
+      <IconPickerModal
+        visible={iconPickerVisible}
+        onClose={() => setIconPickerVisible(false)}
+        icon={icon}
+        onSelect={setIcon}
       />
     </Modal>
   );
