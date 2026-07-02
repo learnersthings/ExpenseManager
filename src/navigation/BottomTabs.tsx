@@ -27,7 +27,7 @@ export default function BottomTabs() {
         headerTitle: (props) => {
           let iconName: keyof typeof Ionicons.glyphMap;
           if (route.name === 'Home') iconName = 'home';
-          else if (route.name === 'Dashboard') iconName = 'pie-chart';
+          else if (route.name === 'Dashboard') iconName = 'grid';
           else if (route.name === 'Analytics') iconName = 'stats-chart';
           else if (route.name === 'Settings') iconName = 'settings';
           else iconName = 'ellipse';
@@ -52,7 +52,7 @@ export default function BottomTabs() {
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Dashboard') {
-            iconName = focused ? 'pie-chart' : 'pie-chart-outline';
+            iconName = focused ? 'grid' : 'grid-outline';
           } else if (route.name === 'Analytics') {
             iconName = focused ? 'stats-chart' : 'stats-chart-outline';
           } else if (route.name === 'Settings') {
