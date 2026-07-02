@@ -5,15 +5,13 @@ import { useTheme } from '@react-navigation/native';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext, PaymentMode } from '../context/ExpenseContext';
 import { Ionicons } from '@expo/vector-icons';
+import { PRESET_COLORS, PRESET_ICONS } from '../constants/presets';
 
 interface AddPaymentModeModalProps {
   visible: boolean;
   onClose: () => void;
   modeToEdit?: PaymentMode | null;
 }
-
-const PRESET_COLORS = ['#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#F44336', '#E91E63', '#673AB7', '#3F51B5', '#00BCD4', '#009688', '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#795548', '#9E9E9E', '#607D8B'];
-const PRESET_ICONS = ['cash', 'card', 'wallet', 'business', 'phone-portrait', 'logo-bitcoin', 'logo-apple', 'logo-google', 'qr-code', 'swap-horizontal'];
 
 export default function AddPaymentModeModal({ visible, onClose, modeToEdit }: AddPaymentModeModalProps) {
   const { colors } = useTheme();
@@ -45,7 +43,7 @@ export default function AddPaymentModeModal({ visible, onClose, modeToEdit }: Ad
 
   const handleSave = async () => {
     setError('');
-    
+
     if (!name.trim()) {
       setError('Please enter a payment mode name.');
       return;
@@ -70,8 +68,8 @@ export default function AddPaymentModeModal({ visible, onClose, modeToEdit }: Ad
         "Are you sure you want to delete this payment mode? This action cannot be undone.",
         [
           { text: "Cancel", style: "cancel" },
-          { 
-            text: "Delete", 
+          {
+            text: "Delete",
             style: "destructive",
             onPress: async () => {
               try {
@@ -91,8 +89,8 @@ export default function AddPaymentModeModal({ visible, onClose, modeToEdit }: Ad
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.modalOverlay}>
-          <KeyboardAvoidingView 
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             style={[styles.modalContent, { backgroundColor: colors.background, paddingBottom: Math.max(24, insets.bottom + 16) }]}
           >
             <View style={styles.header}>
@@ -119,30 +117,36 @@ export default function AddPaymentModeModal({ visible, onClose, modeToEdit }: Ad
 
             <View style={styles.inputWrapper}>
               <Text style={styles.label}>Select Color</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.colorScroll}>
-                {PRESET_COLORS.map(c => (
-                  <TouchableOpacity 
-                    key={c} 
-                    style={[styles.colorSwatch, { backgroundColor: c, borderWidth: color === c ? 3 : 0, borderColor: colors.text }]} 
-                    onPress={() => setColor(c)} 
-                  />
-                ))}
-              </ScrollView>
+              <View style={{ height: 180, borderWidth: 1, borderColor: isDarkTheme ? '#333' : '#e0e0e0', borderRadius: 12, padding: 8 }}>
+                <ScrollView contentContainerStyle={styles.gridContainer} nestedScrollEnabled>
+                  {PRESET_COLORS.map(c => (
+                    <View key={c} style={styles.gridItem}>
+                      <TouchableOpacity
+                        style={[styles.colorSwatch, { backgroundColor: c, borderWidth: color === c ? 3 : (c === '#ffffff' ? 1 : 0), borderColor: color === c ? colors.text : '#ddd' }]}
+                        onPress={() => setColor(c)}
+                      />
+                    </View>
+                  ))}
+                </ScrollView>
+              </View>
             </View>
 
             <View style={styles.inputWrapper}>
               <Text style={styles.label}>Select Icon</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.colorScroll}>
-                {PRESET_ICONS.map(i => (
-                  <TouchableOpacity 
-                    key={i} 
-                    style={[styles.iconSwatch, { backgroundColor: icon === i ? colors.primary : isDarkTheme ? '#1e1e1e' : '#f5f5f5' }]} 
-                    onPress={() => setIcon(i)}
-                  >
-                    <Ionicons name={i as any} size={24} color={icon === i ? '#fff' : colors.text} />
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+              <View style={{ height: 180, borderWidth: 1, borderColor: isDarkTheme ? '#333' : '#e0e0e0', borderRadius: 12, padding: 8 }}>
+                <ScrollView contentContainerStyle={styles.gridContainer} nestedScrollEnabled>
+                  {PRESET_ICONS.map(i => (
+                    <View key={i} style={styles.gridItem}>
+                      <TouchableOpacity
+                        style={[styles.iconSwatch, { backgroundColor: icon === i ? colors.primary : isDarkTheme ? '#1e1e1e' : '#f5f5f5' }]}
+                        onPress={() => setIcon(i)}
+                      >
+                        <Ionicons name={i as any} size={24} color={icon === i ? '#fff' : colors.text} />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </ScrollView>
+              </View>
             </View>
 
             <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={handleSave}>
@@ -214,20 +218,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
   },
-  colorScroll: {
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-start',
     paddingVertical: 8,
+  },
+  gridItem: {
+    width: '16.66%',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   colorSwatch: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    marginRight: 12,
   },
   iconSwatch: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    marginRight: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
