@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, SafeAreaView, Platform, StatusBar } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@react-navigation/native';
 import { useThemeContext } from '../context/ThemeContext';
@@ -11,16 +11,16 @@ interface FilterModalProps {
   availableMonths: number[];
   availableCategories: { id: string; name: string }[];
   availablePaymentModes: { id: string; name: string }[];
-  
+
   selectedYears: number[];
   setSelectedYears: (val: number[]) => void;
-  
+
   selectedMonths: number[];
   setSelectedMonths: (val: number[]) => void;
-  
+
   selectedCategoryIds: string[];
   setSelectedCategoryIds: (val: string[]) => void;
-  
+
   selectedPaymentModeIds: string[];
   setSelectedPaymentModeIds: (val: string[]) => void;
 }
@@ -85,10 +85,10 @@ export default function FilterModal(props: FilterModalProps) {
 
   return (
     <Modal visible={props.visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={props.onClose}>
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
         <View style={[styles.header, { borderBottomColor: isDarkTheme ? '#333' : '#eee' }]}>
           <TouchableOpacity onPress={handleClearAll} style={styles.headerButton}>
-            <Text style={{ color: colors.text, fontSize: 16 }}>Clear</Text>
+            <Text style={{ color: '#ff4444', fontSize: 16, fontWeight: 'bold' }}>Clear</Text>
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: colors.text }]}>Filters</Text>
           <TouchableOpacity onPress={props.onClose} style={styles.headerButton}>
@@ -97,7 +97,7 @@ export default function FilterModal(props: FilterModalProps) {
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          
+
           {/* Years */}
           {props.availableYears.length > 0 && (
             <View style={styles.section}>
