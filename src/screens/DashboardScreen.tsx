@@ -10,7 +10,7 @@ import { formatAmount } from '../utils/format';
 export default function DashboardScreen() {
   const { colors } = useTheme();
   const { isDarkTheme } = useThemeContext();
-  const { getCurrentMonthTotal, getPreviousMonthTotal, expenses, categories, paymentModes, currency, monthlyBudget, bulkDeleteExpenses } = useExpenseContext();
+  const { getCurrentMonthTotal, getPreviousMonthTotal, expenses, categories, paymentModes, currency, monthlyBudget, yearlyBudget, bulkDeleteExpenses, showMonthlyBudget, showYearlyBudget } = useExpenseContext();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [displayCount, setDisplayCount] = useState(5);
@@ -137,49 +137,56 @@ export default function DashboardScreen() {
 
             <View style={styles.summaryItem}>
               <Text style={styles.summaryLabel}>{currentYear} Total</Text>
-              <Text style={[styles.summaryAmount, { color: colors.text }]} numberOfLines={1} adjustsFontSizeToFit>
+              <Text style={[styles.summaryAmount, { color: yearlyBudget > 0 && currentYearTotal > yearlyBudget ? '#ff4444' : colors.text }]} numberOfLines={1} adjustsFontSizeToFit>
                 {currency}{formatAmount(currentYearTotal)}
               </Text>
+              {yearlyBudget > 0 && (
+                <Text style={styles.budgetSubtext}>of {currency}{formatAmount(yearlyBudget)}</Text>
+              )}
             </View>
           </View>
 
-          {monthlyBudget > 0 && (
+          {((monthlyBudget > 0 && showMonthlyBudget) || (yearlyBudget > 0 && showYearlyBudget)) && (
             <View style={styles.progressSection}>
-              <View style={{ marginBottom: 12 }}>
-                <View style={styles.progressHeader}>
-                  <Text style={styles.progressLabel}>Monthly Budget</Text>
-                  <Text style={styles.progressPercent}>
-                    {String(((total / monthlyBudget) * 100).toFixed(2)).padStart(5, '0')}%
-                  </Text>
+              {showMonthlyBudget && monthlyBudget > 0 && (
+                <View style={{ marginBottom: (showYearlyBudget && yearlyBudget > 0) ? 12 : 0 }}>
+                  <View style={styles.progressHeader}>
+                    <Text style={styles.progressLabel}>Monthly Budget</Text>
+                    <Text style={styles.progressPercent}>
+                      {String(((total / monthlyBudget) * 100).toFixed(2)).padStart(5, '0')}%
+                    </Text>
+                  </View>
+                  <View style={styles.progressBarContainer}>
+                    <View style={[
+                      styles.progressBar,
+                      {
+                        backgroundColor: total > monthlyBudget ? '#ff4444' : colors.primary,
+                        width: `${Math.min((total / monthlyBudget) * 100, 100)}%`
+                      }
+                    ]} />
+                  </View>
                 </View>
-                <View style={styles.progressBarContainer}>
-                  <View style={[
-                    styles.progressBar,
-                    {
-                      backgroundColor: total > monthlyBudget ? '#ff4444' : colors.primary,
-                      width: `${Math.min((total / monthlyBudget) * 100, 100)}%`
-                    }
-                  ]} />
-                </View>
-              </View>
+              )}
 
-              <View>
-                <View style={styles.progressHeader}>
-                  <Text style={styles.progressLabel}>Yearly Budget</Text>
-                  <Text style={styles.progressPercent}>
-                    {String(((currentYearTotal / (monthlyBudget * 12)) * 100).toFixed(2)).padStart(5, '0')}%
-                  </Text>
+              {showYearlyBudget && yearlyBudget > 0 && (
+                <View>
+                  <View style={styles.progressHeader}>
+                    <Text style={styles.progressLabel}>Yearly Budget</Text>
+                    <Text style={styles.progressPercent}>
+                      {String(((currentYearTotal / yearlyBudget) * 100).toFixed(2)).padStart(5, '0')}%
+                    </Text>
+                  </View>
+                  <View style={styles.progressBarContainer}>
+                    <View style={[
+                      styles.progressBar,
+                      {
+                        backgroundColor: currentYearTotal > yearlyBudget ? '#ff4444' : colors.primary,
+                        width: `${Math.min((currentYearTotal / yearlyBudget) * 100, 100)}%`
+                      }
+                    ]} />
+                  </View>
                 </View>
-                <View style={styles.progressBarContainer}>
-                  <View style={[
-                    styles.progressBar,
-                    {
-                      backgroundColor: currentYearTotal > (monthlyBudget * 12) ? '#ff4444' : colors.primary,
-                      width: `${Math.min((currentYearTotal / (monthlyBudget * 12)) * 100, 100)}%`
-                    }
-                  ]} />
-                </View>
-              </View>
+              )}
             </View>
           )}
         </View>

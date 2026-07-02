@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, Switch } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext } from '../context/ExpenseContext';
@@ -7,7 +7,7 @@ import { useExpenseContext } from '../context/ExpenseContext';
 export default function BudgetScreen({ navigation }: any) {
   const { colors } = useTheme();
   const { isDarkTheme } = useThemeContext();
-  const { currency, monthlyBudget, yearlyBudget, updateBudgets } = useExpenseContext();
+  const { currency, monthlyBudget, yearlyBudget, updateBudgets, showMonthlyBudget, showYearlyBudget, toggleShowMonthlyBudget, toggleShowYearlyBudget } = useExpenseContext();
 
   const [monthVal, setMonthVal] = useState(monthlyBudget > 0 ? monthlyBudget.toString() : '');
   const [yearVal, setYearVal] = useState(yearlyBudget > 0 ? yearlyBudget.toString() : '');
@@ -76,6 +76,28 @@ export default function BudgetScreen({ navigation }: any) {
               />
             </View>
 
+            <View style={styles.toggleContainer}>
+              <Text style={[styles.label, { color: colors.text, marginBottom: 0 }]}>Show Monthly Budget on Dashboard</Text>
+              <Switch
+                trackColor={{ false: '#767577', true: colors.primary }}
+                thumbColor={showMonthlyBudget ? '#ffffff' : '#f4f3f4'}
+                ios_backgroundColor="#3e3e3e"
+                onValueChange={toggleShowMonthlyBudget}
+                value={showMonthlyBudget}
+              />
+            </View>
+
+            <View style={styles.toggleContainer}>
+              <Text style={[styles.label, { color: colors.text, marginBottom: 0 }]}>Show Yearly Budget on Dashboard</Text>
+              <Switch
+                trackColor={{ false: '#767577', true: colors.primary }}
+                thumbColor={showYearlyBudget ? '#ffffff' : '#f4f3f4'}
+                ios_backgroundColor="#3e3e3e"
+                onValueChange={toggleShowYearlyBudget}
+                value={showYearlyBudget}
+              />
+            </View>
+
             <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={handleSave}>
               <Text style={styles.saveButtonText}>Save Budgets</Text>
             </TouchableOpacity>
@@ -127,6 +149,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   saveButton: {
     height: 52,

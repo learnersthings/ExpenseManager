@@ -32,6 +32,8 @@ interface ExpenseContextType {
   currency: string;
   monthlyBudget: number;
   yearlyBudget: number;
+  showMonthlyBudget: boolean;
+  showYearlyBudget: boolean;
   addExpense: (amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => Promise<void>;
   updateExpense: (id: string, amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
@@ -49,6 +51,8 @@ interface ExpenseContextType {
 
   updateCurrency: (newCurrency: string) => Promise<void>;
   updateBudgets: (monthly: number, yearly: number) => Promise<void>;
+  toggleShowMonthlyBudget: (val: boolean) => Promise<void>;
+  toggleShowYearlyBudget: (val: boolean) => Promise<void>;
   getCurrentMonthTotal: () => number;
   getPreviousMonthTotal: () => number;
   refreshExpenseData: () => Promise<void>;
@@ -62,6 +66,8 @@ const ExpenseContext = createContext<ExpenseContextType>({
   currency: '$',
   monthlyBudget: 0,
   yearlyBudget: 0,
+  showMonthlyBudget: true,
+  showYearlyBudget: true,
   addExpense: async () => {},
   updateExpense: async () => {},
   deleteExpense: async () => {},
@@ -75,6 +81,8 @@ const ExpenseContext = createContext<ExpenseContextType>({
   bulkImport: async () => {},
   updateCurrency: async () => {},
   updateBudgets: async () => {},
+  toggleShowMonthlyBudget: async () => {},
+  toggleShowYearlyBudget: async () => {},
   getCurrentMonthTotal: () => 0,
   getPreviousMonthTotal: () => 0,
   refreshExpenseData: async () => {},
@@ -88,6 +96,8 @@ const CATEGORIES_KEY = '@app_categories';
 const PAYMENT_MODES_KEY = '@app_payment_modes';
 const CURRENCY_KEY = '@app_currency';
 const BUDGET_KEY = '@app_budgets';
+const SHOW_MONTHLY_BUDGET_KEY = '@app_show_monthly_budget';
+const SHOW_YEARLY_BUDGET_KEY = '@app_show_yearly_budget';
 
 export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -96,6 +106,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [currency, setCurrency] = useState('$');
   const [monthlyBudget, setMonthlyBudget] = useState(0);
   const [yearlyBudget, setYearlyBudget] = useState(0);
+  const [showMonthlyBudget, setShowMonthlyBudget] = useState(true);
+  const [showYearlyBudget, setShowYearlyBudget] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuthContext();
 
@@ -104,6 +116,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const paymentModesStorageKey = user ? `${PAYMENT_MODES_KEY}_${user.email}` : PAYMENT_MODES_KEY;
   const currencyStorageKey = user ? `${CURRENCY_KEY}_${user.email}` : CURRENCY_KEY;
   const budgetStorageKey = user ? `${BUDGET_KEY}_${user.email}` : BUDGET_KEY;
+  const showMonthlyBudgetStorageKey = user ? `${SHOW_MONTHLY_BUDGET_KEY}_${user.email}` : SHOW_MONTHLY_BUDGET_KEY;
+  const showYearlyBudgetStorageKey = user ? `${SHOW_YEARLY_BUDGET_KEY}_${user.email}` : SHOW_YEARLY_BUDGET_KEY;
 
   const loadData = async () => {
     try {
@@ -142,6 +156,12 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
         if (parsed.monthly) setMonthlyBudget(parsed.monthly);
         if (parsed.yearly) setYearlyBudget(parsed.yearly);
       }
+
+      const storedShowMonthly = await AsyncStorage.getItem(showMonthlyBudgetStorageKey);
+      if (storedShowMonthly !== null) setShowMonthlyBudget(storedShowMonthly === 'true');
+
+      const storedShowYearly = await AsyncStorage.getItem(showYearlyBudgetStorageKey);
+      if (storedShowYearly !== null) setShowYearlyBudget(storedShowYearly === 'true');
     } catch (e) {
       console.error('Failed to load data', e);
     } finally {
@@ -151,7 +171,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   useEffect(() => {
     loadData();
-  }, [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey]);
+  }, [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, showYearlyBudgetStorageKey]);
 
   const addExpense = async (amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => {
     const newExpense: Expense = {
@@ -293,6 +313,16 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await AsyncStorage.setItem(budgetStorageKey, JSON.stringify({ monthly, yearly }));
   };
 
+  const toggleShowMonthlyBudget = async (val: boolean) => {
+    setShowMonthlyBudget(val);
+    await AsyncStorage.setItem(showMonthlyBudgetStorageKey, val.toString());
+  };
+
+  const toggleShowYearlyBudget = async (val: boolean) => {
+    setShowYearlyBudget(val);
+    await AsyncStorage.setItem(showYearlyBudgetStorageKey, val.toString());
+  };
+
   const getCurrentMonthTotal = () => {
     const now = new Date();
     const currentMonth = now.getMonth();
@@ -323,11 +353,13 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   return (
     <ExpenseContext.Provider value={{ 
       expenses, categories, paymentModes, currency, monthlyBudget, yearlyBudget, 
+      showMonthlyBudget, showYearlyBudget,
       addExpense, updateExpense, deleteExpense, bulkDeleteExpenses,
       addCategory, updateCategory, deleteCategory,
       addPaymentMode, updatePaymentMode, deletePaymentMode,
       bulkImport,
-      updateCurrency, updateBudgets, getCurrentMonthTotal, getPreviousMonthTotal, 
+      updateCurrency, updateBudgets, toggleShowMonthlyBudget, toggleShowYearlyBudget, 
+      getCurrentMonthTotal, getPreviousMonthTotal, 
       refreshExpenseData: loadData, isLoading 
     }}>
       {children}
