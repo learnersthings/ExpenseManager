@@ -56,15 +56,15 @@ export default function ImportSheetModal({ visible, onClose }: ImportSheetModalP
       for (const month of MONTHS) {
         setProgress(`Fetching ${month}...`);
         const fetchUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${month}`;
-        
+
         const response = await fetch(fetchUrl);
         if (!response.ok) {
           console.log(`Failed to fetch ${month}, skipping.`);
           continue;
         }
-        
+
         const csvText = await response.text();
-        
+
         // If the sheet doesn't exist or is not public, it might return HTML (login page) or error text
         if (csvText.includes('<html') || csvText.trim() === '') {
           continue;
@@ -75,13 +75,13 @@ export default function ImportSheetModal({ visible, onClose }: ImportSheetModalP
 
         for (let i = 0; i < rows.length; i++) {
           const row = rows[i];
-          
+
           // Skip header row
           if (i === 0 && String(row[0]).toLowerCase().includes('date')) continue;
-          
+
           // Skip empty rows or total rows
           if (!row[0] || String(row[0]).toLowerCase().includes('total')) continue;
-          
+
           const dateStr = String(row[0]).trim();
           const amountStr = String(row[1]).replace(/,/g, '').trim();
           const descStr = String(row[2] || '').trim();
@@ -106,9 +106,9 @@ export default function ImportSheetModal({ visible, onClose }: ImportSheetModalP
 
           let catId: string | undefined = undefined;
           if (catStr) {
-            const existingCat = categories.find(c => c.name.toLowerCase() === catStr.toLowerCase()) 
-                             || newCategories.find(c => c.name.toLowerCase() === catStr.toLowerCase());
-            
+            const existingCat = categories.find(c => c.name.toLowerCase() === catStr.toLowerCase())
+              || newCategories.find(c => c.name.toLowerCase() === catStr.toLowerCase());
+
             if (existingCat) {
               catId = existingCat.id;
             } else {
@@ -125,8 +125,8 @@ export default function ImportSheetModal({ visible, onClose }: ImportSheetModalP
           let modeId: string | undefined = undefined;
           if (modeStr) {
             const existingMode = paymentModes.find(m => m.name.toLowerCase() === modeStr.toLowerCase())
-                              || newPaymentModes.find(m => m.name.toLowerCase() === modeStr.toLowerCase());
-            
+              || newPaymentModes.find(m => m.name.toLowerCase() === modeStr.toLowerCase());
+
             if (existingMode) {
               modeId = existingMode.id;
             } else {
@@ -159,10 +159,10 @@ export default function ImportSheetModal({ visible, onClose }: ImportSheetModalP
 
       setProgress('Saving to storage...');
       await bulkImport(newExpenses, newCategories, newPaymentModes);
-      
+
       setIsLoading(false);
       Alert.alert(
-        "Import Successful", 
+        "Import Successful",
         `Imported ${newExpenses.length} expenses, ${newCategories.length} new categories, and ${newPaymentModes.length} new payment modes.`,
         [{ text: "OK", onPress: onClose }]
       );
@@ -179,8 +179,8 @@ export default function ImportSheetModal({ visible, onClose }: ImportSheetModalP
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.modalOverlay}>
-          <KeyboardAvoidingView 
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             style={[styles.modalContent, { backgroundColor: colors.background, paddingBottom: Math.max(24, insets.bottom + 16) }]}
           >
             <View style={styles.header}>
@@ -198,16 +198,23 @@ export default function ImportSheetModal({ visible, onClose }: ImportSheetModalP
 
             <View style={styles.inputWrapper}>
               <Text style={styles.label}>Google Sheet URL</Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: isDarkTheme ? '#333' : '#e0e0e0' }]}
-                placeholder="https://docs.google.com/spreadsheets/d/..."
-                placeholderTextColor={placeholderColor}
-                value={url}
-                onChangeText={(text) => { setUrl(text); setError(''); }}
-                editable={!isLoading}
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={[styles.input, { flex: 1, backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: isDarkTheme ? '#333' : '#e0e0e0' }]}
+                  placeholder="Google Sheet URL"
+                  placeholderTextColor={placeholderColor}
+                  value={url}
+                  onChangeText={(text) => { setUrl(text); setError(''); }}
+                  editable={!isLoading}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                {url.length > 0 && !isLoading && (
+                  <TouchableOpacity style={styles.clearIcon} onPress={() => { setUrl(''); setError(''); }}>
+                    <Ionicons name="close-circle" size={20} color={placeholderColor} />
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
 
             {isLoading ? (
@@ -276,12 +283,23 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     fontWeight: '600',
   },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'relative',
+  },
   input: {
     height: 52,
     borderWidth: 1,
     borderRadius: 12,
-    paddingHorizontal: 16,
+    paddingLeft: 16,
+    paddingRight: 40,
     fontSize: 16,
+  },
+  clearIcon: {
+    position: 'absolute',
+    right: 12,
+    padding: 4,
   },
   importButton: {
     height: 52,

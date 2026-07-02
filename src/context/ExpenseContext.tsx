@@ -285,7 +285,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
         new Date(e.date).toDateString() === newExpDateStr &&
         e.amount === newExp.amount &&
         e.categoryId === newExp.categoryId &&
-        e.paymentModeId === newExp.paymentModeId
+        e.paymentModeId === newExp.paymentModeId &&
+        e.description.trim().toLowerCase() === newExp.description.trim().toLowerCase()
       );
 
       if (existingIndex !== -1) {
