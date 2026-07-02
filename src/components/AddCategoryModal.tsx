@@ -6,6 +6,8 @@ import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext, Category } from '../context/ExpenseContext';
 import { Ionicons } from '@expo/vector-icons';
 import { PRESET_COLORS, PRESET_ICONS } from '../constants/presets';
+import ColorPickerModal from './ColorPickerModal';
+import IconPickerModal from './IconPickerModal';
 
 interface AddCategoryModalProps {
   visible: boolean;
@@ -20,9 +22,11 @@ export default function AddCategoryModal({ visible, onClose, categoryToEdit }: A
   const insets = useSafeAreaInsets();
 
   const [name, setName] = useState('');
-  const [icon, setIcon] = useState(PRESET_ICONS[0]);
-  const [color, setColor] = useState(PRESET_COLORS[0]);
+  const [icon, setIcon] = useState('');
+  const [color, setColor] = useState('');
   const [error, setError] = useState('');
+  const [colorPickerVisible, setColorPickerVisible] = useState(false);
+  const [iconPickerVisible, setIconPickerVisible] = useState(false);
 
   React.useEffect(() => {
     if (visible) {
@@ -32,8 +36,8 @@ export default function AddCategoryModal({ visible, onClose, categoryToEdit }: A
         setColor(categoryToEdit.color);
       } else {
         setName('');
-        setIcon(PRESET_ICONS[0]);
-        setColor(PRESET_COLORS[0]);
+        setIcon('');
+        setColor('');
       }
       setError('');
     }
@@ -49,11 +53,21 @@ export default function AddCategoryModal({ visible, onClose, categoryToEdit }: A
       return;
     }
 
+    let finalIcon = icon;
+    let finalColor = color;
+
+    if (!finalIcon) {
+      finalIcon = PRESET_ICONS[Math.floor(Math.random() * PRESET_ICONS.length)];
+    }
+    if (!finalColor) {
+      finalColor = PRESET_COLORS[Math.floor(Math.random() * PRESET_COLORS.length)];
+    }
+
     try {
       if (categoryToEdit) {
-        await updateCategory(categoryToEdit.id, name, icon, color);
+        await updateCategory(categoryToEdit.id, name, finalIcon, finalColor);
       } else {
-        await addCategory(name, icon, color);
+        await addCategory(name, finalIcon, finalColor);
       }
       onClose();
     } catch (e: any) {
@@ -102,69 +116,91 @@ export default function AddCategoryModal({ visible, onClose, categoryToEdit }: A
               </TouchableOpacity>
             </View>
 
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+              {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-            <View style={styles.inputWrapper}>
-              <Text style={styles.label}>Category Name</Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: isDarkTheme ? '#333' : '#e0e0e0' }]}
-                placeholder="e.g. Groceries"
-                placeholderTextColor={placeholderColor}
-                value={name}
-                onChangeText={(text) => { setName(text); setError(''); }}
-              />
-            </View>
-
-            <View style={styles.inputWrapper}>
-              <Text style={styles.label}>Select Color</Text>
-              <View style={{ height: 180, borderWidth: 1, borderColor: isDarkTheme ? '#333' : '#e0e0e0', borderRadius: 12, padding: 8 }}>
-                <ScrollView contentContainerStyle={styles.gridContainer} nestedScrollEnabled>
-                  {PRESET_COLORS.map(c => (
-                    <View key={c} style={styles.gridItem}>
-                      <TouchableOpacity
-                        style={[styles.colorSwatch, { backgroundColor: c, borderWidth: color === c ? 3 : (c === '#ffffff' ? 1 : 0), borderColor: color === c ? colors.text : '#ddd' }]}
-                        onPress={() => setColor(c)}
-                      />
-                    </View>
-                  ))}
-                </ScrollView>
+              <View style={styles.inputWrapper}>
+                <Text style={styles.label}>Category Name</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: isDarkTheme ? '#333' : '#e0e0e0' }]}
+                  placeholder="e.g. Groceries"
+                  placeholderTextColor={placeholderColor}
+                  value={name}
+                  onChangeText={(text) => { setName(text); setError(''); }}
+                />
               </View>
-            </View>
 
-            <View style={styles.inputWrapper}>
-              <Text style={styles.label}>Select Icon</Text>
-              <View style={{ height: 180, borderWidth: 1, borderColor: isDarkTheme ? '#333' : '#e0e0e0', borderRadius: 12, padding: 8 }}>
-                <ScrollView contentContainerStyle={styles.gridContainer} nestedScrollEnabled>
-                  {PRESET_ICONS.map(i => (
-                    <View key={i} style={styles.gridItem}>
-                      <TouchableOpacity
-                        style={[styles.iconSwatch, { backgroundColor: icon === i ? colors.primary : isDarkTheme ? '#1e1e1e' : '#f5f5f5' }]}
-                        onPress={() => setIcon(i)}
-                      >
-                        <Ionicons name={i as any} size={24} color={icon === i ? '#fff' : colors.text} />
-                      </TouchableOpacity>
-                    </View>
-                  ))}
-                </ScrollView>
+              <View style={styles.inputWrapper}>
+                <Text style={styles.label}>Select Color</Text>
+                <TouchableOpacity 
+                  style={[styles.pickerButton, { borderColor: isDarkTheme ? '#333' : '#e0e0e0', backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5' }]}
+                  onPress={() => setColorPickerVisible(true)}
+                >
+                  {color ? (
+                    <View style={[styles.colorSwatchSmall, { backgroundColor: color, borderWidth: color === '#ffffff' ? 1 : 0, borderColor: '#ddd' }]} />
+                  ) : (
+                    <View style={[styles.colorSwatchSmall, { backgroundColor: '#888' }]} />
+                  )}
+                  <Text style={[styles.pickerButtonText, { color: colors.text }]}>
+                    {color ? color.toUpperCase() : 'Random Color (Default)'}
+                  </Text>
+                  <Ionicons name="chevron-forward" size={20} color={colors.text} />
+                </TouchableOpacity>
               </View>
-            </View>
 
-            <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={handleSave}>
-              <Text style={styles.saveButtonText}>
-                {categoryToEdit ? 'Update Category' : 'Save Category'}
-              </Text>
-            </TouchableOpacity>
+              <View style={styles.inputWrapper}>
+                <Text style={styles.label}>Select Icon</Text>
+                <TouchableOpacity 
+                  style={[styles.pickerButton, { borderColor: isDarkTheme ? '#333' : '#e0e0e0', backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5' }]}
+                  onPress={() => setIconPickerVisible(true)}
+                >
+                  {icon ? (
+                    <View style={[styles.iconSwatchSmall, { backgroundColor: colors.primary }]}>
+                      <Ionicons name={icon as any} size={18} color="#fff" />
+                    </View>
+                  ) : (
+                    <View style={[styles.iconSwatchSmall, { backgroundColor: '#888' }]}>
+                      <Ionicons name="help" size={18} color="#fff" />
+                    </View>
+                  )}
+                  <Text style={[styles.pickerButtonText, { color: colors.text }]}>
+                    {icon ? icon : 'Random Icon (Default)'}
+                  </Text>
+                  <Ionicons name="chevron-forward" size={20} color={colors.text} />
+                </TouchableOpacity>
+              </View>
 
-            {categoryToEdit && (
-              <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-                <Ionicons name="trash-outline" size={20} color="#ff4444" style={{ marginRight: 8 }} />
-                <Text style={styles.deleteButtonText}>Delete Category</Text>
+              <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={handleSave}>
+                <Text style={styles.saveButtonText}>
+                  {categoryToEdit ? 'Update Category' : 'Save Category'}
+                </Text>
               </TouchableOpacity>
-            )}
+
+              {categoryToEdit && (
+                <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
+                  <Ionicons name="trash-outline" size={20} color="#ff4444" style={{ marginRight: 8 }} />
+                  <Text style={styles.deleteButtonText}>Delete Category</Text>
+                </TouchableOpacity>
+              )}
+            </ScrollView>
 
           </KeyboardAvoidingView>
         </View>
       </TouchableWithoutFeedback>
+
+      <ColorPickerModal 
+        visible={colorPickerVisible} 
+        onClose={() => setColorPickerVisible(false)} 
+        color={color} 
+        onSelect={setColor} 
+      />
+      
+      <IconPickerModal 
+        visible={iconPickerVisible} 
+        onClose={() => setIconPickerVisible(false)} 
+        icon={icon} 
+        onSelect={setIcon} 
+      />
     </Modal>
   );
 }
@@ -184,6 +220,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 10,
+    maxHeight: '90%',
   },
   header: {
     flexDirection: 'row',
@@ -218,26 +255,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     fontSize: 16,
   },
-  gridContainer: {
+  pickerButton: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-start',
-    paddingVertical: 8,
-  },
-  gridItem: {
-    width: '16.66%',
     alignItems: 'center',
-    marginBottom: 12,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    height: 56,
   },
-  colorSwatch: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  pickerButtonText: {
+    flex: 1,
+    fontSize: 16,
+    marginLeft: 12,
   },
-  iconSwatch: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  colorSwatchSmall: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+  },
+  iconSwatchSmall: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
   },
