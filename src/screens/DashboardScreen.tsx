@@ -14,7 +14,7 @@ export default function DashboardScreen() {
   const { getCurrentMonthTotal, getPreviousMonthTotal, expenses, categories, paymentModes, currency, monthlyBudget, yearlyBudget, bulkDeleteExpenses, showMonthlyBudget, showYearlyBudget } = useExpenseContext();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
-  const [displayCount, setDisplayCount] = useState(5);
+  const [displayCount, setDisplayCount] = useState(10);
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedExpenseIds, setSelectedExpenseIds] = useState<string[]>([]);
 
@@ -55,7 +55,7 @@ export default function DashboardScreen() {
         const query = searchQuery.toLowerCase();
         const cat = categories.find(c => c.id === exp.categoryId);
         const pMode = paymentModes.find(m => m.id === exp.paymentModeId);
-        
+
         const matchDesc = exp.description.toLowerCase().includes(query);
         const matchAmt = formatAmount(exp.amount).includes(query);
         const matchCat = cat && cat.name.toLowerCase().includes(query);
@@ -298,14 +298,14 @@ export default function DashboardScreen() {
                 </TouchableOpacity>
               )}
             </View>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.filterButton, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', borderColor: isDarkTheme ? '#333' : '#e0e0e0' }]}
               onPress={() => setIsFilterModalVisible(true)}
             >
-              <Ionicons 
-                name="options-outline" 
-                size={22} 
-                color={(selectedYears.length > 0 || selectedMonths.length > 0 || selectedCategoryIds.length > 0 || selectedPaymentModeIds.length > 0) ? colors.primary : colors.text} 
+              <Ionicons
+                name="options-outline"
+                size={22}
+                color={(selectedYears.length > 0 || selectedMonths.length > 0 || selectedCategoryIds.length > 0 || selectedPaymentModeIds.length > 0) ? colors.primary : colors.text}
               />
               {(selectedYears.length > 0 || selectedMonths.length > 0 || selectedCategoryIds.length > 0 || selectedPaymentModeIds.length > 0) && (
                 <View style={[styles.filterBadge, { backgroundColor: colors.primary }]} />
@@ -402,7 +402,7 @@ export default function DashboardScreen() {
             {filteredExpenses.length > displayCount && (
               <TouchableOpacity
                 style={[styles.loadMoreButton, { backgroundColor: isDarkTheme ? '#2a2a2a' : '#f0f0f0' }]}
-                onPress={() => setDisplayCount(prev => prev + 100)}
+                onPress={() => setDisplayCount(prev => prev + 20)}
               >
                 <Text style={[styles.loadMoreText, { color: colors.primary }]}>Load More</Text>
                 <Ionicons name="chevron-down" size={16} color={colors.primary} />
