@@ -83,99 +83,136 @@ export default function SettingsScreen({ navigation }: any) {
   return (
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}>
       
-      <TouchableOpacity 
-        style={[styles.row, { backgroundColor: colors.card }]}
-        onPress={() => navigation.navigate('Profile')}
-      >
-        <Text style={[styles.text, { color: colors.text }]}>User Profile</Text>
-        <Ionicons name="chevron-forward" size={20} color={colors.text} />
-      </TouchableOpacity>
-
-      <TouchableOpacity 
-        style={[styles.row, { backgroundColor: colors.card, marginTop: 10 }]}
-        onPress={() => navigation.navigate('Currency')}
-      >
-        <Text style={[styles.text, { color: colors.text }]}>Currency</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Text style={{ color: colors.primary, fontSize: 18, fontWeight: 'bold', marginRight: 8 }}>{currency}</Text>
+      <View style={[styles.group, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Profile</Text>
+        <TouchableOpacity 
+          style={styles.row}
+          onPress={() => navigation.navigate('Profile')}
+        >
+          <View style={styles.rowLeft}>
+            <Ionicons name="person-outline" size={22} color={colors.primary} style={styles.icon} />
+            <Text style={[styles.text, { color: colors.text }]}>User Profile</Text>
+          </View>
           <Ionicons name="chevron-forward" size={20} color={colors.text} />
-        </View>
-      </TouchableOpacity>
-
-      <TouchableOpacity 
-        style={[styles.row, { backgroundColor: colors.card, marginTop: 10 }]}
-        onPress={() => navigation.navigate('Budget')}
-      >
-        <Text style={[styles.text, { color: colors.text }]}>Budget</Text>
-        <Ionicons name="chevron-forward" size={20} color={colors.text} />
-      </TouchableOpacity>
-
-      <TouchableOpacity 
-        style={[styles.row, { backgroundColor: colors.card, marginTop: 10 }]}
-        onPress={() => navigation.navigate('Categories')}
-      >
-        <Text style={[styles.text, { color: colors.text }]}>Manage Categories</Text>
-        <Ionicons name="chevron-forward" size={20} color={colors.text} />
-      </TouchableOpacity>
-
-      <TouchableOpacity 
-        style={[styles.row, { backgroundColor: colors.card, marginTop: 10 }]}
-        onPress={() => navigation.navigate('PaymentModes')}
-      >
-        <Text style={[styles.text, { color: colors.text }]}>Payment Modes</Text>
-        <Ionicons name="chevron-forward" size={20} color={colors.text} />
-      </TouchableOpacity>
-
-      <TouchableOpacity 
-        style={[styles.row, { backgroundColor: colors.card, marginTop: 10 }]}
-        onPress={() => setIsImportModalVisible(true)}
-      >
-        <Text style={[styles.text, { color: colors.text }]}>Import from Google Sheets</Text>
-        <Ionicons name="cloud-download-outline" size={20} color={colors.text} />
-      </TouchableOpacity>
-
-      <View style={[styles.row, { backgroundColor: colors.card, marginTop: 10 }]}>
-        <Text style={[styles.text, { color: colors.text }]}>Dark Mode</Text>
-        <Switch
-          trackColor={{ false: '#767577', true: colors.primary }}
-          thumbColor={isDarkTheme ? '#ffffff' : '#f4f3f4'}
-          ios_backgroundColor="#3e3e3e"
-          onValueChange={toggleTheme}
-          value={isDarkTheme}
-        />
+        </TouchableOpacity>
       </View>
 
-      <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 24, marginBottom: 8 }]}>Data Management</Text>
+      <View style={[styles.group, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Appearance</Text>
+        <View style={styles.row}>
+          <View style={styles.rowLeft}>
+            <Ionicons name="moon-outline" size={22} color={colors.primary} style={styles.icon} />
+            <Text style={[styles.text, { color: colors.text }]}>Dark Mode</Text>
+          </View>
+          <Switch
+            trackColor={{ false: '#767577', true: colors.primary }}
+            thumbColor={isDarkTheme ? '#ffffff' : '#f4f3f4'}
+            ios_backgroundColor="#3e3e3e"
+            onValueChange={toggleTheme}
+            value={isDarkTheme}
+          />
+        </View>
+      </View>
+
+      <View style={[styles.group, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Preferences</Text>
+        <TouchableOpacity 
+          style={styles.row}
+          onPress={() => navigation.navigate('Currency')}
+        >
+          <View style={styles.rowLeft}>
+            <Ionicons name="cash-outline" size={22} color={colors.primary} style={styles.icon} />
+            <Text style={[styles.text, { color: colors.text }]}>Currency</Text>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={{ color: colors.primary, fontSize: 16, fontWeight: 'bold', marginRight: 8 }}>{currency}</Text>
+            <Ionicons name="chevron-forward" size={20} color={colors.text} />
+          </View>
+        </TouchableOpacity>
+        <View style={styles.divider} />
+        <TouchableOpacity 
+          style={styles.row}
+          onPress={() => navigation.navigate('Budget')}
+        >
+          <View style={styles.rowLeft}>
+            <Ionicons name="pie-chart-outline" size={22} color={colors.primary} style={styles.icon} />
+            <Text style={[styles.text, { color: colors.text }]}>Budget</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.text} />
+        </TouchableOpacity>
+        <View style={styles.divider} />
+        <TouchableOpacity 
+          style={styles.row}
+          onPress={() => navigation.navigate('Categories')}
+        >
+          <View style={styles.rowLeft}>
+            <Ionicons name="pricetag-outline" size={22} color={colors.primary} style={styles.icon} />
+            <Text style={[styles.text, { color: colors.text }]}>Manage Categories</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.text} />
+        </TouchableOpacity>
+        <View style={styles.divider} />
+        <TouchableOpacity 
+          style={styles.row}
+          onPress={() => navigation.navigate('PaymentModes')}
+        >
+          <View style={styles.rowLeft}>
+            <Ionicons name="card-outline" size={22} color={colors.primary} style={styles.icon} />
+            <Text style={[styles.text, { color: colors.text }]}>Payment Modes</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.text} />
+        </TouchableOpacity>
+      </View>
+
+      <View style={[styles.group, { backgroundColor: colors.card }]}>
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Data Management</Text>
+        <TouchableOpacity 
+          style={styles.row}
+          onPress={() => setIsImportModalVisible(true)}
+        >
+          <View style={styles.rowLeft}>
+            <Ionicons name="document-text-outline" size={22} color={colors.primary} style={styles.icon} />
+            <Text style={[styles.text, { color: colors.text }]}>Import from Google Sheets</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.text} />
+        </TouchableOpacity>
+        <View style={styles.divider} />
+        <TouchableOpacity 
+          style={[styles.row, { opacity: isProcessing ? 0.5 : 1 }]}
+          onPress={handleBackup}
+          disabled={isProcessing}
+        >
+          <View style={styles.rowLeft}>
+            <Ionicons name="save-outline" size={22} color={colors.primary} style={styles.icon} />
+            <Text style={[styles.text, { color: colors.text }]}>Backup Data</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.text} />
+        </TouchableOpacity>
+        <View style={styles.divider} />
+        <TouchableOpacity 
+          style={[styles.row, { opacity: isProcessing ? 0.5 : 1 }]}
+          onPress={() => {
+            Alert.alert(
+              "Restore Data",
+              "WARNING: This will completely overwrite all current expenses, categories, settings, and profile data with the backup file. This cannot be undone.",
+              [
+                { text: "Cancel", style: "cancel" },
+                { text: "Proceed", style: "destructive", onPress: handleRestore }
+              ]
+            );
+          }}
+          disabled={isProcessing}
+        >
+          <View style={styles.rowLeft}>
+            <Ionicons name="cloud-download-outline" size={22} color={colors.primary} style={styles.icon} />
+            <Text style={[styles.text, { color: colors.text }]}>Restore Data</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.text} />
+        </TouchableOpacity>
+      </View>
 
       <TouchableOpacity 
-        style={[styles.row, { backgroundColor: colors.card, opacity: isProcessing ? 0.5 : 1 }]}
-        onPress={handleBackup}
-        disabled={isProcessing}
-      >
-        <Text style={[styles.text, { color: colors.primary }]}>Backup Data</Text>
-        <Ionicons name="cloud-upload-outline" size={20} color={colors.primary} />
-      </TouchableOpacity>
-
-      <TouchableOpacity 
-        style={[styles.row, { backgroundColor: colors.card, marginTop: 10, opacity: isProcessing ? 0.5 : 1 }]}
-        onPress={() => {
-          Alert.alert(
-            "Restore Data",
-            "WARNING: This will completely overwrite all current expenses, categories, settings, and profile data with the backup file. This cannot be undone.",
-            [
-              { text: "Cancel", style: "cancel" },
-              { text: "Proceed", style: "destructive", onPress: handleRestore }
-            ]
-          );
-        }}
-        disabled={isProcessing}
-      >
-        <Text style={[styles.text, { color: '#ff4444' }]}>Restore Data</Text>
-        <Ionicons name="cloud-download-outline" size={20} color="#ff4444" />
-      </TouchableOpacity>
-
-      <TouchableOpacity 
-        style={[styles.logoutButton, { backgroundColor: '#ff4444', marginTop: 30 }]} 
+        style={[styles.logoutButton, { backgroundColor: '#ff4444', marginTop: 10 }]} 
         onPress={logout}
       >
         <Text style={styles.logoutText}>Log Out</Text>
@@ -194,24 +231,43 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     padding: 20,
   },
+  group: {
+    borderRadius: 10,
+    overflow: 'hidden',
+    marginBottom: 20,
+  },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
+    paddingHorizontal: 15,
+    height: 52,
+  },
+  rowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  icon: {
+    marginRight: 15,
+    width: 24,
+    textAlign: 'center',
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: '#888',
+    opacity: 0.3,
+    marginLeft: 54,
   },
   text: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '500',
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: 'bold',
-    textTransform: 'uppercase',
-    color: '#888',
-    marginLeft: 4,
+    marginLeft: 15,
+    marginTop: 15,
+    marginBottom: 5,
   },
   logoutButton: {
     padding: 15,
