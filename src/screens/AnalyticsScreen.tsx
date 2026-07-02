@@ -1,21 +1,49 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, Dimensions, SafeAreaView, TouchableOpacity } from 'react-native';
 import { useTheme } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { PieChart as GiftedPieChart, BarChart } from 'react-native-gifted-charts';
 import { Text as SvgText } from 'react-native-svg';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext } from '../context/ExpenseContext';
+import FilterModal from '../components/FilterModal';
 import { formatAmount } from '../utils/format';
 
 const screenWidth = Dimensions.get('window').width;
 
-type TimeFilter = 'This Month' | 'Last Month' | 'This Year' | 'All Time';
+type TimeFilter = 'This Month' | 'Last Month' | 'This Year' | 'All Time' | 'Custom';
 
 export default function AnalyticsScreen() {
   const { colors } = useTheme();
   const { isDarkTheme } = useThemeContext();
   const { expenses, categories, paymentModes, currency } = useExpenseContext();
   const [activeFilter, setActiveFilter] = useState<TimeFilter>('This Month');
+  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+  const [selectedYears, setSelectedYears] = useState<number[]>([]);
+  const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [selectedPaymentModeIds, setSelectedPaymentModeIds] = useState<string[]>([]);
+
+  // Compute available filter options dynamically from expenses
+  const availableYears = useMemo(() => {
+    const years = new Set(expenses.map(e => new Date(e.date).getFullYear()));
+    return Array.from(years).sort((a, b) => b - a);
+  }, [expenses]);
+
+  const availableMonths = useMemo(() => {
+    const months = new Set(expenses.map(e => new Date(e.date).getMonth()));
+    return Array.from(months).sort((a, b) => a - b);
+  }, [expenses]);
+
+  const availableCategories = useMemo(() => {
+    const usedIds = new Set(expenses.map(e => e.categoryId).filter(Boolean));
+    return categories.filter(c => usedIds.has(c.id));
+  }, [expenses, categories]);
+
+  const availablePaymentModes = useMemo(() => {
+    const usedIds = new Set(expenses.map(e => e.paymentModeId).filter(Boolean));
+    return paymentModes.filter(p => usedIds.has(p.id));
+  }, [expenses, paymentModes]);
 
   const filteredExpenses = useMemo(() => {
     const now = new Date();
@@ -24,19 +52,29 @@ export default function AnalyticsScreen() {
 
     return expenses.filter(exp => {
       const expDate = new Date(exp.date);
+      const expYear = expDate.getFullYear();
+      const expMonth = expDate.getMonth();
+
       if (activeFilter === 'This Month') {
-        return expDate.getMonth() === currentMonth && expDate.getFullYear() === currentYear;
-      }
-      if (activeFilter === 'Last Month') {
+        if (!(expMonth === currentMonth && expYear === currentYear)) return false;
+      } else if (activeFilter === 'Last Month') {
         const lastMonthDate = new Date(currentYear, currentMonth - 1, 1);
-        return expDate.getMonth() === lastMonthDate.getMonth() && expDate.getFullYear() === lastMonthDate.getFullYear();
+        if (!(expMonth === lastMonthDate.getMonth() && expYear === lastMonthDate.getFullYear())) return false;
+      } else if (activeFilter === 'This Year') {
+        if (expYear !== currentYear) return false;
+      } else if (activeFilter === 'Custom') {
+        // Filter by Year
+        if (selectedYears.length > 0 && !selectedYears.includes(expYear)) return false;
+        // Filter by Month
+        if (selectedMonths.length > 0 && !selectedMonths.includes(expMonth)) return false;
+        // Filter by Category
+        if (selectedCategoryIds.length > 0 && (!exp.categoryId || !selectedCategoryIds.includes(exp.categoryId))) return false;
+        // Filter by Payment Mode
+        if (selectedPaymentModeIds.length > 0 && (!exp.paymentModeId || !selectedPaymentModeIds.includes(exp.paymentModeId))) return false;
       }
-      if (activeFilter === 'This Year') {
-        return expDate.getFullYear() === currentYear;
-      }
-      return true; // All Time
+      return true;
     });
-  }, [expenses, activeFilter]);
+  }, [expenses, activeFilter, selectedYears, selectedMonths, selectedCategoryIds, selectedPaymentModeIds]);
 
   const totalSpent = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
 
@@ -104,6 +142,10 @@ export default function AnalyticsScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
 
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: colors.text }]}>Analytics</Text>
+        </View>
+
         {/* Filter Pills */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterContainer}>
           {(['This Month', 'Last Month', 'This Year', 'All Time'] as TimeFilter[]).map(filter => (
@@ -121,10 +163,30 @@ export default function AnalyticsScreen() {
               <Text style={{ color: activeFilter === filter ? '#fff' : colors.text, fontWeight: '600' }}>{filter}</Text>
             </TouchableOpacity>
           ))}
+          
+          {/* Custom Filter Button */}
+          <TouchableOpacity
+            style={[
+              styles.filterPill,
+              {
+                backgroundColor: activeFilter === 'Custom' ? colors.primary : (isDarkTheme ? '#333' : '#e0e0e0'),
+                marginRight: 20,
+                flexDirection: 'row',
+                alignItems: 'center'
+              }
+            ]}
+            onPress={() => {
+              setActiveFilter('Custom');
+              setIsFilterModalVisible(true);
+            }}
+          >
+            <Text style={{ color: activeFilter === 'Custom' ? '#fff' : colors.text, fontWeight: '600', marginRight: 4 }}>Custom</Text>
+            <Ionicons name="filter" size={16} color={activeFilter === 'Custom' ? '#fff' : colors.text} />
+          </TouchableOpacity>
         </ScrollView>
 
         <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000' }]}>
-          <Text style={styles.cardLabel}>Total Spent ({activeFilter})</Text>
+          <Text style={styles.cardLabel}>Total Spent ({activeFilter === 'Custom' ? 'Filtered' : activeFilter})</Text>
           <Text style={[styles.totalSpent, { color: colors.text }]}>{currency}{formatAmount(totalSpent)}</Text>
         </View>
 
@@ -192,6 +254,24 @@ export default function AnalyticsScreen() {
           </>
         )}
       </ScrollView>
+
+      <FilterModal
+        visible={isFilterModalVisible}
+        onClose={() => setIsFilterModalVisible(false)}
+        availableYears={availableYears}
+        availableMonths={availableMonths}
+        availableCategories={availableCategories}
+        availablePaymentModes={availablePaymentModes}
+        selectedYears={selectedYears}
+        setSelectedYears={setSelectedYears}
+        selectedMonths={selectedMonths}
+        setSelectedMonths={setSelectedMonths}
+        selectedCategoryIds={selectedCategoryIds}
+        setSelectedCategoryIds={setSelectedCategoryIds}
+        selectedPaymentModeIds={selectedPaymentModeIds}
+        setSelectedPaymentModeIds={setSelectedPaymentModeIds}
+        onClearAll={() => setActiveFilter('This Month')}
+      />
     </SafeAreaView>
   );
 }

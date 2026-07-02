@@ -23,6 +23,7 @@ interface FilterModalProps {
 
   selectedPaymentModeIds: string[];
   setSelectedPaymentModeIds: (val: string[]) => void;
+  onClearAll?: () => void;
 }
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -68,6 +69,9 @@ export default function FilterModal(props: FilterModalProps) {
     props.setSelectedMonths([]);
     props.setSelectedCategoryIds([]);
     props.setSelectedPaymentModeIds([]);
+    if (props.onClearAll) {
+      props.onClearAll();
+    }
   };
 
   const renderChip = (label: string, isSelected: boolean, onPress: () => void) => (
