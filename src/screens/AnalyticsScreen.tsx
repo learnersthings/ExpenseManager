@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { PieChart as GiftedPieChart, BarChart } from 'react-native-gifted-charts';
@@ -8,7 +8,9 @@ import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext } from '../context/ExpenseContext';
 import FilterModal from '../components/FilterModal';
 import { formatAmount } from '../utils/format';
-
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
+import { generateAnalyticsPDFHTML } from '../utils/pdfGenerator';
 const screenWidth = Dimensions.get('window').width;
 
 type TimeFilter = 'This Month' | 'Last Month' | 'This Year' | 'All Time' | 'Custom';
@@ -138,6 +140,17 @@ export default function AnalyticsScreen() {
 
   const mostUsedCategory = fullCategoryData.length > 0 ? fullCategoryData[0] : null;
 
+  const handleDownloadPDF = async () => {
+    try {
+      const filterName = activeFilter === 'Custom' ? 'Custom Filter' : activeFilter;
+      const html = generateAnalyticsPDFHTML(filterName, totalSpent, fullCategoryData, paymentModeData, currency);
+      const { uri } = await Print.printToFileAsync({ html });
+      await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to generate PDF report.');
+    }
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -182,7 +195,12 @@ export default function AnalyticsScreen() {
         </ScrollView>
 
         <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000' }]}>
-          <Text style={styles.cardLabel}>Total Spent ({activeFilter === 'Custom' ? 'Filtered' : activeFilter})</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={styles.cardLabel}>Total Spent ({activeFilter === 'Custom' ? 'Filtered' : activeFilter})</Text>
+            <TouchableOpacity onPress={handleDownloadPDF} style={{ padding: 4 }}>
+              <Ionicons name="download-outline" size={24} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
           <Text style={[styles.totalSpent, { color: colors.text }]}>{currency}{formatAmount(totalSpent)}</Text>
         </View>
 

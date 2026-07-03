@@ -7,7 +7,9 @@ import { useExpenseContext, Expense } from '../context/ExpenseContext';
 import AddExpenseModal from '../components/AddExpenseModal';
 import FilterModal from '../components/FilterModal';
 import { formatAmount } from '../utils/format';
-
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
+import { generateDashboardPDFHTML } from '../utils/pdfGenerator';
 export default function DashboardScreen() {
   const { colors } = useTheme();
   const { isDarkTheme } = useThemeContext();
@@ -175,6 +177,18 @@ export default function DashboardScreen() {
     );
   };
 
+  const handleDownloadPDF = async () => {
+    try {
+      // Use filteredExpenses if you want to export what's on the screen
+      // Or if in select mode, you could export selected expenses, but let's stick to filtered
+      const html = generateDashboardPDFHTML(filteredExpenses, categories, paymentModes, currency);
+      const { uri } = await Print.printToFileAsync({ html });
+      await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to generate PDF report.');
+    }
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -298,6 +312,12 @@ export default function DashboardScreen() {
                 </TouchableOpacity>
               )}
             </View>
+            <TouchableOpacity
+              style={[styles.filterButton, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', borderColor: isDarkTheme ? '#333' : '#e0e0e0', marginRight: 10 }]}
+              onPress={handleDownloadPDF}
+            >
+              <Ionicons name="download-outline" size={22} color={colors.text} />
+            </TouchableOpacity>
             <TouchableOpacity
               style={[styles.filterButton, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', borderColor: isDarkTheme ? '#333' : '#e0e0e0' }]}
               onPress={() => setIsFilterModalVisible(true)}
