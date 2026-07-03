@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Alert, TextInput, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Alert, TextInput, Platform, ActivityIndicator } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '../context/ThemeContext';
@@ -20,6 +20,7 @@ export default function DashboardScreen() {
   const [displayCount, setDisplayCount] = useState(10);
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedExpenseIds, setSelectedExpenseIds] = useState<string[]>([]);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Search and Filter States
   const [searchQuery, setSearchQuery] = useState('');
@@ -180,6 +181,7 @@ export default function DashboardScreen() {
 
   const handleDownloadPDF = async () => {
     try {
+      setIsDownloading(true);
       const html = generateDashboardPDFHTML(filteredExpenses, categories, paymentModes, currency);
       const { uri, base64 } = await Print.printToFileAsync({ html, base64: true });
       
@@ -194,6 +196,8 @@ export default function DashboardScreen() {
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to generate or save PDF report.');
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -323,8 +327,13 @@ export default function DashboardScreen() {
             <TouchableOpacity
               style={[styles.filterButton, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', borderColor: isDarkTheme ? '#333' : '#e0e0e0', marginRight: 10 }]}
               onPress={handleDownloadPDF}
+              disabled={isDownloading}
             >
-              <Ionicons name="download-outline" size={22} color={colors.text} />
+              {isDownloading ? (
+                <ActivityIndicator size="small" color={colors.text} />
+              ) : (
+                <Ionicons name="download-outline" size={22} color={colors.text} />
+              )}
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.filterButton, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', borderColor: isDarkTheme ? '#333' : '#e0e0e0' }]}

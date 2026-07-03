@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions, SafeAreaView, TouchableOpacity, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions, SafeAreaView, TouchableOpacity, Alert, Platform, ActivityIndicator } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { PieChart as GiftedPieChart, BarChart } from 'react-native-gifted-charts';
@@ -26,6 +26,7 @@ export default function AnalyticsScreen() {
   const [selectedMonths, setSelectedMonths] = useState<number[]>([]);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [selectedPaymentModeIds, setSelectedPaymentModeIds] = useState<string[]>([]);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Compute available filter options dynamically from expenses
   const availableYears = useMemo(() => {
@@ -143,6 +144,7 @@ export default function AnalyticsScreen() {
 
   const handleDownloadPDF = async () => {
     try {
+      setIsDownloading(true);
       const filterName = activeFilter === 'Custom' ? 'Custom Filter' : activeFilter;
       const html = generateAnalyticsPDFHTML(filterName, totalSpent, fullCategoryData, paymentModeData, currency);
       const { uri, base64 } = await Print.printToFileAsync({ html, base64: true });
@@ -158,6 +160,8 @@ export default function AnalyticsScreen() {
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to generate or save PDF report.');
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -207,8 +211,12 @@ export default function AnalyticsScreen() {
         <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000' }]}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <Text style={styles.cardLabel}>Total Spent ({activeFilter === 'Custom' ? 'Filtered' : activeFilter})</Text>
-            <TouchableOpacity onPress={handleDownloadPDF} style={{ padding: 4 }}>
-              <Ionicons name="download-outline" size={24} color={colors.primary} />
+            <TouchableOpacity onPress={handleDownloadPDF} style={{ padding: 4 }} disabled={isDownloading}>
+              {isDownloading ? (
+                <ActivityIndicator size="small" color={colors.primary} />
+              ) : (
+                <Ionicons name="download-outline" size={24} color={colors.primary} />
+              )}
             </TouchableOpacity>
           </View>
           <Text style={[styles.totalSpent, { color: colors.text }]}>{currency}{formatAmount(totalSpent)}</Text>
