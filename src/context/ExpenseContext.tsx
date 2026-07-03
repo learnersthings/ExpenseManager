@@ -59,6 +59,8 @@ interface ExpenseContextType {
   isLoading: boolean;
   downloadPathUri: string | null;
   updateDownloadPath: (uri: string | null) => Promise<void>;
+  backupPathUri: string | null;
+  updateBackupPath: (uri: string | null) => Promise<void>;
 }
 
 const ExpenseContext = createContext<ExpenseContextType>({
@@ -91,6 +93,8 @@ const ExpenseContext = createContext<ExpenseContextType>({
   isLoading: true,
   downloadPathUri: null,
   updateDownloadPath: async () => {},
+  backupPathUri: null,
+  updateBackupPath: async () => {},
 });
 
 export const useExpenseContext = () => useContext(ExpenseContext);
@@ -103,6 +107,7 @@ const BUDGET_KEY = '@app_budgets';
 const SHOW_MONTHLY_BUDGET_KEY = '@app_show_monthly_budget';
 const SHOW_YEARLY_BUDGET_KEY = '@app_show_yearly_budget';
 const DOWNLOAD_PATH_KEY = '@app_download_path';
+const BACKUP_PATH_KEY = '@app_backup_path';
 
 export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -114,6 +119,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [showMonthlyBudget, setShowMonthlyBudget] = useState(true);
   const [showYearlyBudget, setShowYearlyBudget] = useState(true);
   const [downloadPathUri, setDownloadPathUri] = useState<string | null>(null);
+  const [backupPathUri, setBackupPathUri] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuthContext();
 
@@ -125,6 +131,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const showMonthlyBudgetStorageKey = user ? `${SHOW_MONTHLY_BUDGET_KEY}_${user.email}` : SHOW_MONTHLY_BUDGET_KEY;
   const showYearlyBudgetStorageKey = user ? `${SHOW_YEARLY_BUDGET_KEY}_${user.email}` : SHOW_YEARLY_BUDGET_KEY;
   const downloadPathStorageKey = user ? `${DOWNLOAD_PATH_KEY}_${user.email}` : DOWNLOAD_PATH_KEY;
+  const backupPathStorageKey = user ? `${BACKUP_PATH_KEY}_${user.email}` : BACKUP_PATH_KEY;
 
   const loadData = async () => {
     try {
@@ -176,6 +183,13 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       } else {
         setDownloadPathUri(null);
       }
+
+      const storedBackupPath = await AsyncStorage.getItem(backupPathStorageKey);
+      if (storedBackupPath !== null) {
+        setBackupPathUri(storedBackupPath);
+      } else {
+        setBackupPathUri(null);
+      }
     } catch (e) {
       console.error('Failed to load data', e);
     } finally {
@@ -185,7 +199,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   useEffect(() => {
     loadData();
-  }, [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, showYearlyBudgetStorageKey, downloadPathStorageKey]);
+  }, [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, showYearlyBudgetStorageKey, downloadPathStorageKey, backupPathStorageKey]);
 
   const addExpense = async (amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => {
     const newExpense: Expense = {
@@ -347,6 +361,15 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const updateBackupPath = async (uri: string | null) => {
+    setBackupPathUri(uri);
+    if (uri) {
+      await AsyncStorage.setItem(backupPathStorageKey, uri);
+    } else {
+      await AsyncStorage.removeItem(backupPathStorageKey);
+    }
+  };
+
   const getCurrentMonthTotal = () => {
     const now = new Date();
     const currentMonth = now.getMonth();
@@ -385,7 +408,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       updateCurrency, updateBudgets, toggleShowMonthlyBudget, toggleShowYearlyBudget, 
       getCurrentMonthTotal, getPreviousMonthTotal, 
       refreshExpenseData: loadData, isLoading,
-      downloadPathUri, updateDownloadPath
+      downloadPathUri, updateDownloadPath,
+      backupPathUri, updateBackupPath
     }}>
       {children}
     </ExpenseContext.Provider>

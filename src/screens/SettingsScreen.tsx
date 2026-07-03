@@ -17,7 +17,7 @@ export default function SettingsScreen({ navigation }: any) {
   const { logout, refreshAuth } = useAuthContext();
   const [isImportModalVisible, setIsImportModalVisible] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const { currency, refreshExpenseData, downloadPathUri, updateDownloadPath } = useExpenseContext();
+  const { currency, refreshExpenseData, downloadPathUri, updateDownloadPath, backupPathUri, updateBackupPath } = useExpenseContext();
 
   const handleSetDownloadPath = async () => {
     if (Platform.OS !== 'android') {
@@ -36,24 +36,80 @@ export default function SettingsScreen({ navigation }: any) {
     }
   };
 
+  const handleSetBackupPath = async () => {
+    if (Platform.OS !== 'android') {
+      Alert.alert('Unsupported', 'Setting a default backup path is only available on Android devices due to system limitations.');
+      return;
+    }
+    
+    try {
+      const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+      if (permissions.granted) {
+        await updateBackupPath(permissions.directoryUri);
+        Alert.alert('Success', 'Backup path set successfully! Future backups will be saved here automatically (keeping the last 5).');
+      }
+    } catch (e: any) {
+      Alert.alert('Error', 'Failed to set backup path: ' + e.message);
+    }
+  };
+
   const handleBackup = async () => {
     try {
       setIsProcessing(true);
       const keys = await AsyncStorage.getAllKeys();
       const stores = await AsyncStorage.multiGet(keys);
       const backupData = Object.fromEntries(stores);
+      const backupString = JSON.stringify(backupData);
       
-      const fileUri = FileSystem.documentDirectory + 'ExpenseManagerBackup.json';
-      await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(backupData));
-      
-      const isSharingAvailable = await Sharing.isAvailableAsync();
-      if (isSharingAvailable) {
-        await Sharing.shareAsync(fileUri, { mimeType: 'application/json', dialogTitle: 'Save Backup' });
+      if (backupPathUri && Platform.OS === 'android') {
+        const timestamp = new Date().getTime();
+        const filename = `ExpenseManagerBackup_${timestamp}.json`;
+        
+        // Create the new backup file
+        const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(backupPathUri, filename, 'application/json');
+        await FileSystem.writeAsStringAsync(fileUri, backupString, { encoding: FileSystem.EncodingType.UTF8 });
+        
+        // Manage old backups
+        const allFiles = await FileSystem.StorageAccessFramework.readDirectoryAsync(backupPathUri);
+        
+        // Filter files that contain 'ExpenseManagerBackup_' and end with '.json'
+        const backupFiles = allFiles.filter(uri => {
+          const decoded = decodeURIComponent(uri);
+          return decoded.includes('ExpenseManagerBackup_') && decoded.endsWith('.json');
+        });
+        
+        // Sort ascending by timestamp
+        backupFiles.sort((a, b) => {
+          const getTimestamp = (uri: string) => {
+            const match = decodeURIComponent(uri).match(/ExpenseManagerBackup_(\d+)\.json/);
+            return match ? parseInt(match[1], 10) : 0;
+          };
+          return getTimestamp(a) - getTimestamp(b);
+        });
+        
+        // Keep only 5 backups
+        const maxBackups = 5;
+        if (backupFiles.length > maxBackups) {
+          const filesToDelete = backupFiles.slice(0, backupFiles.length - maxBackups);
+          for (const fileToDelete of filesToDelete) {
+            await FileSystem.StorageAccessFramework.deleteAsync(fileToDelete);
+          }
+        }
+        
+        Alert.alert('Success', 'Backup saved successfully to your chosen folder.');
       } else {
-        alert('Sharing is not available on this device');
+        const fileUri = FileSystem.documentDirectory + 'ExpenseManagerBackup.json';
+        await FileSystem.writeAsStringAsync(fileUri, backupString);
+        
+        const isSharingAvailable = await Sharing.isAvailableAsync();
+        if (isSharingAvailable) {
+          await Sharing.shareAsync(fileUri, { mimeType: 'application/json', dialogTitle: 'Save Backup' });
+        } else {
+          Alert.alert('Error', 'Sharing is not available on this device');
+        }
       }
     } catch (e: any) {
-      alert('Backup failed: ' + e.message);
+      Alert.alert('Error', 'Backup failed: ' + e.message);
     } finally {
       setIsProcessing(false);
     }
@@ -179,32 +235,6 @@ export default function SettingsScreen({ navigation }: any) {
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.text} />
         </TouchableOpacity>
-        {Platform.OS === 'android' && (
-          <>
-            <View style={styles.divider} />
-            <TouchableOpacity 
-              style={styles.row}
-              onPress={handleSetDownloadPath}
-            >
-              <View style={styles.rowLeft}>
-                <Ionicons name="folder-outline" size={22} color={colors.primary} style={styles.icon} />
-                <Text style={[styles.text, { color: colors.text }]}>Download Path</Text>
-              </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, justifyContent: 'flex-end', marginLeft: 20 }}>
-                <Text style={{ color: colors.primary, fontSize: 12, marginRight: 8, flexShrink: 1 }} numberOfLines={1} ellipsizeMode="middle">
-                  {downloadPathUri ? decodeURIComponent(downloadPathUri.split('%3A').pop() || 'Custom Path') : 'Not Set'}
-                </Text>
-                {downloadPathUri ? (
-                  <TouchableOpacity onPress={() => updateDownloadPath(null)} style={{ padding: 4 }}>
-                    <Ionicons name="close-circle" size={20} color="#ff4444" />
-                  </TouchableOpacity>
-                ) : (
-                  <Ionicons name="chevron-forward" size={20} color={colors.text} />
-                )}
-              </View>
-            </TouchableOpacity>
-          </>
-        )}
       </View>
 
       <View style={[styles.group, { backgroundColor: colors.card }]}>
@@ -252,6 +282,54 @@ export default function SettingsScreen({ navigation }: any) {
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.text} />
         </TouchableOpacity>
+        {Platform.OS === 'android' && (
+          <>
+            <View style={styles.divider} />
+            <TouchableOpacity 
+              style={styles.row}
+              onPress={handleSetDownloadPath}
+            >
+              <View style={styles.rowLeft}>
+                <Ionicons name="folder-outline" size={22} color={colors.primary} style={styles.icon} />
+                <Text style={[styles.text, { color: colors.text }]}>Download Path</Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, justifyContent: 'flex-end', marginLeft: 20 }}>
+                <Text style={{ color: colors.primary, fontSize: 12, marginRight: 8, flexShrink: 1 }} numberOfLines={1} ellipsizeMode="middle">
+                  {downloadPathUri ? decodeURIComponent(downloadPathUri.split('%3A').pop() || 'Custom Path') : 'Not Set'}
+                </Text>
+                {downloadPathUri ? (
+                  <TouchableOpacity onPress={() => updateDownloadPath(null)} style={{ padding: 4 }}>
+                    <Ionicons name="close-circle" size={20} color="#ff4444" />
+                  </TouchableOpacity>
+                ) : (
+                  <Ionicons name="chevron-forward" size={20} color={colors.text} />
+                )}
+              </View>
+            </TouchableOpacity>
+            <View style={styles.divider} />
+            <TouchableOpacity 
+              style={styles.row}
+              onPress={handleSetBackupPath}
+            >
+              <View style={styles.rowLeft}>
+                <Ionicons name="folder-outline" size={22} color={colors.primary} style={styles.icon} />
+                <Text style={[styles.text, { color: colors.text }]}>Backup Path</Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, justifyContent: 'flex-end', marginLeft: 20 }}>
+                <Text style={{ color: colors.primary, fontSize: 12, marginRight: 8, flexShrink: 1 }} numberOfLines={1} ellipsizeMode="middle">
+                  {backupPathUri ? decodeURIComponent(backupPathUri.split('%3A').pop() || 'Custom Path') : 'Not Set'}
+                </Text>
+                {backupPathUri ? (
+                  <TouchableOpacity onPress={() => updateBackupPath(null)} style={{ padding: 4 }}>
+                    <Ionicons name="close-circle" size={20} color="#ff4444" />
+                  </TouchableOpacity>
+                ) : (
+                  <Ionicons name="chevron-forward" size={20} color={colors.text} />
+                )}
+              </View>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
 
       <TouchableOpacity 
