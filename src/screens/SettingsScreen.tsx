@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Switch, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Switch, TouchableOpacity, Alert, ScrollView, Platform } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { useThemeContext } from '../context/ThemeContext';
 import { useAuthContext } from '../context/AuthContext';
@@ -17,7 +17,24 @@ export default function SettingsScreen({ navigation }: any) {
   const { logout, refreshAuth } = useAuthContext();
   const [isImportModalVisible, setIsImportModalVisible] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const { currency, refreshExpenseData } = useExpenseContext();
+  const { currency, refreshExpenseData, downloadPathUri, updateDownloadPath } = useExpenseContext();
+
+  const handleSetDownloadPath = async () => {
+    if (Platform.OS !== 'android') {
+      Alert.alert('Unsupported', 'Setting a default download path is only available on Android devices due to system limitations.');
+      return;
+    }
+    
+    try {
+      const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+      if (permissions.granted) {
+        await updateDownloadPath(permissions.directoryUri);
+        Alert.alert('Success', 'Download path set successfully! Future PDF reports will be saved here automatically.');
+      }
+    } catch (e: any) {
+      Alert.alert('Error', 'Failed to set download path: ' + e.message);
+    }
+  };
 
   const handleBackup = async () => {
     try {
@@ -162,6 +179,32 @@ export default function SettingsScreen({ navigation }: any) {
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.text} />
         </TouchableOpacity>
+        {Platform.OS === 'android' && (
+          <>
+            <View style={styles.divider} />
+            <TouchableOpacity 
+              style={styles.row}
+              onPress={handleSetDownloadPath}
+            >
+              <View style={styles.rowLeft}>
+                <Ionicons name="folder-outline" size={22} color={colors.primary} style={styles.icon} />
+                <Text style={[styles.text, { color: colors.text }]}>Download Path</Text>
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, justifyContent: 'flex-end', marginLeft: 20 }}>
+                <Text style={{ color: colors.primary, fontSize: 12, marginRight: 8, flexShrink: 1 }} numberOfLines={1} ellipsizeMode="middle">
+                  {downloadPathUri ? decodeURIComponent(downloadPathUri.split('%3A').pop() || 'Custom Path') : 'Not Set'}
+                </Text>
+                {downloadPathUri ? (
+                  <TouchableOpacity onPress={() => updateDownloadPath(null)} style={{ padding: 4 }}>
+                    <Ionicons name="close-circle" size={20} color="#ff4444" />
+                  </TouchableOpacity>
+                ) : (
+                  <Ionicons name="chevron-forward" size={20} color={colors.text} />
+                )}
+              </View>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
 
       <View style={[styles.group, { backgroundColor: colors.card }]}>

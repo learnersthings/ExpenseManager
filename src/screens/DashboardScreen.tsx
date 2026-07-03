@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Alert, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Alert, TextInput, Platform } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '../context/ThemeContext';
@@ -9,11 +9,12 @@ import FilterModal from '../components/FilterModal';
 import { formatAmount } from '../utils/format';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system/legacy';
 import { generateDashboardPDFHTML } from '../utils/pdfGenerator';
 export default function DashboardScreen() {
   const { colors } = useTheme();
   const { isDarkTheme } = useThemeContext();
-  const { getCurrentMonthTotal, getPreviousMonthTotal, expenses, categories, paymentModes, currency, monthlyBudget, yearlyBudget, bulkDeleteExpenses, showMonthlyBudget, showYearlyBudget } = useExpenseContext();
+  const { getCurrentMonthTotal, getPreviousMonthTotal, expenses, categories, paymentModes, currency, monthlyBudget, yearlyBudget, bulkDeleteExpenses, showMonthlyBudget, showYearlyBudget, downloadPathUri } = useExpenseContext();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [displayCount, setDisplayCount] = useState(10);
@@ -179,13 +180,20 @@ export default function DashboardScreen() {
 
   const handleDownloadPDF = async () => {
     try {
-      // Use filteredExpenses if you want to export what's on the screen
-      // Or if in select mode, you could export selected expenses, but let's stick to filtered
       const html = generateDashboardPDFHTML(filteredExpenses, categories, paymentModes, currency);
-      const { uri } = await Print.printToFileAsync({ html });
-      await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+      const { uri, base64 } = await Print.printToFileAsync({ html, base64: true });
+      
+      if (downloadPathUri && Platform.OS === 'android') {
+        const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(downloadPathUri, `Expense_Report_${new Date().getTime()}.pdf`, 'application/pdf');
+        if (base64) {
+          await FileSystem.writeAsStringAsync(fileUri, base64, { encoding: FileSystem.EncodingType.Base64 });
+          Alert.alert('Success', 'PDF saved automatically to your chosen download folder.');
+        }
+      } else {
+        await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+      }
     } catch (error) {
-      Alert.alert('Error', 'Failed to generate PDF report.');
+      Alert.alert('Error', 'Failed to generate or save PDF report.');
     }
   };
 

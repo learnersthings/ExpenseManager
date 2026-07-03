@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Dimensions, SafeAreaView, TouchableOpacity, Alert, Platform } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { PieChart as GiftedPieChart, BarChart } from 'react-native-gifted-charts';
@@ -10,6 +10,7 @@ import FilterModal from '../components/FilterModal';
 import { formatAmount } from '../utils/format';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system/legacy';
 import { generateAnalyticsPDFHTML } from '../utils/pdfGenerator';
 const screenWidth = Dimensions.get('window').width;
 
@@ -18,7 +19,7 @@ type TimeFilter = 'This Month' | 'Last Month' | 'This Year' | 'All Time' | 'Cust
 export default function AnalyticsScreen() {
   const { colors } = useTheme();
   const { isDarkTheme } = useThemeContext();
-  const { expenses, categories, paymentModes, currency } = useExpenseContext();
+  const { expenses, categories, paymentModes, currency, downloadPathUri } = useExpenseContext();
   const [activeFilter, setActiveFilter] = useState<TimeFilter>('This Month');
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
   const [selectedYears, setSelectedYears] = useState<number[]>([]);
@@ -144,10 +145,19 @@ export default function AnalyticsScreen() {
     try {
       const filterName = activeFilter === 'Custom' ? 'Custom Filter' : activeFilter;
       const html = generateAnalyticsPDFHTML(filterName, totalSpent, fullCategoryData, paymentModeData, currency);
-      const { uri } = await Print.printToFileAsync({ html });
-      await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+      const { uri, base64 } = await Print.printToFileAsync({ html, base64: true });
+      
+      if (downloadPathUri && Platform.OS === 'android') {
+        const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(downloadPathUri, `Analytics_Report_${new Date().getTime()}.pdf`, 'application/pdf');
+        if (base64) {
+          await FileSystem.writeAsStringAsync(fileUri, base64, { encoding: FileSystem.EncodingType.Base64 });
+          Alert.alert('Success', 'PDF saved automatically to your chosen download folder.');
+        }
+      } else {
+        await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+      }
     } catch (error) {
-      Alert.alert('Error', 'Failed to generate PDF report.');
+      Alert.alert('Error', 'Failed to generate or save PDF report.');
     }
   };
 
