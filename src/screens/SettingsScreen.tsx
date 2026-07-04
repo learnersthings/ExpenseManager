@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { View, StyleSheet, Switch, TouchableOpacity, Alert, ScrollView, Platform } from 'react-native';
 import AppText from '../components/AppText';
-import { useThemeContext } from '../context/ThemeContext';
+import { useThemeContext, ACCENT_COLORS } from '../context/ThemeContext';
 import { useAuthContext } from '../context/AuthContext';
 import ImportSheetModal from '../components/ImportSheetModal';
 import { useExpenseContext } from '../context/ExpenseContext';
@@ -14,10 +14,11 @@ import * as DocumentPicker from 'expo-document-picker';
 
 export default function SettingsScreen({ navigation }: any) {
   const colors = useThemeColors();
-  const { isDarkTheme, toggleTheme, refreshTheme } = useThemeContext();
+  const { isDarkTheme, toggleTheme, refreshTheme, accentColor, setAccentColor } = useThemeContext();
   const { logout, refreshAuth } = useAuthContext();
   const [isImportModalVisible, setIsImportModalVisible] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isAccentExpanded, setIsAccentExpanded] = useState(false);
   const { currency, refreshExpenseData, downloadPathUri, updateDownloadPath, backupPathUri, updateBackupPath } = useExpenseContext();
 
   const handleSetDownloadPath = async () => {
@@ -185,6 +186,47 @@ export default function SettingsScreen({ navigation }: any) {
             onValueChange={toggleTheme}
             value={isDarkTheme}
           />
+        </View>
+
+        <View style={styles.divider} />
+        
+        <View style={{ padding: 16 }}>
+          <TouchableOpacity 
+            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: isAccentExpanded ? 16 : 0 }}
+            onPress={() => setIsAccentExpanded(!isAccentExpanded)}
+            activeOpacity={0.7}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Ionicons name="color-palette-outline" size={22} color={colors.primary} style={styles.icon} />
+              <AppText style={[styles.text, { color: colors.text }]}>Accent Color</AppText>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              {!isAccentExpanded && (
+                <View style={[styles.colorSwatch, { width: 24, height: 24, borderRadius: 12, marginRight: 8, backgroundColor: accentColor }]} />
+              )}
+              <Ionicons name={isAccentExpanded ? "chevron-up" : "chevron-down"} size={20} color={colors.text} />
+            </View>
+          </TouchableOpacity>
+          
+          {isAccentExpanded && (
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
+              {ACCENT_COLORS.map((color) => (
+                <TouchableOpacity
+                  key={color}
+                  onPress={() => setAccentColor(color)}
+                  style={[
+                    styles.colorSwatch,
+                    { backgroundColor: color, marginRight: 0 },
+                    accentColor === color && { borderWidth: 3, borderColor: colors.text }
+                  ]}
+                >
+                  {accentColor === color && (
+                    <Ionicons name="checkmark" size={16} color="#FFF" style={{ textShadowColor: 'rgba(0,0,0,0.3)', textShadowRadius: 2, textShadowOffset: { width: 0, height: 1 } }} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </View>
       </View>
 
@@ -370,9 +412,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   icon: {
-    marginRight: 15,
+    marginRight: 16,
     width: 24,
-    textAlign: 'center',
   },
   divider: {
     height: StyleSheet.hairlineWidth,
@@ -390,6 +431,14 @@ const styles = StyleSheet.create({
     marginLeft: 15,
     marginTop: 15,
     marginBottom: 5,
+  },
+  colorSwatch: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   logoutButton: {
     padding: 15,

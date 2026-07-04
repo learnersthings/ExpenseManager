@@ -5,27 +5,54 @@ import { useAuthContext } from './AuthContext';
 
 interface ThemeContextType {
   isDarkTheme: boolean;
+  accentColor: string;
   toggleTheme: () => void;
+  setAccentColor: (color: string) => Promise<void>;
   refreshTheme: () => Promise<void>;
 }
 
+export const ACCENT_COLORS = [
+  '#3B82F6', // Royal Blue
+  '#6366F1', // Indigo
+  '#10B981', // Emerald Green
+  '#8B5CF6', // Amethyst Purple
+  '#F43F5E', // Coral Red
+  '#F59E0B', // Amber Orange
+  '#14B8A6', // Teal
+  '#EAB308', // Yellow
+  '#64748B', // Slate Grey
+  '#84CC16', // Lime Green
+  '#D946EF', // Fuchsia
+  '#0EA5E9', // Sky Blue
+  '#34D399', // Mint
+  '#F97316', // Orange
+  '#EF4444', // Red
+  '#A8A29E', // Warm Gray
+  '#0F172A', // Slate Dark
+];
+
 const ThemeContext = createContext<ThemeContextType>({
   isDarkTheme: true,
-  toggleTheme: () => {},
-  refreshTheme: async () => {},
+  accentColor: ACCENT_COLORS[0],
+  toggleTheme: () => { },
+  setAccentColor: async () => { },
+  refreshTheme: async () => { },
 });
 
 export const useThemeContext = () => useContext(ThemeContext);
 
 const THEME_KEY = '@app_theme_is_dark';
+const ACCENT_KEY = '@app_theme_accent_color';
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const systemColorScheme = useColorScheme();
   const { user } = useAuthContext();
   const themeKey = user ? `${THEME_KEY}_${user.email}` : THEME_KEY;
-  
+  const accentKey = user ? `${ACCENT_KEY}_${user.email}` : ACCENT_KEY;
+
   // Default to system theme or true (dark) if system is unavailable
   const [isDarkTheme, setIsDarkTheme] = useState(systemColorScheme === 'dark' || systemColorScheme == null);
+  const [accentColor, setAccentColorState] = useState(ACCENT_COLORS[0]);
   const [isReady, setIsReady] = useState(false);
 
   const loadTheme = async () => {
@@ -36,6 +63,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       } else {
         setIsDarkTheme(systemColorScheme === 'dark' || systemColorScheme == null);
       }
+
+      const storedAccent = await AsyncStorage.getItem(accentKey);
+      if (storedAccent !== null) {
+        setAccentColorState(storedAccent);
+      }
     } catch (e) {
       console.error('Failed to load theme.', e);
     } finally {
@@ -45,7 +77,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     loadTheme();
-  }, [themeKey]);
+  }, [themeKey, accentKey]);
 
   const toggleTheme = async () => {
     const newTheme = !isDarkTheme;
@@ -53,10 +85,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     await AsyncStorage.setItem(themeKey, JSON.stringify(newTheme));
   };
 
+  const setAccentColor = async (color: string) => {
+    setAccentColorState(color);
+    await AsyncStorage.setItem(accentKey, color);
+  };
+
   if (!isReady) return null;
 
   return (
-    <ThemeContext.Provider value={{ isDarkTheme, toggleTheme, refreshTheme: loadTheme }}>
+    <ThemeContext.Provider value={{ isDarkTheme, accentColor, toggleTheme, setAccentColor, refreshTheme: loadTheme }}>
       {children}
     </ThemeContext.Provider>
   );

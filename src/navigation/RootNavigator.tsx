@@ -9,19 +9,29 @@ import BottomTabs from './BottomTabs';
 import AuthStack from './AuthStack';
 
 export default function RootNavigator() {
-  const { isDarkTheme } = useThemeContext();
+  const { isDarkTheme, accentColor } = useThemeContext();
   const { isLoggedIn, isAuthLoading } = useAuthContext();
+
+  const CustomDarkTheme = {
+    ...DarkTheme,
+    colors: { ...DarkTheme.colors, primary: accentColor },
+  };
+
+  const CustomLightTheme = {
+    ...DefaultTheme,
+    colors: { ...DefaultTheme.colors, primary: accentColor },
+  };
 
   if (isAuthLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: isDarkTheme ? '#121212' : '#ffffff' }}>
-        <ActivityIndicator size="large" color={isDarkTheme ? '#00FFFF' : '#0000ff'} />
+        <ActivityIndicator size="large" color={accentColor} />
       </View>
     );
   }
 
   return (
-    <NavigationContainer theme={isDarkTheme ? DarkTheme : DefaultTheme}>
+    <NavigationContainer theme={isDarkTheme ? CustomDarkTheme : CustomLightTheme}>
       <StatusBar style={isDarkTheme ? 'light' : 'dark'} />
       {isLoggedIn ? <BottomTabs /> : <AuthStack />}
     </NavigationContainer>
