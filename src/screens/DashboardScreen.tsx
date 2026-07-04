@@ -23,16 +23,16 @@ export default function DashboardScreen() {
   const renderCards = () => (
     <View>
       {/* Monthly Spending Card */}
-      <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000', padding: 20 }]}>
+      <View style={[styles.card, { backgroundColor: colors.primary, shadowColor: isDarkTheme ? '#00FFFF' : colors.primary, padding: 20 }]}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View style={{ flex: 1, paddingRight: 16 }}>
-            <Text style={{ fontSize: 14, color: colors.text, opacity: 0.7, marginBottom: 8, fontWeight: '600', textTransform: 'uppercase' }}>{currentMonthName} Spending</Text>
-            <Text style={{ fontSize: 32, fontWeight: 'bold', color: monthlyBudget > 0 && total > monthlyBudget ? '#ff4444' : colors.text, marginBottom: monthlyBudget > 0 && showMonthlyBudget ? 16 : 0 }} numberOfLines={1} adjustsFontSizeToFit>
+            <Text style={{ fontSize: 14, color: '#FFF', opacity: 0.9, marginBottom: 8, fontWeight: '600', textTransform: 'uppercase' }}>{currentMonthName} Spending</Text>
+            <Text style={{ fontSize: 32, fontWeight: 'bold', color: monthlyBudget > 0 && total > monthlyBudget ? '#ffcccc' : '#FFF', marginBottom: monthlyBudget > 0 && showMonthlyBudget ? 16 : 0 }} numberOfLines={1} adjustsFontSizeToFit>
               {currency}{formatAmount(total)}
             </Text>
             {monthlyBudget > 0 && showMonthlyBudget && (
-              <View style={{ height: 6, backgroundColor: isDarkTheme ? '#333' : '#eee', borderRadius: 3, width: '100%', overflow: 'hidden' }}>
-                <View style={{ height: '100%', backgroundColor: total > monthlyBudget ? '#ff4444' : colors.primary, width: `${Math.min((total / monthlyBudget) * 100, 100)}%` }} />
+              <View style={{ height: 6, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 3, width: '100%', overflow: 'hidden' }}>
+                <View style={{ height: '100%', backgroundColor: total > monthlyBudget ? '#ffcccc' : '#FFF', width: `${Math.min((total / monthlyBudget) * 100, 100)}%` }} />
               </View>
             )}
           </View>
@@ -40,9 +40,9 @@ export default function DashboardScreen() {
           {monthlyBudget > 0 && showMonthlyBudget && (
             <View style={{ alignItems: 'center', justifyContent: 'center' }}>
               <Svg width={120} height={120}>
-                <Circle stroke={isDarkTheme ? '#333' : '#eee'} cx={60} cy={60} r={50} strokeWidth={8} fill="none" />
+                <Circle stroke="rgba(255,255,255,0.2)" cx={60} cy={60} r={50} strokeWidth={8} fill="none" />
                 <Circle
-                  stroke={total > monthlyBudget ? '#ff4444' : colors.primary}
+                  stroke={total > monthlyBudget ? '#ffcccc' : '#FFF'}
                   cx={60} cy={60} r={50} strokeWidth={8}
                   strokeDasharray={`${2 * Math.PI * 50} ${2 * Math.PI * 50}`}
                   strokeDashoffset={2 * Math.PI * 50 - (Math.min((total / monthlyBudget) * 100, 100) / 100) * 2 * Math.PI * 50}
@@ -50,10 +50,10 @@ export default function DashboardScreen() {
                 />
               </Svg>
               <View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ fontSize: 15, fontWeight: 'bold', color: colors.text }}>
+                <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#FFF' }}>
                   {`${String(((total / monthlyBudget) * 100).toFixed(2)).padStart(5, '0')}%`}
                 </Text>
-                <Text style={{ fontSize: 10, color: colors.text, opacity: 0.6, marginTop: 2 }}>
+                <Text style={{ fontSize: 10, color: '#FFF', opacity: 0.8, marginTop: 2 }}>
                   of {currency}{formatAmount(monthlyBudget)}
                 </Text>
               </View>
@@ -63,16 +63,16 @@ export default function DashboardScreen() {
       </View>
 
       {/* Yearly Spending Card */}
-      <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000', padding: 20 }]}>
+      <View style={[styles.card, { backgroundColor: colors.primary, shadowColor: isDarkTheme ? '#00FFFF' : colors.primary, padding: 20 }]}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View style={{ flex: 1, paddingRight: 16 }}>
-            <Text style={{ fontSize: 14, color: colors.text, opacity: 0.7, marginBottom: 8, fontWeight: '600', textTransform: 'uppercase' }}>{currentYear} Total Spending</Text>
-            <Text style={{ fontSize: 32, fontWeight: 'bold', color: yearlyBudget > 0 && currentYearTotal > yearlyBudget ? '#ff4444' : colors.text, marginBottom: yearlyBudget > 0 && showYearlyBudget ? 16 : 0 }} numberOfLines={1} adjustsFontSizeToFit>
+            <Text style={{ fontSize: 14, color: '#FFF', opacity: 0.9, marginBottom: 8, fontWeight: '600', textTransform: 'uppercase' }}>{currentYear} Total Spending</Text>
+            <Text style={{ fontSize: 32, fontWeight: 'bold', color: yearlyBudget > 0 && currentYearTotal > yearlyBudget ? '#ffcccc' : '#FFF', marginBottom: yearlyBudget > 0 && showYearlyBudget ? 16 : 0 }} numberOfLines={1} adjustsFontSizeToFit>
               {currency}{formatAmount(currentYearTotal)}
             </Text>
             {yearlyBudget > 0 && showYearlyBudget && (
-              <View style={{ height: 6, backgroundColor: isDarkTheme ? '#333' : '#eee', borderRadius: 3, width: '100%', overflow: 'hidden' }}>
-                <View style={{ height: '100%', backgroundColor: currentYearTotal > yearlyBudget ? '#ff4444' : colors.primary, width: `${Math.min((currentYearTotal / yearlyBudget) * 100, 100)}%` }} />
+              <View style={{ height: 6, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 3, width: '100%', overflow: 'hidden' }}>
+                <View style={{ height: '100%', backgroundColor: currentYearTotal > yearlyBudget ? '#ffcccc' : '#FFF', width: `${Math.min((currentYearTotal / yearlyBudget) * 100, 100)}%` }} />
               </View>
             )}
           </View>
@@ -80,9 +80,9 @@ export default function DashboardScreen() {
           {yearlyBudget > 0 && showYearlyBudget && (
             <View style={{ alignItems: 'center', justifyContent: 'center' }}>
               <Svg width={120} height={120}>
-                <Circle stroke={isDarkTheme ? '#333' : '#eee'} cx={60} cy={60} r={50} strokeWidth={8} fill="none" />
+                <Circle stroke="rgba(255,255,255,0.2)" cx={60} cy={60} r={50} strokeWidth={8} fill="none" />
                 <Circle
-                  stroke={currentYearTotal > yearlyBudget ? '#ff4444' : colors.primary}
+                  stroke={currentYearTotal > yearlyBudget ? '#ffcccc' : '#FFF'}
                   cx={60} cy={60} r={50} strokeWidth={8}
                   strokeDasharray={`${2 * Math.PI * 50} ${2 * Math.PI * 50}`}
                   strokeDashoffset={2 * Math.PI * 50 - (Math.min((currentYearTotal / yearlyBudget) * 100, 100) / 100) * 2 * Math.PI * 50}
@@ -90,10 +90,10 @@ export default function DashboardScreen() {
                 />
               </Svg>
               <View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ fontSize: 15, fontWeight: 'bold', color: colors.text }}>
+                <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#FFF' }}>
                   {`${String(((currentYearTotal / yearlyBudget) * 100).toFixed(2)).padStart(5, '0')}%`}
                 </Text>
-                <Text style={{ fontSize: 10, color: colors.text, opacity: 0.6, marginTop: 2 }}>
+                <Text style={{ fontSize: 10, color: '#FFF', opacity: 0.8, marginTop: 2 }}>
                   of {currency}{formatAmount(yearlyBudget)}
                 </Text>
               </View>
