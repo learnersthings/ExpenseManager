@@ -209,19 +209,6 @@ export default function DashboardScreen() {
         <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000' }]}>
           <View style={styles.cardHeader}>
             <Text style={[styles.cardTitle, { color: colors.text }]}>Expense Summary</Text>
-            {diffPercent !== null && (
-              <View style={[styles.diffBadge, { backgroundColor: diffPrefix === '+' ? 'rgba(0,200,81,0.1)' : diffPrefix === '-' ? 'rgba(255,68,68,0.1)' : 'rgba(136,136,136,0.1)' }]}>
-                <Ionicons
-                  name={diffPrefix === '+' ? "trending-down" : diffPrefix === '-' ? "trending-up" : "remove"}
-                  size={14}
-                  color={diffColor}
-                  style={{ marginRight: 4 }}
-                />
-                <Text style={[styles.diffText, { color: diffColor }]}>
-                  {diffPrefix}{diffPercent}%
-                </Text>
-              </View>
-            )}
           </View>
 
           <View style={styles.summaryRow}>
