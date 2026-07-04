@@ -71,13 +71,20 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
       setDescriptionError('Please enter a description.');
       hasError = true;
     }
-    if (categories.length > 0 && !categoryId) {
-      setCategoryError('Please select a category.');
-      hasError = true;
+    if (categories.length > 0) {
+      const isValidCategory = categoryId && categories.some(c => c.id === categoryId);
+      if (!isValidCategory) {
+        setCategoryError('Please select a category.');
+        hasError = true;
+      }
     }
-    if (paymentModes.length > 0 && !paymentModeId) {
-      setPaymentModeError('Please select a payment mode.');
-      hasError = true;
+
+    if (paymentModes.length > 0) {
+      const isValidPaymentMode = paymentModeId && paymentModes.some(p => p.id === paymentModeId);
+      if (!isValidPaymentMode) {
+        setPaymentModeError('Please select a payment mode.');
+        hasError = true;
+      }
     }
 
     if (hasError) return;
