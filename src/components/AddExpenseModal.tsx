@@ -71,11 +71,11 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
       setDescriptionError('Please enter a description.');
       hasError = true;
     }
-    if (!categoryId) {
+    if (categories.length > 0 && !categoryId) {
       setCategoryError('Please select a category.');
       hasError = true;
     }
-    if (!paymentModeId) {
+    if (paymentModes.length > 0 && !paymentModeId) {
       setPaymentModeError('Please select a payment mode.');
       hasError = true;
     }

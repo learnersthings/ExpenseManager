@@ -14,8 +14,8 @@ export const generateDashboardPDFHTML = (
       <tr>
         <td>${new Date(exp.date).toLocaleDateString()}</td>
         <td>${exp.description}</td>
-        <td>${cat ? cat.name : 'Other'}</td>
-        <td>${mode ? mode.name : 'Unknown'}</td>
+        <td>${cat ? cat.name : ''}</td>
+        <td>${mode ? mode.name : ''}</td>
         <td style="text-align: right; color: #ff4444;">${formatAmount(exp.amount)}</td>
       </tr>
     `;
@@ -172,12 +172,12 @@ export const generateAnalyticsPDFHTML = (
         </div>
 
         <div class="card">
-          <h2>Payment Modes</h2>
+          <h2>Payment Mode</h2>
           ${generateSVGPieChart(paymentModeData)}
           <table>
             <thead>
               <tr>
-                <th>Mode</th>
+                <th>Payment Mode</th>
                 <th style="text-align: right;">Percentage (%)</th>
                 <th style="text-align: right;">Amount</th>
               </tr>

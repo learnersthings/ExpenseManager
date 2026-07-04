@@ -101,7 +101,7 @@ export default function AnalyticsScreen() {
         value: categoryTotals[catId],
         color: cat ? cat.color : '#888',
         text: percentage,
-        name: cat ? cat.name : 'Other',
+        name: cat ? cat.name : '',
         amount: categoryTotals[catId]
       };
     }).sort((a, b) => b.value - a.value);
@@ -126,7 +126,7 @@ export default function AnalyticsScreen() {
       const percentage = modeTotalSum > 0 ? ((modeTotals[modeId] / modeTotalSum) * 100).toFixed(2) + '%' : '0.00%';
       return {
         value: modeTotals[modeId],
-        name: mode ? mode.name : 'Unknown',
+        name: mode ? mode.name : '',
         amount: modeTotals[modeId],
         color: mode ? mode.color : '#888',
         text: percentage
