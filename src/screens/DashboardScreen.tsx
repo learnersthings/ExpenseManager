@@ -11,6 +11,8 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
 import { generateDashboardPDFHTML } from '../utils/pdfGenerator';
+import Svg, { Circle, Text as SvgText } from 'react-native-svg';
+
 export default function DashboardScreen() {
   const { colors } = useTheme();
   const { isDarkTheme } = useThemeContext();
@@ -184,7 +186,7 @@ export default function DashboardScreen() {
       setIsDownloading(true);
       const html = generateDashboardPDFHTML(filteredExpenses, categories, paymentModes, currency);
       const { uri, base64 } = await Print.printToFileAsync({ html, base64: true });
-      
+
       if (downloadPathUri && Platform.OS === 'android') {
         const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(downloadPathUri, `Expense_Report_${new Date().getTime()}.pdf`, 'application/pdf');
         if (base64) {
@@ -236,44 +238,42 @@ export default function DashboardScreen() {
           </View>
 
           {((monthlyBudget > 0 && showMonthlyBudget) || (yearlyBudget > 0 && showYearlyBudget)) && (
-            <View style={styles.progressSection}>
+            <View style={[styles.progressSection, { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingTop: 16 }]}>
               {showMonthlyBudget && monthlyBudget > 0 && (
-                <View style={{ marginBottom: (showYearlyBudget && yearlyBudget > 0) ? 12 : 0 }}>
-                  <View style={styles.progressHeader}>
-                    <Text style={styles.progressLabel}>Monthly Budget</Text>
-                    <Text style={styles.progressPercent}>
-                      {String(((total / monthlyBudget) * 100).toFixed(2)).padStart(5, '0')}%
-                    </Text>
-                  </View>
-                  <View style={styles.progressBarContainer}>
-                    <View style={[
-                      styles.progressBar,
-                      {
-                        backgroundColor: total > monthlyBudget ? '#ff4444' : colors.primary,
-                        width: `${Math.min((total / monthlyBudget) * 100, 100)}%`
-                      }
-                    ]} />
-                  </View>
+                <View style={{ alignItems: 'center' }}>
+                  <Svg width={120} height={120}>
+                    <Circle stroke={isDarkTheme ? '#333' : '#eee'} cx={60} cy={60} r={50} strokeWidth={8} fill="none" />
+                    <Circle
+                      stroke={total > monthlyBudget ? '#ff4444' : colors.primary}
+                      cx={60} cy={60} r={50} strokeWidth={8}
+                      strokeDasharray={`${2 * Math.PI * 50} ${2 * Math.PI * 50}`}
+                      strokeDashoffset={2 * Math.PI * 50 - (Math.min((total / monthlyBudget) * 100, 100) / 100) * 2 * Math.PI * 50}
+                      strokeLinecap="round" fill="none" transform="rotate(-90 60 60)"
+                    />
+                    <SvgText x={60} y={60} textAnchor="middle" alignmentBaseline="middle" fontSize={15} fontWeight="bold" fill={colors.text}>
+                      {`${String(((total / monthlyBudget) * 100).toFixed(2)).padStart(5, '0')}%`}
+                    </SvgText>
+                  </Svg>
+                  <Text style={{ marginTop: 8, color: colors.text, fontSize: 14, fontWeight: '600' }}>Monthly Budget</Text>
                 </View>
               )}
 
               {showYearlyBudget && yearlyBudget > 0 && (
-                <View>
-                  <View style={styles.progressHeader}>
-                    <Text style={styles.progressLabel}>Yearly Budget</Text>
-                    <Text style={styles.progressPercent}>
-                      {String(((currentYearTotal / yearlyBudget) * 100).toFixed(2)).padStart(5, '0')}%
-                    </Text>
-                  </View>
-                  <View style={styles.progressBarContainer}>
-                    <View style={[
-                      styles.progressBar,
-                      {
-                        backgroundColor: currentYearTotal > yearlyBudget ? '#ff4444' : colors.primary,
-                        width: `${Math.min((currentYearTotal / yearlyBudget) * 100, 100)}%`
-                      }
-                    ]} />
-                  </View>
+                <View style={{ alignItems: 'center' }}>
+                  <Svg width={120} height={120}>
+                    <Circle stroke={isDarkTheme ? '#333' : '#eee'} cx={60} cy={60} r={50} strokeWidth={8} fill="none" />
+                    <Circle
+                      stroke={currentYearTotal > yearlyBudget ? '#ff4444' : colors.primary}
+                      cx={60} cy={60} r={50} strokeWidth={8}
+                      strokeDasharray={`${2 * Math.PI * 50} ${2 * Math.PI * 50}`}
+                      strokeDashoffset={2 * Math.PI * 50 - (Math.min((currentYearTotal / yearlyBudget) * 100, 100) / 100) * 2 * Math.PI * 50}
+                      strokeLinecap="round" fill="none" transform="rotate(-90 60 60)"
+                    />
+                    <SvgText x={60} y={60} textAnchor="middle" alignmentBaseline="middle" fontSize={15} fontWeight="bold" fill={colors.text}>
+                      {`${String(((currentYearTotal / yearlyBudget) * 100).toFixed(2)).padStart(5, '0')}%`}
+                    </SvgText>
+                  </Svg>
+                  <Text style={{ marginTop: 8, color: colors.text, fontSize: 14, fontWeight: '600' }}>Yearly Budget</Text>
                 </View>
               )}
             </View>
