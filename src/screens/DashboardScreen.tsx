@@ -207,77 +207,84 @@ export default function DashboardScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
 
-        {/* Expenses Summary Card */}
-        <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000' }]}>
-          <View style={styles.cardHeader}>
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Expense Summary</Text>
-          </View>
-
-          <View style={styles.summaryRow}>
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>{currentMonthName}</Text>
-              <Text style={[styles.summaryAmount, { color: monthlyBudget > 0 && total > monthlyBudget ? '#ff4444' : colors.primary }]} numberOfLines={1} adjustsFontSizeToFit>
+        {/* Monthly Spending Card */}
+        <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000', padding: 20 }]}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View style={{ flex: 1, paddingRight: 16 }}>
+              <Text style={{ fontSize: 14, color: colors.text, opacity: 0.7, marginBottom: 8, fontWeight: '600', textTransform: 'uppercase' }}>{currentMonthName} Spending</Text>
+              <Text style={{ fontSize: 32, fontWeight: 'bold', color: monthlyBudget > 0 && total > monthlyBudget ? '#ff4444' : colors.text, marginBottom: monthlyBudget > 0 && showMonthlyBudget ? 16 : 0 }} numberOfLines={1} adjustsFontSizeToFit>
                 {currency}{formatAmount(total)}
               </Text>
-              {monthlyBudget > 0 && (
-                <Text style={styles.budgetSubtext}>of {currency}{formatAmount(monthlyBudget)}</Text>
+              {monthlyBudget > 0 && showMonthlyBudget && (
+                <View style={{ height: 6, backgroundColor: isDarkTheme ? '#333' : '#eee', borderRadius: 3, width: '100%', overflow: 'hidden' }}>
+                  <View style={{ height: '100%', backgroundColor: total > monthlyBudget ? '#ff4444' : colors.primary, width: `${Math.min((total / monthlyBudget) * 100, 100)}%` }} />
+                </View>
               )}
             </View>
+            
+            {monthlyBudget > 0 && showMonthlyBudget && (
+              <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                <Svg width={120} height={120}>
+                  <Circle stroke={isDarkTheme ? '#333' : '#eee'} cx={60} cy={60} r={50} strokeWidth={8} fill="none" />
+                  <Circle
+                    stroke={total > monthlyBudget ? '#ff4444' : colors.primary}
+                    cx={60} cy={60} r={50} strokeWidth={8}
+                    strokeDasharray={`${2 * Math.PI * 50} ${2 * Math.PI * 50}`}
+                    strokeDashoffset={2 * Math.PI * 50 - (Math.min((total / monthlyBudget) * 100, 100) / 100) * 2 * Math.PI * 50}
+                    strokeLinecap="round" fill="none" transform="rotate(-90 60 60)"
+                  />
+                </Svg>
+                <View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ fontSize: 15, fontWeight: 'bold', color: colors.text }}>
+                    {`${String(((total / monthlyBudget) * 100).toFixed(2)).padStart(5, '0')}%`}
+                  </Text>
+                  <Text style={{ fontSize: 10, color: colors.text, opacity: 0.6, marginTop: 2 }}>
+                    of {currency}{formatAmount(monthlyBudget)}
+                  </Text>
+                </View>
+              </View>
+            )}
+          </View>
+        </View>
 
-            <View style={[styles.summaryDivider, { backgroundColor: isDarkTheme ? '#333' : '#eee' }]} />
-
-            <View style={styles.summaryItem}>
-              <Text style={styles.summaryLabel}>{currentYear} Total</Text>
-              <Text style={[styles.summaryAmount, { color: yearlyBudget > 0 && currentYearTotal > yearlyBudget ? '#ff4444' : colors.text }]} numberOfLines={1} adjustsFontSizeToFit>
+        {/* Yearly Spending Card */}
+        <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000', padding: 20 }]}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <View style={{ flex: 1, paddingRight: 16 }}>
+              <Text style={{ fontSize: 14, color: colors.text, opacity: 0.7, marginBottom: 8, fontWeight: '600', textTransform: 'uppercase' }}>{currentYear} Total</Text>
+              <Text style={{ fontSize: 32, fontWeight: 'bold', color: yearlyBudget > 0 && currentYearTotal > yearlyBudget ? '#ff4444' : colors.text, marginBottom: yearlyBudget > 0 && showYearlyBudget ? 16 : 0 }} numberOfLines={1} adjustsFontSizeToFit>
                 {currency}{formatAmount(currentYearTotal)}
               </Text>
-              {yearlyBudget > 0 && (
-                <Text style={styles.budgetSubtext}>of {currency}{formatAmount(yearlyBudget)}</Text>
+              {yearlyBudget > 0 && showYearlyBudget && (
+                <View style={{ height: 6, backgroundColor: isDarkTheme ? '#333' : '#eee', borderRadius: 3, width: '100%', overflow: 'hidden' }}>
+                  <View style={{ height: '100%', backgroundColor: currentYearTotal > yearlyBudget ? '#ff4444' : colors.primary, width: `${Math.min((currentYearTotal / yearlyBudget) * 100, 100)}%` }} />
+                </View>
               )}
             </View>
+            
+            {yearlyBudget > 0 && showYearlyBudget && (
+              <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                <Svg width={120} height={120}>
+                  <Circle stroke={isDarkTheme ? '#333' : '#eee'} cx={60} cy={60} r={50} strokeWidth={8} fill="none" />
+                  <Circle
+                    stroke={currentYearTotal > yearlyBudget ? '#ff4444' : colors.primary}
+                    cx={60} cy={60} r={50} strokeWidth={8}
+                    strokeDasharray={`${2 * Math.PI * 50} ${2 * Math.PI * 50}`}
+                    strokeDashoffset={2 * Math.PI * 50 - (Math.min((currentYearTotal / yearlyBudget) * 100, 100) / 100) * 2 * Math.PI * 50}
+                    strokeLinecap="round" fill="none" transform="rotate(-90 60 60)"
+                  />
+                </Svg>
+                <View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ fontSize: 15, fontWeight: 'bold', color: colors.text }}>
+                    {`${String(((currentYearTotal / yearlyBudget) * 100).toFixed(2)).padStart(5, '0')}%`}
+                  </Text>
+                  <Text style={{ fontSize: 10, color: colors.text, opacity: 0.6, marginTop: 2 }}>
+                    of {currency}{formatAmount(yearlyBudget)}
+                  </Text>
+                </View>
+              </View>
+            )}
           </View>
-
-          {((monthlyBudget > 0 && showMonthlyBudget) || (yearlyBudget > 0 && showYearlyBudget)) && (
-            <View style={[styles.progressSection, { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingTop: 16 }]}>
-              {showMonthlyBudget && monthlyBudget > 0 && (
-                <View style={{ alignItems: 'center' }}>
-                  <Svg width={120} height={120}>
-                    <Circle stroke={isDarkTheme ? '#333' : '#eee'} cx={60} cy={60} r={50} strokeWidth={8} fill="none" />
-                    <Circle
-                      stroke={total > monthlyBudget ? '#ff4444' : colors.primary}
-                      cx={60} cy={60} r={50} strokeWidth={8}
-                      strokeDasharray={`${2 * Math.PI * 50} ${2 * Math.PI * 50}`}
-                      strokeDashoffset={2 * Math.PI * 50 - (Math.min((total / monthlyBudget) * 100, 100) / 100) * 2 * Math.PI * 50}
-                      strokeLinecap="round" fill="none" transform="rotate(-90 60 60)"
-                    />
-                    <SvgText x={60} y={60} textAnchor="middle" alignmentBaseline="middle" fontSize={15} fontWeight="bold" fill={colors.text}>
-                      {`${String(((total / monthlyBudget) * 100).toFixed(2)).padStart(5, '0')}%`}
-                    </SvgText>
-                  </Svg>
-                  <Text style={{ marginTop: 8, color: colors.text, fontSize: 14, fontWeight: '600' }}>Monthly Budget</Text>
-                </View>
-              )}
-
-              {showYearlyBudget && yearlyBudget > 0 && (
-                <View style={{ alignItems: 'center' }}>
-                  <Svg width={120} height={120}>
-                    <Circle stroke={isDarkTheme ? '#333' : '#eee'} cx={60} cy={60} r={50} strokeWidth={8} fill="none" />
-                    <Circle
-                      stroke={currentYearTotal > yearlyBudget ? '#ff4444' : colors.primary}
-                      cx={60} cy={60} r={50} strokeWidth={8}
-                      strokeDasharray={`${2 * Math.PI * 50} ${2 * Math.PI * 50}`}
-                      strokeDashoffset={2 * Math.PI * 50 - (Math.min((currentYearTotal / yearlyBudget) * 100, 100) / 100) * 2 * Math.PI * 50}
-                      strokeLinecap="round" fill="none" transform="rotate(-90 60 60)"
-                    />
-                    <SvgText x={60} y={60} textAnchor="middle" alignmentBaseline="middle" fontSize={15} fontWeight="bold" fill={colors.text}>
-                      {`${String(((currentYearTotal / yearlyBudget) * 100).toFixed(2)).padStart(5, '0')}%`}
-                    </SvgText>
-                  </Svg>
-                  <Text style={{ marginTop: 8, color: colors.text, fontSize: 14, fontWeight: '600' }}>Yearly Budget</Text>
-                </View>
-              )}
-            </View>
-          )}
         </View>
 
         <View style={styles.sectionHeader}>
