@@ -3,13 +3,16 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingVi
 import { useTheme } from '@react-navigation/native';
 import { useAuthContext } from '../context/AuthContext';
 import { useThemeContext } from '../context/ThemeContext';
+import { useExpenseContext } from '../context/ExpenseContext';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function ProfileScreen({ navigation }: any) {
   const { colors } = useTheme();
   const { isDarkTheme } = useThemeContext();
   const { user, updateProfile, changePassword } = useAuthContext();
+  const { migrateUserEmail } = useExpenseContext();
 
+  const [email, setEmail] = useState(user?.email || '');
   const [firstName, setFirstName] = useState(user?.firstName || '');
   const [lastName, setLastName] = useState(user?.lastName || '');
   const [oldPassword, setOldPassword] = useState('');
@@ -18,6 +21,7 @@ export default function ProfileScreen({ navigation }: any) {
   
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   
+  const [emailError, setEmailError] = useState('');
   const [firstNameError, setFirstNameError] = useState('');
   const [lastNameError, setLastNameError] = useState('');
   const [passwordError, setPasswordError] = useState('');
@@ -27,12 +31,20 @@ export default function ProfileScreen({ navigation }: any) {
   const placeholderColor = isDarkTheme ? '#888' : '#aaa';
 
   const handleUpdateProfile = async () => {
+    setEmailError('');
     setFirstNameError('');
     setLastNameError('');
     setGeneralMessage('');
     setIsSuccess(false);
 
     let isValid = true;
+    if (!email.trim()) {
+      setEmailError('Email cannot be empty.');
+      isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setEmailError('Please enter a valid email address.');
+      isValid = false;
+    }
     if (!firstName.trim()) {
       setFirstNameError('First Name cannot be empty.');
       isValid = false;
@@ -44,7 +56,11 @@ export default function ProfileScreen({ navigation }: any) {
     if (!isValid) return;
 
     try {
-      await updateProfile(firstName, lastName);
+      const newEmail = email.toLowerCase();
+      if (user?.email && newEmail !== user.email) {
+        await migrateUserEmail(user.email, newEmail);
+      }
+      await updateProfile(firstName, lastName, newEmail);
       setGeneralMessage('Profile updated successfully!');
       setIsSuccess(true);
     } catch (error: any) {
@@ -102,12 +118,17 @@ export default function ProfileScreen({ navigation }: any) {
             <Text style={styles.label}>Email Address</Text>
             <TextInput
               style={[
-                styles.input, 
-                { backgroundColor: isDarkTheme ? '#2a2a2a' : '#eaeaea', color: '#888', borderColor: isDarkTheme ? '#333' : '#e0e0e0' }
+                styles.input,
+                { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: emailError ? '#ff4444' : (isDarkTheme ? '#333' : '#e0e0e0') }
               ]}
-              value={user?.email || ''}
-              editable={false}
+              placeholder="Email Address"
+              placeholderTextColor={placeholderColor}
+              value={email}
+              onChangeText={(text) => { setEmail(text); setEmailError(''); setGeneralMessage(''); }}
+              autoCapitalize="none"
+              keyboardType="email-address"
             />
+            {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
           </View>
 
           <View style={styles.inputWrapper}>
