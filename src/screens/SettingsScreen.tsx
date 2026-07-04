@@ -15,7 +15,7 @@ import * as DocumentPicker from 'expo-document-picker';
 export default function SettingsScreen({ navigation }: any) {
   const colors = useThemeColors();
   const { isDarkTheme, toggleTheme, refreshTheme, accentColor, setAccentColor } = useThemeContext();
-  const { logout, refreshAuth } = useAuthContext();
+  const { logout, refreshAuth, user } = useAuthContext();
   const [isImportModalVisible, setIsImportModalVisible] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isAccentExpanded, setIsAccentExpanded] = useState(false);
@@ -100,7 +100,8 @@ export default function SettingsScreen({ navigation }: any) {
         
         Alert.alert('Success', 'Backup saved successfully to your chosen folder.');
       } else {
-        const fileUri = FileSystem.documentDirectory + 'ExpenseManagerBackup.json';
+        const timestamp = new Date().getTime();
+        const fileUri = FileSystem.documentDirectory + `ExpenseManagerBackup_${timestamp}.json`;
         await FileSystem.writeAsStringAsync(fileUri, backupString);
         
         const isSharingAvailable = await Sharing.isAvailableAsync();
@@ -166,7 +167,9 @@ export default function SettingsScreen({ navigation }: any) {
         >
           <View style={styles.rowLeft}>
             <Ionicons name="person-outline" size={22} color={colors.primary} style={styles.icon} />
-            <AppText style={[styles.text, { color: colors.text }]}>User Profile</AppText>
+            <AppText style={[styles.text, { color: colors.text }]}>
+              {user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : 'User Profile'}
+            </AppText>
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.text} />
         </TouchableOpacity>
