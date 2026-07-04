@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator, Alert } from 'react-native';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { View, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ActivityIndicator, Alert } from 'react-native';
+import AppText from '../components/AppText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTheme } from '@react-navigation/native';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext, Expense, Category, PaymentMode } from '../context/ExpenseContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,7 +19,7 @@ const PRESET_COLORS = ['#4CAF50', '#2196F3', '#FF9800', '#9C27B0', '#F44336', '#
 const PRESET_ICONS = ['pricetag', 'bag', 'card', 'cash', 'cart', 'folder', 'star', 'albums'];
 
 export default function ImportSheetModal({ visible, onClose }: ImportSheetModalProps) {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
   const { bulkImport, categories, paymentModes } = useExpenseContext();
   const insets = useSafeAreaInsets();
@@ -173,7 +174,7 @@ export default function ImportSheetModal({ visible, onClose }: ImportSheetModalP
     }
   };
 
-  const placeholderColor = isDarkTheme ? '#888' : '#aaa';
+  const placeholderColor = colors.textMuted;
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -184,23 +185,23 @@ export default function ImportSheetModal({ visible, onClose }: ImportSheetModalP
             style={[styles.modalContent, { backgroundColor: colors.background, paddingBottom: Math.max(24, insets.bottom + 16) }]}
           >
             <View style={styles.header}>
-              <Text style={[styles.title, { color: colors.text }]}>Import from Google Sheets</Text>
+              <AppText style={[styles.title, { color: colors.text }]}>Import from Google Sheets</AppText>
               <TouchableOpacity onPress={!isLoading ? onClose : undefined}>
                 <Ionicons name="close" size={24} color={!isLoading ? colors.text : '#888'} />
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.instructions}>
+            <AppText style={styles.instructions}>
               Please paste the link to your Google Sheet below. Ensure the sheet is set to "Anyone with the link can view". The app will read tabs named after months.
-            </Text>
+            </AppText>
 
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+            {error ? <AppText style={styles.errorText}>{error}</AppText> : null}
 
             <View style={styles.inputWrapper}>
-              <Text style={styles.label}>Google Sheet URL</Text>
+              <AppText style={styles.label}>Google Sheet URL</AppText>
               <View style={styles.inputContainer}>
                 <TextInput
-                  style={[styles.input, { flex: 1, backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: isDarkTheme ? '#333' : '#e0e0e0' }]}
+                  style={[styles.input, { flex: 1, backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
                   placeholder="Google Sheet URL"
                   placeholderTextColor={placeholderColor}
                   value={url}
@@ -220,11 +221,11 @@ export default function ImportSheetModal({ visible, onClose }: ImportSheetModalP
             {isLoading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={colors.primary} />
-                <Text style={[styles.progressText, { color: colors.primary }]}>{progress}</Text>
+                <AppText style={[styles.progressText, { color: colors.primary }]}>{progress}</AppText>
               </View>
             ) : (
               <TouchableOpacity style={[styles.importButton, { backgroundColor: colors.primary }]} onPress={handleImport}>
-                <Text style={styles.importButtonText}>Import Data</Text>
+                <AppText style={styles.importButtonText}>Import Data</AppText>
               </TouchableOpacity>
             )}
 
@@ -323,3 +324,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+

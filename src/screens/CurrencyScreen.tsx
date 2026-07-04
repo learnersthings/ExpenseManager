@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { useTheme } from '@react-navigation/native';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import AppText from '../components/AppText';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext } from '../context/ExpenseContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,7 +20,7 @@ const CURRENCIES = [
 ];
 
 export default function CurrencyScreen({ navigation }: any) {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
   const { currency, updateCurrency } = useExpenseContext();
 
@@ -30,7 +31,7 @@ export default function CurrencyScreen({ navigation }: any) {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000' }]}>
+      <View style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
         {CURRENCIES.map((c, index) => {
           const isSelected = currency === c.symbol;
           return (
@@ -43,8 +44,8 @@ export default function CurrencyScreen({ navigation }: any) {
               onPress={() => handleSelect(c.symbol)}
             >
               <View style={styles.left}>
-                <Text style={[styles.symbol, { color: colors.primary }]}>{c.symbol}</Text>
-                <Text style={[styles.name, { color: colors.text }]}>{c.name}</Text>
+                <AppText style={[styles.symbol, { color: colors.primary }]}>{c.symbol}</AppText>
+                <AppText style={[styles.name, { color: colors.text }]}>{c.name}</AppText>
               </View>
               {isSelected && <Ionicons name="checkmark" size={24} color={colors.primary} />}
             </TouchableOpacity>
@@ -88,3 +89,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 });
+

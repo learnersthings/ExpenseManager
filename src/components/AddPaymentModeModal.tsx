@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView, Alert } from 'react-native';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { View, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView, Alert } from 'react-native';
+import AppText from '../components/AppText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTheme } from '@react-navigation/native';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext, PaymentMode } from '../context/ExpenseContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,7 +17,7 @@ interface AddPaymentModeModalProps {
 }
 
 export default function AddPaymentModeModal({ visible, onClose, modeToEdit }: AddPaymentModeModalProps) {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
   const { paymentModes, addPaymentMode, updatePaymentMode, deletePaymentMode } = useExpenseContext();
   const insets = useSafeAreaInsets();
@@ -43,7 +44,7 @@ export default function AddPaymentModeModal({ visible, onClose, modeToEdit }: Ad
     }
   }, [visible, modeToEdit]);
 
-  const placeholderColor = isDarkTheme ? '#888' : '#aaa';
+  const placeholderColor = colors.textMuted;
 
   const handleSave = async () => {
     setError('');
@@ -118,21 +119,21 @@ export default function AddPaymentModeModal({ visible, onClose, modeToEdit }: Ad
             style={[styles.modalContent, { backgroundColor: colors.background, paddingBottom: Math.max(24, insets.bottom + 16) }]}
           >
             <View style={styles.header}>
-              <Text style={[styles.title, { color: colors.text }]}>
+              <AppText style={[styles.title, { color: colors.text }]}>
                 {modeToEdit ? 'Edit Payment Mode' : 'Add Payment Mode'}
-              </Text>
+              </AppText>
               <TouchableOpacity onPress={onClose}>
                 <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
-              {error ? <Text style={styles.errorText}>{error}</Text> : null}
+              {error ? <AppText style={styles.errorText}>{error}</AppText> : null}
 
               <View style={styles.inputWrapper}>
-                <Text style={styles.label}>Payment Mode Name</Text>
+                <AppText style={styles.label}>Payment Mode Name</AppText>
                 <TextInput
-                  style={[styles.input, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: isDarkTheme ? '#333' : '#e0e0e0' }]}
+                  style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
                   placeholder="e.g. Credit Card"
                   placeholderTextColor={placeholderColor}
                   value={name}
@@ -141,9 +142,9 @@ export default function AddPaymentModeModal({ visible, onClose, modeToEdit }: Ad
               </View>
 
               <View style={styles.inputWrapper}>
-                <Text style={styles.label}>Select Color</Text>
+                <AppText style={styles.label}>Select Color</AppText>
                 <TouchableOpacity 
-                  style={[styles.pickerButton, { borderColor: isDarkTheme ? '#333' : '#e0e0e0', backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5' }]}
+                  style={[styles.pickerButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
                   onPress={() => setColorPickerVisible(true)}
                 >
                   {color ? (
@@ -151,17 +152,17 @@ export default function AddPaymentModeModal({ visible, onClose, modeToEdit }: Ad
                   ) : (
                     <View style={[styles.colorSwatchSmall, { backgroundColor: '#888' }]} />
                   )}
-                  <Text style={[styles.pickerButtonText, { color: colors.text }]}>
+                  <AppText style={[styles.pickerButtonText, { color: colors.text }]}>
                     {color ? color.toUpperCase() : 'Random Color (Default)'}
-                  </Text>
+                  </AppText>
                   <Ionicons name="chevron-forward" size={20} color={colors.text} />
                 </TouchableOpacity>
               </View>
 
               <View style={styles.inputWrapper}>
-                <Text style={styles.label}>Select Icon</Text>
+                <AppText style={styles.label}>Select Icon</AppText>
                 <TouchableOpacity 
-                  style={[styles.pickerButton, { borderColor: isDarkTheme ? '#333' : '#e0e0e0', backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5' }]}
+                  style={[styles.pickerButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
                   onPress={() => setIconPickerVisible(true)}
                 >
                   {icon ? (
@@ -173,23 +174,23 @@ export default function AddPaymentModeModal({ visible, onClose, modeToEdit }: Ad
                       <Ionicons name="help" size={18} color="#fff" />
                     </View>
                   )}
-                  <Text style={[styles.pickerButtonText, { color: colors.text }]}>
+                  <AppText style={[styles.pickerButtonText, { color: colors.text }]}>
                     {icon ? icon : 'Random Icon (Default)'}
-                  </Text>
+                  </AppText>
                   <Ionicons name="chevron-forward" size={20} color={colors.text} />
                 </TouchableOpacity>
               </View>
 
               <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={handleSave}>
-                <Text style={styles.saveButtonText}>
+                <AppText style={styles.saveButtonText}>
                   {modeToEdit ? 'Update Payment Mode' : 'Save Payment Mode'}
-                </Text>
+                </AppText>
               </TouchableOpacity>
 
               {modeToEdit && (
                 <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
                   <Ionicons name="trash-outline" size={20} color="#ff4444" style={{ marginRight: 8 }} />
-                  <Text style={styles.deleteButtonText}>Delete Payment Mode</Text>
+                  <AppText style={styles.deleteButtonText}>Delete Payment Mode</AppText>
                 </TouchableOpacity>
               )}
             </ScrollView>
@@ -319,3 +320,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+

@@ -451,3 +451,4 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     </ExpenseContext.Provider>
   );
 };
+

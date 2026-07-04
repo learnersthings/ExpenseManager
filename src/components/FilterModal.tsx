@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, SafeAreaView, Platform, StatusBar } from 'react-native';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { View, StyleSheet, Modal, TouchableOpacity, ScrollView, SafeAreaView, Platform, StatusBar } from 'react-native';
+import AppText from '../components/AppText';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '@react-navigation/native';
 import { useThemeContext } from '../context/ThemeContext';
 
 interface FilterModalProps {
@@ -29,7 +30,7 @@ interface FilterModalProps {
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export default function FilterModal(props: FilterModalProps) {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
 
   const toggleYear = (y: number) => {
@@ -79,11 +80,11 @@ export default function FilterModal(props: FilterModalProps) {
       key={label}
       style={[
         styles.chip,
-        { backgroundColor: isSelected ? colors.primary : (isDarkTheme ? '#333' : '#e0e0e0') }
+        { backgroundColor: isSelected ? colors.primary : (colors.border) }
       ]}
       onPress={onPress}
     >
-      <Text style={[styles.chipText, { color: isSelected ? '#fff' : colors.text }]}>{label}</Text>
+      <AppText style={[styles.chipText, { color: isSelected ? '#fff' : colors.text }]}>{label}</AppText>
     </TouchableOpacity>
   );
 
@@ -92,11 +93,11 @@ export default function FilterModal(props: FilterModalProps) {
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }]}>
         <View style={[styles.header, { borderBottomColor: isDarkTheme ? '#333' : '#eee' }]}>
           <TouchableOpacity onPress={handleClearAll} style={styles.headerButton}>
-            <Text style={{ color: '#ff4444', fontSize: 16, fontWeight: 'bold' }}>Clear</Text>
+            <AppText style={{ color: '#ff4444', fontSize: 16, fontWeight: 'bold' }}>Clear</AppText>
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Filters</Text>
+          <AppText style={[styles.headerTitle, { color: colors.text }]}>Filters</AppText>
           <TouchableOpacity onPress={props.onClose} style={styles.headerButton}>
-            <Text style={{ color: colors.primary, fontSize: 16, fontWeight: 'bold' }}>Done</Text>
+            <AppText style={{ color: colors.primary, fontSize: 16, fontWeight: 'bold' }}>Done</AppText>
           </TouchableOpacity>
         </View>
 
@@ -105,7 +106,7 @@ export default function FilterModal(props: FilterModalProps) {
           {/* Years */}
           {props.availableYears.length > 0 && (
             <View style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Year</Text>
+              <AppText style={[styles.sectionTitle, { color: colors.text }]}>Year</AppText>
               <View style={styles.chipContainer}>
                 {props.availableYears.map(y => renderChip(y.toString(), props.selectedYears.includes(y), () => toggleYear(y)))}
               </View>
@@ -115,7 +116,7 @@ export default function FilterModal(props: FilterModalProps) {
           {/* Months */}
           {props.availableMonths.length > 0 && (
             <View style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Month</Text>
+              <AppText style={[styles.sectionTitle, { color: colors.text }]}>Month</AppText>
               <View style={styles.chipContainer}>
                 {props.availableMonths.map(m => renderChip(MONTH_NAMES[m], props.selectedMonths.includes(m), () => toggleMonth(m)))}
               </View>
@@ -125,7 +126,7 @@ export default function FilterModal(props: FilterModalProps) {
           {/* Categories */}
           {props.availableCategories.length > 0 && (
             <View style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Category</Text>
+              <AppText style={[styles.sectionTitle, { color: colors.text }]}>Category</AppText>
               <View style={styles.chipContainer}>
                 {props.availableCategories.map(c => renderChip(c.name, props.selectedCategoryIds.includes(c.id), () => toggleCategory(c.id)))}
               </View>
@@ -135,7 +136,7 @@ export default function FilterModal(props: FilterModalProps) {
           {/* Payment Modes */}
           {props.availablePaymentModes.length > 0 && (
             <View style={styles.section}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>Payment Mode</Text>
+              <AppText style={[styles.sectionTitle, { color: colors.text }]}>Payment Mode</AppText>
               <View style={styles.chipContainer}>
                 {props.availablePaymentModes.map(p => renderChip(p.name, props.selectedPaymentModeIds.includes(p.id), () => togglePaymentMode(p.id)))}
               </View>
@@ -194,3 +195,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+

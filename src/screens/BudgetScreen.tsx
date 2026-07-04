@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, Switch } from 'react-native';
-import { useTheme } from '@react-navigation/native';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { View, StyleSheet, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, Switch } from 'react-native';
+import AppText from '../components/AppText';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext } from '../context/ExpenseContext';
 
 export default function BudgetScreen({ navigation }: any) {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
   const { currency, monthlyBudget, yearlyBudget, updateBudgets, showMonthlyBudget, showYearlyBudget, toggleShowMonthlyBudget, toggleShowYearlyBudget } = useExpenseContext();
 
@@ -14,7 +15,7 @@ export default function BudgetScreen({ navigation }: any) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const placeholderColor = isDarkTheme ? '#888' : '#aaa';
+  const placeholderColor = colors.textMuted;
 
   const handleSave = async () => {
     setError('');
@@ -45,17 +46,17 @@ export default function BudgetScreen({ navigation }: any) {
       >
         <ScrollView contentContainerStyle={styles.scroll}>
           
-          <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000' }]}>
-            <Text style={[styles.title, { color: colors.text }]}>Set Your Budgets</Text>
-            <Text style={styles.subtitle}>These limits will help you track your spending.</Text>
+          <View style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
+            <AppText style={[styles.title, { color: colors.text }]}>Set Your Budgets</AppText>
+            <AppText style={styles.subtitle}>These limits will help you track your spending.</AppText>
 
-            {error ? <Text style={styles.errorText}>{error}</Text> : null}
-            {success ? <Text style={styles.successText}>{success}</Text> : null}
+            {error ? <AppText style={styles.errorText}>{error}</AppText> : null}
+            {success ? <AppText style={styles.successText}>{success}</AppText> : null}
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Monthly Budget ({currency})</Text>
+              <AppText style={styles.label}>Monthly Budget ({currency})</AppText>
               <TextInput
-                style={[styles.input, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: isDarkTheme ? '#333' : '#e0e0e0' }]}
+                style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
                 placeholder="e.g. 500"
                 placeholderTextColor={placeholderColor}
                 keyboardType="numeric"
@@ -65,9 +66,9 @@ export default function BudgetScreen({ navigation }: any) {
             </View>
 
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Yearly Budget ({currency})</Text>
+              <AppText style={styles.label}>Yearly Budget ({currency})</AppText>
               <TextInput
-                style={[styles.input, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: isDarkTheme ? '#333' : '#e0e0e0' }]}
+                style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
                 placeholder="e.g. 6000"
                 placeholderTextColor={placeholderColor}
                 keyboardType="numeric"
@@ -77,7 +78,7 @@ export default function BudgetScreen({ navigation }: any) {
             </View>
 
             <View style={styles.toggleContainer}>
-              <Text style={[styles.label, { color: colors.text, marginBottom: 0 }]}>Show Monthly Budget on Dashboard</Text>
+              <AppText style={[styles.label, { color: colors.text, marginBottom: 0 }]}>Show Monthly Budget on Dashboard</AppText>
               <Switch
                 trackColor={{ false: '#767577', true: colors.primary }}
                 thumbColor={showMonthlyBudget ? '#ffffff' : '#f4f3f4'}
@@ -88,7 +89,7 @@ export default function BudgetScreen({ navigation }: any) {
             </View>
 
             <View style={styles.toggleContainer}>
-              <Text style={[styles.label, { color: colors.text, marginBottom: 0 }]}>Show Yearly Budget on Dashboard</Text>
+              <AppText style={[styles.label, { color: colors.text, marginBottom: 0 }]}>Show Yearly Budget on Dashboard</AppText>
               <Switch
                 trackColor={{ false: '#767577', true: colors.primary }}
                 thumbColor={showYearlyBudget ? '#ffffff' : '#f4f3f4'}
@@ -99,7 +100,7 @@ export default function BudgetScreen({ navigation }: any) {
             </View>
 
             <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={handleSave}>
-              <Text style={styles.saveButtonText}>Save Budgets</Text>
+              <AppText style={styles.saveButtonText}>Save Budgets</AppText>
             </TouchableOpacity>
 
           </View>
@@ -179,3 +180,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+

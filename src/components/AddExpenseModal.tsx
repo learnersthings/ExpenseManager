@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView, Alert } from 'react-native';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { View, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView, Alert } from 'react-native';
+import AppText from '../components/AppText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useTheme } from '@react-navigation/native';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext, Expense, Category } from '../context/ExpenseContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,7 +15,7 @@ interface AddExpenseModalProps {
 }
 
 export default function AddExpenseModal({ visible, onClose, expenseToEdit }: AddExpenseModalProps) {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
   const { addExpense, updateExpense, deleteExpense, categories, paymentModes } = useExpenseContext();
   const insets = useSafeAreaInsets();
@@ -57,7 +58,7 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
     }
   }, [visible, expenseToEdit]);
 
-  const placeholderColor = isDarkTheme ? '#888' : '#aaa';
+  const placeholderColor = colors.textMuted;
 
   const handleSave = async () => {
     clearErrors();
@@ -141,31 +142,31 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
             style={[styles.modalContent, { backgroundColor: colors.background, paddingBottom: Math.max(24, insets.bottom + 16) }]}
           >
             <View style={styles.header}>
-              <Text style={[styles.title, { color: colors.text }]}>
+              <AppText style={[styles.title, { color: colors.text }]}>
                 {expenseToEdit ? 'Edit Expense' : 'Add Expense'}
-              </Text>
+              </AppText>
               <TouchableOpacity onPress={onClose}>
                 <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
 
             <View style={styles.inputWrapper}>
-              <Text style={styles.label}>Amount</Text>
+              <AppText style={styles.label}>Amount</AppText>
               <TextInput
-                style={[styles.input, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: isDarkTheme ? '#333' : '#e0e0e0' }]}
+                style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
                 placeholder="0.00"
                 placeholderTextColor={placeholderColor}
                 keyboardType="numeric"
                 value={amount}
                 onChangeText={(text) => { setAmount(text); setAmountError(''); }}
               />
-              {amountError ? <Text style={styles.fieldErrorText}>{amountError}</Text> : null}
+              {amountError ? <AppText style={styles.fieldErrorText}>{amountError}</AppText> : null}
             </View>
 
             <View style={styles.inputWrapper}>
-              <Text style={styles.label}>Description</Text>
+              <AppText style={styles.label}>Description</AppText>
               <TextInput
-                style={[styles.input, styles.textArea, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: isDarkTheme ? '#333' : '#e0e0e0' }]}
+                style={[styles.input, styles.textArea, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
                 placeholder="Description"
                 placeholderTextColor={placeholderColor}
                 value={description}
@@ -174,61 +175,61 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
                 numberOfLines={3}
                 textAlignVertical="top"
               />
-              {descriptionError ? <Text style={styles.fieldErrorText}>{descriptionError}</Text> : null}
+              {descriptionError ? <AppText style={styles.fieldErrorText}>{descriptionError}</AppText> : null}
             </View>
 
             <View style={styles.inputWrapper}>
-              <Text style={styles.label}>Date</Text>
+              <AppText style={styles.label}>Date</AppText>
               <TouchableOpacity
-                style={[styles.dateButton, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', borderColor: isDarkTheme ? '#333' : '#e0e0e0' }]}
+                style={[styles.dateButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
                 onPress={() => setShowDatePicker(true)}
               >
-                <Text style={{ color: colors.text, fontSize: 16 }}>{date.toLocaleDateString()}</Text>
+                <AppText style={{ color: colors.text, fontSize: 16 }}>{date.toLocaleDateString()}</AppText>
                 <Ionicons name="calendar-outline" size={20} color={colors.text} />
               </TouchableOpacity>
             </View>
 
             {categories.length > 0 && (
               <View style={styles.inputWrapper}>
-                <Text style={styles.label}>Category</Text>
+                <AppText style={styles.label}>Category</AppText>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
                   {categories.map((cat) => (
                     <TouchableOpacity
                       key={cat.id}
                       style={[
                         styles.categoryChip,
-                        { backgroundColor: categoryId === cat.id ? cat.color : isDarkTheme ? '#1e1e1e' : '#f5f5f5' }
+                        { backgroundColor: categoryId === cat.id ? cat.color : colors.surface }
                       ]}
                       onPress={() => { setCategoryId(cat.id); setCategoryError(''); }}
                     >
                       <Ionicons name={cat.icon as any} size={16} color={categoryId === cat.id ? '#fff' : cat.color} style={{ marginRight: 6 }} />
-                      <Text style={{ color: categoryId === cat.id ? '#fff' : colors.text, fontWeight: '600' }}>{cat.name}</Text>
+                      <AppText style={{ color: categoryId === cat.id ? '#fff' : colors.text, fontWeight: '600' }}>{cat.name}</AppText>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
-                {categoryError ? <Text style={styles.fieldErrorText}>{categoryError}</Text> : null}
+                {categoryError ? <AppText style={styles.fieldErrorText}>{categoryError}</AppText> : null}
               </View>
             )}
 
             {paymentModes.length > 0 && (
               <View style={styles.inputWrapper}>
-                <Text style={styles.label}>Payment Mode</Text>
+                <AppText style={styles.label}>Payment Mode</AppText>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
                   {paymentModes.map((mode) => (
                     <TouchableOpacity
                       key={mode.id}
                       style={[
                         styles.categoryChip,
-                        { backgroundColor: paymentModeId === mode.id ? mode.color : isDarkTheme ? '#1e1e1e' : '#f5f5f5' }
+                        { backgroundColor: paymentModeId === mode.id ? mode.color : colors.surface }
                       ]}
                       onPress={() => { setPaymentModeId(mode.id); setPaymentModeError(''); }}
                     >
                       <Ionicons name={mode.icon as any} size={16} color={paymentModeId === mode.id ? '#fff' : mode.color} style={{ marginRight: 6 }} />
-                      <Text style={{ color: paymentModeId === mode.id ? '#fff' : colors.text, fontWeight: '600' }}>{mode.name}</Text>
+                      <AppText style={{ color: paymentModeId === mode.id ? '#fff' : colors.text, fontWeight: '600' }}>{mode.name}</AppText>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
-                {paymentModeError ? <Text style={styles.fieldErrorText}>{paymentModeError}</Text> : null}
+                {paymentModeError ? <AppText style={styles.fieldErrorText}>{paymentModeError}</AppText> : null}
               </View>
             )}
 
@@ -242,15 +243,15 @@ export default function AddExpenseModal({ visible, onClose, expenseToEdit }: Add
             )}
 
             <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={handleSave}>
-              <Text style={styles.saveButtonText}>
+              <AppText style={styles.saveButtonText}>
                 {expenseToEdit ? 'Update Expense' : 'Save Expense'}
-              </Text>
+              </AppText>
             </TouchableOpacity>
 
             {expenseToEdit && (
               <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
                 <Ionicons name="trash-outline" size={20} color="#ff4444" style={{ marginRight: 8 }} />
-                <Text style={styles.deleteButtonText}>Delete Expense</Text>
+                <AppText style={styles.deleteButtonText}>Delete Expense</AppText>
               </TouchableOpacity>
             )}
 
@@ -371,3 +372,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+

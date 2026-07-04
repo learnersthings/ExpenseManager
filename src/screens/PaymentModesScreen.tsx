@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
-import { useTheme } from '@react-navigation/native';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { View, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import AppText from '../components/AppText';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext, PaymentMode } from '../context/ExpenseContext';
 import { Ionicons } from '@expo/vector-icons';
 import AddPaymentModeModal from '../components/AddPaymentModeModal';
 
 export default function PaymentModesScreen() {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
   const { paymentModes } = useExpenseContext();
   
@@ -29,26 +30,26 @@ export default function PaymentModesScreen() {
       <ScrollView contentContainerStyle={styles.scroll}>
         
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>Payment Modes</Text>
-          <Text style={styles.subtitle}>Manage how you pay for expenses.</Text>
+          <AppText style={[styles.title, { color: colors.text }]}>Payment Modes</AppText>
+          <AppText style={styles.subtitle}>Manage how you pay for expenses.</AppText>
         </View>
 
         {paymentModes.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No payment modes found. Add one!</Text>
+            <AppText style={styles.emptyText}>No payment modes found. Add one!</AppText>
           </View>
         ) : (
           <View style={styles.grid}>
             {paymentModes.map((mode) => (
               <TouchableOpacity 
                 key={mode.id} 
-                style={[styles.modeCard, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000' }]}
+                style={[styles.modeCard, { backgroundColor: colors.card, shadowColor: colors.shadow }]}
                 onPress={() => handleEditMode(mode)}
               >
                 <View style={[styles.iconContainer, { backgroundColor: mode.color }]}>
                   <Ionicons name={mode.icon as any} size={28} color="#fff" />
                 </View>
-                <Text style={[styles.modeName, { color: colors.text }]} numberOfLines={1}>{mode.name}</Text>
+                <AppText style={[styles.modeName, { color: colors.text }]} numberOfLines={1}>{mode.name}</AppText>
               </TouchableOpacity>
             ))}
           </View>
@@ -143,3 +144,4 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
 });
+

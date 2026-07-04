@@ -1,14 +1,13 @@
 import React from 'react';
+import { useThemeColors } from '../hooks/useThemeColors';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useTheme } from '@react-navigation/native';
-
 import LoginScreen from '../screens/LoginScreen';
 import SignupScreen from '../screens/SignupScreen';
 
 const Stack = createNativeStackNavigator();
 
 export default function AuthStack() {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
 
   return (
     <Stack.Navigator
@@ -21,3 +20,4 @@ export default function AuthStack() {
     </Stack.Navigator>
   );
 }
+

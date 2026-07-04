@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
-import { useTheme } from '@react-navigation/native';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { View, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
+import AppText from '../components/AppText';
 import { useAuthContext } from '../context/AuthContext';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext } from '../context/ExpenseContext';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function ProfileScreen({ navigation }: any) {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
   const { user, updateProfile, changePassword } = useAuthContext();
   const { migrateUserEmail } = useExpenseContext();
@@ -28,7 +29,7 @@ export default function ProfileScreen({ navigation }: any) {
   const [generalMessage, setGeneralMessage] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const placeholderColor = isDarkTheme ? '#888' : '#aaa';
+  const placeholderColor = colors.textMuted;
 
   const handleUpdateProfile = async () => {
     setEmailError('');
@@ -107,19 +108,19 @@ export default function ProfileScreen({ navigation }: any) {
         
         {generalMessage ? (
           <View style={[styles.messageBox, { backgroundColor: isSuccess ? '#4caf5020' : '#ff444420', borderColor: isSuccess ? '#4caf50' : '#ff4444' }]}>
-            <Text style={[styles.messageText, { color: isSuccess ? '#4caf50' : '#ff4444' }]}>{generalMessage}</Text>
+            <AppText style={[styles.messageText, { color: isSuccess ? '#4caf50' : '#ff4444' }]}>{generalMessage}</AppText>
           </View>
         ) : null}
 
-        <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000' }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Personal Information</Text>
+        <View style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
+          <AppText style={[styles.sectionTitle, { color: colors.text }]}>Personal Information</AppText>
 
           <View style={styles.inputWrapper}>
-            <Text style={styles.label}>Email Address</Text>
+            <AppText style={styles.label}>Email Address</AppText>
             <TextInput
               style={[
                 styles.input,
-                { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: emailError ? '#ff4444' : (isDarkTheme ? '#333' : '#e0e0e0') }
+                { backgroundColor: colors.surface, color: colors.text, borderColor: emailError ? '#ff4444' : (colors.border) }
               ]}
               placeholder="Email Address"
               placeholderTextColor={placeholderColor}
@@ -128,59 +129,59 @@ export default function ProfileScreen({ navigation }: any) {
               autoCapitalize="none"
               keyboardType="email-address"
             />
-            {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+            {emailError ? <AppText style={styles.errorText}>{emailError}</AppText> : null}
           </View>
 
           <View style={styles.inputWrapper}>
-            <Text style={styles.label}>First Name</Text>
+            <AppText style={styles.label}>First Name</AppText>
             <TextInput
               style={[
                 styles.input, 
-                { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: firstNameError ? '#ff4444' : (isDarkTheme ? '#333' : '#e0e0e0') }
+                { backgroundColor: colors.surface, color: colors.text, borderColor: firstNameError ? '#ff4444' : (colors.border) }
               ]}
               placeholder="First Name"
               placeholderTextColor={placeholderColor}
               value={firstName}
               onChangeText={(text) => { setFirstName(text); setFirstNameError(''); setGeneralMessage(''); }}
             />
-            {firstNameError ? <Text style={styles.errorText}>{firstNameError}</Text> : null}
+            {firstNameError ? <AppText style={styles.errorText}>{firstNameError}</AppText> : null}
           </View>
 
           <View style={styles.inputWrapper}>
-            <Text style={styles.label}>Last Name</Text>
+            <AppText style={styles.label}>Last Name</AppText>
             <TextInput
               style={[
                 styles.input, 
-                { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: lastNameError ? '#ff4444' : (isDarkTheme ? '#333' : '#e0e0e0') }
+                { backgroundColor: colors.surface, color: colors.text, borderColor: lastNameError ? '#ff4444' : (colors.border) }
               ]}
               placeholder="Last Name"
               placeholderTextColor={placeholderColor}
               value={lastName}
               onChangeText={(text) => { setLastName(text); setLastNameError(''); setGeneralMessage(''); }}
             />
-            {lastNameError ? <Text style={styles.errorText}>{lastNameError}</Text> : null}
+            {lastNameError ? <AppText style={styles.errorText}>{lastNameError}</AppText> : null}
           </View>
 
           <TouchableOpacity 
             style={[styles.button, { backgroundColor: colors.primary }]} 
             onPress={handleUpdateProfile}
           >
-            <Text style={styles.buttonText}>Update Profile</Text>
+            <AppText style={styles.buttonText}>Update Profile</AppText>
           </TouchableOpacity>
         </View>
 
         {!isChangingPassword ? (
           <TouchableOpacity 
-            style={[styles.rowButton, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000' }]}
+            style={[styles.rowButton, { backgroundColor: colors.card, shadowColor: colors.shadow }]}
             onPress={() => setIsChangingPassword(true)}
           >
-            <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>Change Password</Text>
+            <AppText style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>Change Password</AppText>
             <Ionicons name="chevron-forward" size={24} color={colors.text} />
           </TouchableOpacity>
         ) : (
-          <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000' }]}>
+          <View style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
             <View style={styles.headerRow}>
-              <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>Change Password</Text>
+              <AppText style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>Change Password</AppText>
               <TouchableOpacity onPress={() => {
                 setIsChangingPassword(false);
                 setPasswordError('');
@@ -196,7 +197,7 @@ export default function ProfileScreen({ navigation }: any) {
               <TextInput
                 style={[
                   styles.input, 
-                  { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: passwordError ? '#ff4444' : (isDarkTheme ? '#333' : '#e0e0e0') }
+                  { backgroundColor: colors.surface, color: colors.text, borderColor: passwordError ? '#ff4444' : (colors.border) }
                 ]}
                 placeholder="Current Password"
                 placeholderTextColor={placeholderColor}
@@ -210,7 +211,7 @@ export default function ProfileScreen({ navigation }: any) {
               <TextInput
                 style={[
                   styles.input, 
-                  { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: passwordError ? '#ff4444' : (isDarkTheme ? '#333' : '#e0e0e0') }
+                  { backgroundColor: colors.surface, color: colors.text, borderColor: passwordError ? '#ff4444' : (colors.border) }
                 ]}
                 placeholder="New Password"
                 placeholderTextColor={placeholderColor}
@@ -224,7 +225,7 @@ export default function ProfileScreen({ navigation }: any) {
               <TextInput
                 style={[
                   styles.input, 
-                  { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: passwordError ? '#ff4444' : (isDarkTheme ? '#333' : '#e0e0e0') }
+                  { backgroundColor: colors.surface, color: colors.text, borderColor: passwordError ? '#ff4444' : (colors.border) }
                 ]}
                 placeholder="Confirm New Password"
                 placeholderTextColor={placeholderColor}
@@ -232,14 +233,14 @@ export default function ProfileScreen({ navigation }: any) {
                 onChangeText={(text) => { setConfirmPassword(text); setPasswordError(''); setGeneralMessage(''); }}
                 secureTextEntry
               />
-              {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+              {passwordError ? <AppText style={styles.errorText}>{passwordError}</AppText> : null}
             </View>
 
             <TouchableOpacity 
               style={[styles.button, { backgroundColor: colors.primary, marginTop: 4 }]} 
               onPress={handleChangePassword}
             >
-              <Text style={styles.buttonText}>Update Password</Text>
+              <AppText style={styles.buttonText}>Update Password</AppText>
             </TouchableOpacity>
           </View>
         )}
@@ -334,3 +335,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+

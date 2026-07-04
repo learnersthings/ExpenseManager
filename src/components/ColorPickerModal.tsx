@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, TouchableWithoutFeedback, ScrollView } from 'react-native';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { View, TouchableOpacity, StyleSheet, Modal, TouchableWithoutFeedback, ScrollView } from 'react-native';
+import AppText from '../components/AppText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTheme } from '@react-navigation/native';
 import { useThemeContext } from '../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { PRESET_COLORS } from '../constants/presets';
@@ -14,7 +15,7 @@ interface ColorPickerModalProps {
 }
 
 export default function ColorPickerModal({ visible, onClose, color, onSelect }: ColorPickerModalProps) {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
   const insets = useSafeAreaInsets();
 
@@ -25,7 +26,7 @@ export default function ColorPickerModal({ visible, onClose, color, onSelect }: 
           <TouchableWithoutFeedback onPress={() => {}}>
             <View style={[styles.modalContent, { backgroundColor: colors.background, paddingBottom: Math.max(24, insets.bottom + 16) }]}>
               <View style={styles.header}>
-                <Text style={[styles.title, { color: colors.text }]}>Choose Color</Text>
+                <AppText style={[styles.title, { color: colors.text }]}>Choose Color</AppText>
                 <TouchableOpacity onPress={onClose}>
                   <Ionicons name="close" size={24} color={colors.text} />
                 </TouchableOpacity>
@@ -107,3 +108,4 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
 });
+

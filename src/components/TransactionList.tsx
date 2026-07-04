@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Alert, TextInput, Platform, ActivityIndicator } from 'react-native';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { View, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, Alert, TextInput, Platform, ActivityIndicator } from 'react-native';
+import AppText from '../components/AppText';
 import { useTheme, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '../context/ThemeContext';
@@ -20,7 +22,7 @@ interface TransactionListProps {
 }
 
 export default function TransactionList({ ListHeaderComponent, hideTitle, isTransactionsScreen }: TransactionListProps) {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
   const navigation = useNavigation<any>();
   const { isDarkTheme } = useThemeContext();
   const { getCurrentMonthTotal, getPreviousMonthTotal, expenses, categories, paymentModes, currency, monthlyBudget, yearlyBudget, bulkDeleteExpenses, showMonthlyBudget, showYearlyBudget, downloadPathUri } = useExpenseContext();
@@ -218,10 +220,10 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
 
         {!isTransactionsScreen && (
           <View style={styles.sectionHeader}>
-            {!hideTitle && <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Activity</Text>}
+            {!hideTitle && <AppText style={[styles.sectionTitle, { color: colors.text }]}>Recent Activity</AppText>}
             {expenses.length > 0 && (
               <TouchableOpacity onPress={() => navigation.navigate('Transactions')}>
-                <Text style={{ color: colors.primary, fontWeight: '600' }}>See All</Text>
+                <AppText style={{ color: colors.primary, fontWeight: '600' }}>See All</AppText>
               </TouchableOpacity>
             )}
           </View>
@@ -229,25 +231,25 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
 
         {expenses.length > 0 && (
           <View style={styles.searchFilterContainer}>
-            <View style={[styles.searchBar, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', borderColor: isDarkTheme ? '#333' : '#e0e0e0' }]}>
-              <Ionicons name="search" size={20} color={isDarkTheme ? '#888' : '#aaa'} style={styles.searchIcon} />
+            <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Ionicons name="search" size={20} color={colors.textMuted} style={styles.searchIcon} />
               <TextInput
                 style={[styles.searchInput, { color: colors.text }]}
                 placeholder="Search Expense..."
-                placeholderTextColor={isDarkTheme ? '#888' : '#aaa'}
+                placeholderTextColor={colors.textMuted}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />
               {searchQuery.length > 0 && (
                 <TouchableOpacity onPress={() => setSearchQuery('')}>
-                  <Ionicons name="close-circle" size={20} color={isDarkTheme ? '#888' : '#aaa'} />
+                  <Ionicons name="close-circle" size={20} color={colors.textMuted} />
                 </TouchableOpacity>
               )}
             </View>
             {isTransactionsScreen && (
               <>
                 <TouchableOpacity
-                  style={[styles.filterButton, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', borderColor: isDarkTheme ? '#333' : '#e0e0e0', marginRight: 10 }]}
+                  style={[styles.filterButton, { backgroundColor: colors.surface, borderColor: colors.border, marginRight: 10 }]}
                   onPress={handleDownloadPDF}
                   disabled={isDownloading}
                 >
@@ -258,7 +260,7 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
                   )}
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.filterButton, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', borderColor: isDarkTheme ? '#333' : '#e0e0e0' }]}
+                  style={[styles.filterButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
                   onPress={() => setIsFilterModalVisible(true)}
                 >
                   <Ionicons
@@ -271,7 +273,7 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
                   )}
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.filterButton, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', borderColor: isDarkTheme ? '#333' : '#e0e0e0', marginLeft: 10 }]}
+                  style={[styles.filterButton, { backgroundColor: colors.surface, borderColor: colors.border, marginLeft: 10 }]}
                   onPress={() => {
                     if (isSelectMode) {
                       setIsSelectMode(false);
@@ -302,20 +304,20 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
                 size={22} 
                 color={colors.primary} 
               />
-              <Text style={{ marginLeft: 8, color: colors.primary, fontWeight: '600' }}>Select All</Text>
+              <AppText style={{ marginLeft: 8, color: colors.primary, fontWeight: '600' }}>Select All</AppText>
             </TouchableOpacity>
 
             {/* Right Side: Actions */}
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <TouchableOpacity onPress={() => { setIsSelectMode(false); setSelectedExpenseIds([]); }} style={{ marginRight: 16 }}>
-                <Text style={{ color: isDarkTheme ? '#888' : '#aaa', fontWeight: '500' }}>Cancel</Text>
+                <AppText style={{ color: colors.textMuted, fontWeight: '500' }}>Cancel</AppText>
               </TouchableOpacity>
               <TouchableOpacity 
                 onPress={handleDeleteSelected} 
                 disabled={selectedExpenseIds.length === 0} 
                 style={{ opacity: selectedExpenseIds.length === 0 ? 0.5 : 1 }}
               >
-                <Text style={{ color: '#ff4444', fontWeight: '600' }}>Delete ({selectedExpenseIds.length})</Text>
+                <AppText style={{ color: '#ff4444', fontWeight: '600' }}>Delete ({selectedExpenseIds.length})</AppText>
               </TouchableOpacity>
             </View>
           </View>
@@ -324,11 +326,11 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
 
         {expenses.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>No expenses yet. Add one!</Text>
+            <AppText style={styles.emptyStateText}>No expenses yet. Add one!</AppText>
           </View>
         ) : filteredExpenses.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>No expenses match your search or filters.</Text>
+            <AppText style={styles.emptyStateText}>No expenses match your search or filters.</AppText>
           </View>
         ) : (
           <>
@@ -347,7 +349,7 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
 
               return groups.map((group, groupIndex) => (
                 <View key={`group-${groupIndex}`}>
-                  <Text style={[styles.monthHeader, { color: colors.text }]}>{group.title}</Text>
+                  <AppText style={[styles.monthHeader, { color: colors.text }]}>{group.title}</AppText>
                   {group.data.map((exp) => {
                     const category = categories.find(c => c.id === exp.categoryId);
                     const paymentMode = paymentModes.find(m => m.id === exp.paymentModeId);
@@ -374,20 +376,20 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
                             </View>
                           )}
                           <View style={{ flex: 1, paddingRight: 10 }}>
-                            <Text style={[styles.expenseDesc, { color: colors.text }]} numberOfLines={1}>{exp.description}</Text>
+                            <AppText style={[styles.expenseDesc, { color: colors.text }]} numberOfLines={1}>{exp.description}</AppText>
                             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                              <Text style={styles.expenseDate}>{new Date(exp.date).toLocaleDateString()}</Text>
+                              <AppText style={styles.expenseDate}>{new Date(exp.date).toLocaleDateString()}</AppText>
                               {paymentMode && (
                                 <>
-                                  <Text style={styles.dotSeparator}>•</Text>
+                                  <AppText style={styles.dotSeparator}>•</AppText>
                                   <Ionicons name={paymentMode.icon as any} size={12} color={paymentMode.color} style={{ marginRight: 4 }} />
-                                  <Text style={[styles.paymentModeText, { color: paymentMode.color }]} numberOfLines={1}>{paymentMode.name}</Text>
+                                  <AppText style={[styles.paymentModeText, { color: paymentMode.color }]} numberOfLines={1}>{paymentMode.name}</AppText>
                                 </>
                               )}
                             </View>
                           </View>
                         </View>
-                        <Text style={[styles.expenseAmount, { color: '#ff4444' }]}>-{currency}{formatAmount(exp.amount)}</Text>
+                        <AppText style={[styles.expenseAmount, { color: '#ff4444' }]}>-{currency}{formatAmount(exp.amount)}</AppText>
                       </TouchableOpacity>
                     );
                   })}
@@ -400,7 +402,7 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
                 style={[styles.loadMoreButton, { backgroundColor: isDarkTheme ? '#2a2a2a' : '#f0f0f0' }]}
                 onPress={() => setDisplayCount(prev => prev + 20)}
               >
-                <Text style={[styles.loadMoreText, { color: colors.primary }]}>Load More</Text>
+                <AppText style={[styles.loadMoreText, { color: colors.primary }]}>Load More</AppText>
                 <Ionicons name="chevron-down" size={16} color={colors.primary} />
               </TouchableOpacity>
             )}
@@ -696,3 +698,4 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
 });
+

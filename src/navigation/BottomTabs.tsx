@@ -1,10 +1,9 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { View } from 'react-native';
+import AppText from '../components/AppText';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '@react-navigation/native';
-
-
 import DashboardScreen from '../screens/DashboardScreen';
 import TransactionsScreen from '../screens/TransactionsScreen';
 import AnalyticsScreen from '../screens/AnalyticsScreen';
@@ -13,7 +12,7 @@ import SettingsStack from './SettingsStack';
 const Tab = createBottomTabNavigator();
 
 export default function BottomTabs() {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
 
   return (
     <Tab.Navigator
@@ -36,7 +35,7 @@ export default function BottomTabs() {
           return (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Ionicons name={iconName} size={22} color={colors.text} style={{ marginRight: 8 }} />
-              <Text style={{ color: colors.text, fontSize: 18, fontWeight: '600' }}>{props.children}</Text>
+              <AppText style={{ color: colors.text, fontSize: 18, fontWeight: '600' }}>{props.children}</AppText>
             </View>
           );
         },
@@ -78,3 +77,4 @@ export default function BottomTabs() {
     </Tab.Navigator>
   );
 }
+

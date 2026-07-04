@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import AppText from '../components/AppText';
+import { useThemeColors } from '../hooks/useThemeColors';
 import {
   View,
   Text,
@@ -10,12 +12,11 @@ import {
   Platform,
   ScrollView
 } from 'react-native';
-import { useTheme } from '@react-navigation/native';
 import { useAuthContext } from '../context/AuthContext';
 import { useThemeContext } from '../context/ThemeContext';
 
 export default function LoginScreen({ navigation }: any) {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
   const { login } = useAuthContext();
   const { isDarkTheme } = useThemeContext();
 
@@ -26,7 +27,7 @@ export default function LoginScreen({ navigation }: any) {
   const [passwordError, setPasswordError] = useState('');
   const [generalError, setGeneralError] = useState('');
 
-  const placeholderColor = isDarkTheme ? '#888' : '#aaa';
+  const placeholderColor = colors.textMuted;
 
   const handleLogin = async () => {
     let isValid = true;
@@ -70,18 +71,18 @@ export default function LoginScreen({ navigation }: any) {
             style={styles.logo}
             resizeMode="contain"
           />
-          <Text style={[styles.title, { color: colors.text }]}>Welcome</Text>
-          <Text style={styles.subtitle}>Sign in to continue</Text>
+          <AppText style={[styles.title, { color: colors.text }]}>Welcome</AppText>
+          <AppText style={styles.subtitle}>Sign in to continue</AppText>
         </View>
 
-        <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000' }]}>
-          {generalError ? <Text style={styles.errorTextCenter}>{generalError}</Text> : null}
+        <View style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
+          {generalError ? <AppText style={styles.errorTextCenter}>{generalError}</AppText> : null}
 
           <View style={styles.inputWrapper}>
             <TextInput
               style={[
                 styles.input,
-                { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: emailError ? '#ff4444' : (isDarkTheme ? '#333' : '#e0e0e0') }
+                { backgroundColor: colors.surface, color: colors.text, borderColor: emailError ? '#ff4444' : (colors.border) }
               ]}
               placeholder="Email"
               placeholderTextColor={placeholderColor}
@@ -90,14 +91,14 @@ export default function LoginScreen({ navigation }: any) {
               keyboardType="email-address"
               autoCapitalize="none"
             />
-            {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+            {emailError ? <AppText style={styles.errorText}>{emailError}</AppText> : null}
           </View>
 
           <View style={styles.inputWrapper}>
             <TextInput
               style={[
                 styles.input,
-                { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: passwordError ? '#ff4444' : (isDarkTheme ? '#333' : '#e0e0e0') }
+                { backgroundColor: colors.surface, color: colors.text, borderColor: passwordError ? '#ff4444' : (colors.border) }
               ]}
               placeholder="Password"
               placeholderTextColor={placeholderColor}
@@ -105,21 +106,21 @@ export default function LoginScreen({ navigation }: any) {
               onChangeText={(text) => { setPassword(text); setPasswordError(''); setGeneralError(''); }}
               secureTextEntry
             />
-            {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
+            {passwordError ? <AppText style={styles.errorText}>{passwordError}</AppText> : null}
           </View>
 
           <TouchableOpacity
             style={[styles.button, { backgroundColor: colors.primary }]}
             onPress={handleLogin}
           >
-            <Text style={styles.buttonText}>Log In</Text>
+            <AppText style={styles.buttonText}>Log In</AppText>
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity style={styles.footer} onPress={() => navigation.navigate('Signup')}>
-          <Text style={[styles.link, { color: colors.text }]}>
-            Don't have an account? <Text style={{ color: colors.primary, fontWeight: 'bold' }}>Sign up</Text>
-          </Text>
+          <AppText style={[styles.link, { color: colors.text }]}>
+            Don't have an account? <AppText style={{ color: colors.primary, fontWeight: 'bold' }}>Sign up</AppText>
+          </AppText>
         </TouchableOpacity>
 
       </ScrollView>
@@ -207,3 +208,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
 });
+
+

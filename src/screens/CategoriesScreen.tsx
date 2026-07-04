@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
-import { useTheme } from '@react-navigation/native';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { View, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import AppText from '../components/AppText';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext, Category } from '../context/ExpenseContext';
 import { Ionicons } from '@expo/vector-icons';
 import AddCategoryModal from '../components/AddCategoryModal';
 
 export default function CategoriesScreen() {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
   const { categories } = useExpenseContext();
   
@@ -29,26 +30,26 @@ export default function CategoriesScreen() {
       <ScrollView contentContainerStyle={styles.scroll}>
         
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.text }]}>Your Categories</Text>
-          <Text style={styles.subtitle}>Tap a category to edit or delete it.</Text>
+          <AppText style={[styles.title, { color: colors.text }]}>Your Categories</AppText>
+          <AppText style={styles.subtitle}>Tap a category to edit or delete it.</AppText>
         </View>
 
         {categories.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No categories found. Add one!</Text>
+            <AppText style={styles.emptyText}>No categories found. Add one!</AppText>
           </View>
         ) : (
           <View style={styles.grid}>
             {categories.map((cat) => (
               <TouchableOpacity 
                 key={cat.id} 
-                style={[styles.catCard, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000' }]}
+                style={[styles.catCard, { backgroundColor: colors.card, shadowColor: colors.shadow }]}
                 onPress={() => handleEditCategory(cat)}
               >
                 <View style={[styles.iconContainer, { backgroundColor: cat.color }]}>
                   <Ionicons name={cat.icon as any} size={28} color="#fff" />
                 </View>
-                <Text style={[styles.catName, { color: colors.text }]} numberOfLines={1}>{cat.name}</Text>
+                <AppText style={[styles.catName, { color: colors.text }]} numberOfLines={1}>{cat.name}</AppText>
               </TouchableOpacity>
             ))}
           </View>
@@ -143,3 +144,4 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
 });
+

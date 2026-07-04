@@ -1,13 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { useTheme } from '@react-navigation/native';
-
+import { useThemeColors } from '../hooks/useThemeColors';
+import { View, StyleSheet } from 'react-native';
+import AppText from '../components/AppText';
 export default function HomeScreen() {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.text, { color: colors.text }]}>Home Screen</Text>
+      <AppText style={[styles.text, { color: colors.text }]}>Home Screen</AppText>
     </View>
   );
 }
@@ -23,3 +23,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+

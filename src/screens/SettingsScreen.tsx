@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Switch, TouchableOpacity, Alert, ScrollView, Platform } from 'react-native';
-import { useTheme } from '@react-navigation/native';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { View, StyleSheet, Switch, TouchableOpacity, Alert, ScrollView, Platform } from 'react-native';
+import AppText from '../components/AppText';
 import { useThemeContext } from '../context/ThemeContext';
 import { useAuthContext } from '../context/AuthContext';
 import ImportSheetModal from '../components/ImportSheetModal';
@@ -12,7 +13,7 @@ import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 
 export default function SettingsScreen({ navigation }: any) {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
   const { isDarkTheme, toggleTheme, refreshTheme } = useThemeContext();
   const { logout, refreshAuth } = useAuthContext();
   const [isImportModalVisible, setIsImportModalVisible] = useState(false);
@@ -157,25 +158,25 @@ export default function SettingsScreen({ navigation }: any) {
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.background }]}>
       
       <View style={[styles.group, { backgroundColor: colors.card }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Profile</Text>
+        <AppText style={[styles.sectionTitle, { color: colors.text }]}>Profile</AppText>
         <TouchableOpacity 
           style={styles.row}
           onPress={() => navigation.navigate('Profile')}
         >
           <View style={styles.rowLeft}>
             <Ionicons name="person-outline" size={22} color={colors.primary} style={styles.icon} />
-            <Text style={[styles.text, { color: colors.text }]}>User Profile</Text>
+            <AppText style={[styles.text, { color: colors.text }]}>User Profile</AppText>
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.text} />
         </TouchableOpacity>
       </View>
 
       <View style={[styles.group, { backgroundColor: colors.card }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Appearance</Text>
+        <AppText style={[styles.sectionTitle, { color: colors.text }]}>Appearance</AppText>
         <View style={styles.row}>
           <View style={styles.rowLeft}>
             <Ionicons name="moon-outline" size={22} color={colors.primary} style={styles.icon} />
-            <Text style={[styles.text, { color: colors.text }]}>Dark Mode</Text>
+            <AppText style={[styles.text, { color: colors.text }]}>Dark Mode</AppText>
           </View>
           <Switch
             trackColor={{ false: '#767577', true: colors.primary }}
@@ -188,17 +189,17 @@ export default function SettingsScreen({ navigation }: any) {
       </View>
 
       <View style={[styles.group, { backgroundColor: colors.card }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Preferences</Text>
+        <AppText style={[styles.sectionTitle, { color: colors.text }]}>Preferences</AppText>
         <TouchableOpacity 
           style={styles.row}
           onPress={() => navigation.navigate('Currency')}
         >
           <View style={styles.rowLeft}>
             <Ionicons name="cash-outline" size={22} color={colors.primary} style={styles.icon} />
-            <Text style={[styles.text, { color: colors.text }]}>Currency</Text>
+            <AppText style={[styles.text, { color: colors.text }]}>Currency</AppText>
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={{ color: colors.primary, fontSize: 16, fontWeight: 'bold', marginRight: 8 }}>{currency}</Text>
+            <AppText style={{ color: colors.primary, fontSize: 16, fontWeight: 'bold', marginRight: 8 }}>{currency}</AppText>
             <Ionicons name="chevron-forward" size={20} color={colors.text} />
           </View>
         </TouchableOpacity>
@@ -209,7 +210,7 @@ export default function SettingsScreen({ navigation }: any) {
         >
           <View style={styles.rowLeft}>
             <Ionicons name="pie-chart-outline" size={22} color={colors.primary} style={styles.icon} />
-            <Text style={[styles.text, { color: colors.text }]}>Budget</Text>
+            <AppText style={[styles.text, { color: colors.text }]}>Budget</AppText>
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.text} />
         </TouchableOpacity>
@@ -220,7 +221,7 @@ export default function SettingsScreen({ navigation }: any) {
         >
           <View style={styles.rowLeft}>
             <Ionicons name="pricetag-outline" size={22} color={colors.primary} style={styles.icon} />
-            <Text style={[styles.text, { color: colors.text }]}>Manage Categories</Text>
+            <AppText style={[styles.text, { color: colors.text }]}>Manage Categories</AppText>
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.text} />
         </TouchableOpacity>
@@ -231,21 +232,21 @@ export default function SettingsScreen({ navigation }: any) {
         >
           <View style={styles.rowLeft}>
             <Ionicons name="card-outline" size={22} color={colors.primary} style={styles.icon} />
-            <Text style={[styles.text, { color: colors.text }]}>Payment Modes</Text>
+            <AppText style={[styles.text, { color: colors.text }]}>Payment Modes</AppText>
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.text} />
         </TouchableOpacity>
       </View>
 
       <View style={[styles.group, { backgroundColor: colors.card }]}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>Data Management</Text>
+        <AppText style={[styles.sectionTitle, { color: colors.text }]}>Data Management</AppText>
         <TouchableOpacity 
           style={styles.row}
           onPress={() => setIsImportModalVisible(true)}
         >
           <View style={styles.rowLeft}>
             <Ionicons name="document-text-outline" size={22} color={colors.primary} style={styles.icon} />
-            <Text style={[styles.text, { color: colors.text }]}>Import from Google Sheets</Text>
+            <AppText style={[styles.text, { color: colors.text }]}>Import from Google Sheets</AppText>
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.text} />
         </TouchableOpacity>
@@ -257,7 +258,7 @@ export default function SettingsScreen({ navigation }: any) {
         >
           <View style={styles.rowLeft}>
             <Ionicons name="save-outline" size={22} color={colors.primary} style={styles.icon} />
-            <Text style={[styles.text, { color: colors.text }]}>Backup Data</Text>
+            <AppText style={[styles.text, { color: colors.text }]}>Backup Data</AppText>
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.text} />
         </TouchableOpacity>
@@ -278,7 +279,7 @@ export default function SettingsScreen({ navigation }: any) {
         >
           <View style={styles.rowLeft}>
             <Ionicons name="cloud-download-outline" size={22} color={colors.primary} style={styles.icon} />
-            <Text style={[styles.text, { color: colors.text }]}>Restore Data</Text>
+            <AppText style={[styles.text, { color: colors.text }]}>Restore Data</AppText>
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.text} />
         </TouchableOpacity>
@@ -291,12 +292,12 @@ export default function SettingsScreen({ navigation }: any) {
             >
               <View style={styles.rowLeft}>
                 <Ionicons name="folder-outline" size={22} color={colors.primary} style={styles.icon} />
-                <Text style={[styles.text, { color: colors.text }]}>Download Path</Text>
+                <AppText style={[styles.text, { color: colors.text }]}>Download Path</AppText>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, justifyContent: 'flex-end', marginLeft: 20 }}>
-                <Text style={{ color: colors.primary, fontSize: 12, marginRight: 8, flexShrink: 1 }} numberOfLines={1} ellipsizeMode="middle">
+                <AppText style={{ color: colors.primary, fontSize: 12, marginRight: 8, flexShrink: 1 }} numberOfLines={1} ellipsizeMode="middle">
                   {downloadPathUri ? decodeURIComponent(downloadPathUri.split('%3A').pop() || 'Custom Path') : 'Not Set'}
-                </Text>
+                </AppText>
                 {downloadPathUri ? (
                   <TouchableOpacity onPress={() => updateDownloadPath(null)} style={{ padding: 4 }}>
                     <Ionicons name="close-circle" size={20} color="#ff4444" />
@@ -313,12 +314,12 @@ export default function SettingsScreen({ navigation }: any) {
             >
               <View style={styles.rowLeft}>
                 <Ionicons name="folder-outline" size={22} color={colors.primary} style={styles.icon} />
-                <Text style={[styles.text, { color: colors.text }]}>Backup Path</Text>
+                <AppText style={[styles.text, { color: colors.text }]}>Backup Path</AppText>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, justifyContent: 'flex-end', marginLeft: 20 }}>
-                <Text style={{ color: colors.primary, fontSize: 12, marginRight: 8, flexShrink: 1 }} numberOfLines={1} ellipsizeMode="middle">
+                <AppText style={{ color: colors.primary, fontSize: 12, marginRight: 8, flexShrink: 1 }} numberOfLines={1} ellipsizeMode="middle">
                   {backupPathUri ? decodeURIComponent(backupPathUri.split('%3A').pop() || 'Custom Path') : 'Not Set'}
-                </Text>
+                </AppText>
                 {backupPathUri ? (
                   <TouchableOpacity onPress={() => updateBackupPath(null)} style={{ padding: 4 }}>
                     <Ionicons name="close-circle" size={20} color="#ff4444" />
@@ -336,7 +337,7 @@ export default function SettingsScreen({ navigation }: any) {
         style={[styles.logoutButton, { backgroundColor: '#ff4444', marginTop: 10 }]} 
         onPress={logout}
       >
-        <Text style={styles.logoutText}>Log Out</Text>
+        <AppText style={styles.logoutText}>Log Out</AppText>
       </TouchableOpacity>
 
       <ImportSheetModal 
@@ -402,3 +403,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+

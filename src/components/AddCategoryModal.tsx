@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView, Alert } from 'react-native';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { View, TextInput, TouchableOpacity, StyleSheet, Modal, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, ScrollView, Alert } from 'react-native';
+import AppText from '../components/AppText';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTheme } from '@react-navigation/native';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext, Category } from '../context/ExpenseContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,7 +17,7 @@ interface AddCategoryModalProps {
 }
 
 export default function AddCategoryModal({ visible, onClose, categoryToEdit }: AddCategoryModalProps) {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
   const { categories, addCategory, updateCategory, deleteCategory } = useExpenseContext();
   const insets = useSafeAreaInsets();
@@ -43,7 +44,7 @@ export default function AddCategoryModal({ visible, onClose, categoryToEdit }: A
     }
   }, [visible, categoryToEdit]);
 
-  const placeholderColor = isDarkTheme ? '#888' : '#aaa';
+  const placeholderColor = colors.textMuted;
 
   const handleSave = async () => {
     setError('');
@@ -118,21 +119,21 @@ export default function AddCategoryModal({ visible, onClose, categoryToEdit }: A
             style={[styles.modalContent, { backgroundColor: colors.background, paddingBottom: Math.max(24, insets.bottom + 16) }]}
           >
             <View style={styles.header}>
-              <Text style={[styles.title, { color: colors.text }]}>
+              <AppText style={[styles.title, { color: colors.text }]}>
                 {categoryToEdit ? 'Edit Category' : 'Add Category'}
-              </Text>
+              </AppText>
               <TouchableOpacity onPress={onClose}>
                 <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
-              {error ? <Text style={styles.errorText}>{error}</Text> : null}
+              {error ? <AppText style={styles.errorText}>{error}</AppText> : null}
 
               <View style={styles.inputWrapper}>
-                <Text style={styles.label}>Category Name</Text>
+                <AppText style={styles.label}>Category Name</AppText>
                 <TextInput
-                  style={[styles.input, { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: isDarkTheme ? '#333' : '#e0e0e0' }]}
+                  style={[styles.input, { backgroundColor: colors.surface, color: colors.text, borderColor: colors.border }]}
                   placeholder="Category Name"
                   placeholderTextColor={placeholderColor}
                   value={name}
@@ -141,9 +142,9 @@ export default function AddCategoryModal({ visible, onClose, categoryToEdit }: A
               </View>
 
               <View style={styles.inputWrapper}>
-                <Text style={styles.label}>Select Color</Text>
+                <AppText style={styles.label}>Select Color</AppText>
                 <TouchableOpacity
-                  style={[styles.pickerButton, { borderColor: isDarkTheme ? '#333' : '#e0e0e0', backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5' }]}
+                  style={[styles.pickerButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
                   onPress={() => setColorPickerVisible(true)}
                 >
                   {color ? (
@@ -151,17 +152,17 @@ export default function AddCategoryModal({ visible, onClose, categoryToEdit }: A
                   ) : (
                     <View style={[styles.colorSwatchSmall, { backgroundColor: '#888' }]} />
                   )}
-                  <Text style={[styles.pickerButtonText, { color: colors.text }]}>
+                  <AppText style={[styles.pickerButtonText, { color: colors.text }]}>
                     {color ? color.toUpperCase() : 'Random Color (Default)'}
-                  </Text>
+                  </AppText>
                   <Ionicons name="chevron-forward" size={20} color={colors.text} />
                 </TouchableOpacity>
               </View>
 
               <View style={styles.inputWrapper}>
-                <Text style={styles.label}>Select Icon</Text>
+                <AppText style={styles.label}>Select Icon</AppText>
                 <TouchableOpacity
-                  style={[styles.pickerButton, { borderColor: isDarkTheme ? '#333' : '#e0e0e0', backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5' }]}
+                  style={[styles.pickerButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
                   onPress={() => setIconPickerVisible(true)}
                 >
                   {icon ? (
@@ -173,23 +174,23 @@ export default function AddCategoryModal({ visible, onClose, categoryToEdit }: A
                       <Ionicons name="help" size={18} color="#fff" />
                     </View>
                   )}
-                  <Text style={[styles.pickerButtonText, { color: colors.text }]}>
+                  <AppText style={[styles.pickerButtonText, { color: colors.text }]}>
                     {icon ? icon : 'Random Icon (Default)'}
-                  </Text>
+                  </AppText>
                   <Ionicons name="chevron-forward" size={20} color={colors.text} />
                 </TouchableOpacity>
               </View>
 
               <TouchableOpacity style={[styles.saveButton, { backgroundColor: colors.primary }]} onPress={handleSave}>
-                <Text style={styles.saveButtonText}>
+                <AppText style={styles.saveButtonText}>
                   {categoryToEdit ? 'Update Category' : 'Save Category'}
-                </Text>
+                </AppText>
               </TouchableOpacity>
 
               {categoryToEdit && (
                 <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
                   <Ionicons name="trash-outline" size={20} color="#ff4444" style={{ marginRight: 8 }} />
-                  <Text style={styles.deleteButtonText}>Delete Category</Text>
+                  <AppText style={styles.deleteButtonText}>Delete Category</AppText>
                 </TouchableOpacity>
               )}
             </ScrollView>
@@ -319,3 +320,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+

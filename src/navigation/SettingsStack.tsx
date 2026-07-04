@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { View } from 'react-native';
+import AppText from '../components/AppText';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useTheme } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
 import SettingsScreen from '../screens/SettingsScreen';
@@ -14,7 +15,7 @@ import PaymentModesScreen from '../screens/PaymentModesScreen';
 const Stack = createNativeStackNavigator();
 
 export default function SettingsStack() {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
 
   return (
     <Stack.Navigator
@@ -34,7 +35,7 @@ export default function SettingsStack() {
           headerTitle: () => (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Ionicons name="settings" size={22} color={colors.text} style={{ marginRight: 8 }} />
-              <Text style={{ color: colors.text, fontSize: 18, fontWeight: '600' }}>Settings</Text>
+              <AppText style={{ color: colors.text, fontSize: 18, fontWeight: '600' }}>Settings</AppText>
             </View>
           )
         }} 
@@ -67,3 +68,4 @@ export default function SettingsStack() {
     </Stack.Navigator>
   );
 }
+

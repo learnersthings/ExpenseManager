@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { useTheme } from '@react-navigation/native';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { View, StyleSheet } from 'react-native';
+import AppText from '../components/AppText';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext } from '../context/ExpenseContext';
 import { formatAmount } from '../utils/format';
@@ -8,7 +9,7 @@ import Svg, { Circle } from 'react-native-svg';
 import TransactionList from '../components/TransactionList';
 
 export default function DashboardScreen() {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
   const { getCurrentMonthTotal, expenses, currency, monthlyBudget, yearlyBudget, showMonthlyBudget, showYearlyBudget } = useExpenseContext();
 
@@ -26,10 +27,10 @@ export default function DashboardScreen() {
       <View style={[styles.card, { backgroundColor: colors.primary, shadowColor: isDarkTheme ? '#00FFFF' : colors.primary, padding: 20 }]}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View style={{ flex: 1, paddingRight: 16 }}>
-            <Text style={{ fontSize: 14, color: '#FFF', opacity: 0.9, marginBottom: 8, fontWeight: '600', textTransform: 'uppercase' }}>{currentMonthName} Spending</Text>
-            <Text style={{ fontSize: 32, fontWeight: 'bold', color: monthlyBudget > 0 && total > monthlyBudget ? '#ffcccc' : '#FFF', marginBottom: monthlyBudget > 0 && showMonthlyBudget ? 16 : 0 }} numberOfLines={1} adjustsFontSizeToFit>
+            <AppText style={{ fontSize: 14, color: '#FFF', opacity: 0.9, marginBottom: 8, fontWeight: '600', textTransform: 'uppercase' }}>{currentMonthName} Spending</AppText>
+            <AppText style={{ fontSize: 32, fontWeight: 'bold', color: monthlyBudget > 0 && total > monthlyBudget ? '#ffcccc' : '#FFF', marginBottom: monthlyBudget > 0 && showMonthlyBudget ? 16 : 0 }} numberOfLines={1} adjustsFontSizeToFit>
               {currency}{formatAmount(total)}
-            </Text>
+            </AppText>
             {monthlyBudget > 0 && showMonthlyBudget && (
               <View style={{ height: 6, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 3, width: '100%', overflow: 'hidden' }}>
                 <View style={{ height: '100%', backgroundColor: total > monthlyBudget ? '#ffcccc' : '#FFF', width: `${Math.min((total / monthlyBudget) * 100, 100)}%` }} />
@@ -50,12 +51,12 @@ export default function DashboardScreen() {
                 />
               </Svg>
               <View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#FFF' }}>
+                <AppText style={{ fontSize: 15, fontWeight: 'bold', color: '#FFF' }}>
                   {`${String(((total / monthlyBudget) * 100).toFixed(2)).padStart(5, '0')}%`}
-                </Text>
-                <Text style={{ fontSize: 10, color: '#FFF', opacity: 0.8, marginTop: 2 }}>
+                </AppText>
+                <AppText style={{ fontSize: 10, color: '#FFF', opacity: 0.8, marginTop: 2 }}>
                   of {currency}{formatAmount(monthlyBudget)}
-                </Text>
+                </AppText>
               </View>
             </View>
           )}
@@ -66,10 +67,10 @@ export default function DashboardScreen() {
       <View style={[styles.card, { backgroundColor: colors.primary, shadowColor: isDarkTheme ? '#00FFFF' : colors.primary, padding: 20 }]}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View style={{ flex: 1, paddingRight: 16 }}>
-            <Text style={{ fontSize: 14, color: '#FFF', opacity: 0.9, marginBottom: 8, fontWeight: '600', textTransform: 'uppercase' }}>{currentYear} Total Spending</Text>
-            <Text style={{ fontSize: 32, fontWeight: 'bold', color: yearlyBudget > 0 && currentYearTotal > yearlyBudget ? '#ffcccc' : '#FFF', marginBottom: yearlyBudget > 0 && showYearlyBudget ? 16 : 0 }} numberOfLines={1} adjustsFontSizeToFit>
+            <AppText style={{ fontSize: 14, color: '#FFF', opacity: 0.9, marginBottom: 8, fontWeight: '600', textTransform: 'uppercase' }}>{currentYear} Total Spending</AppText>
+            <AppText style={{ fontSize: 32, fontWeight: 'bold', color: yearlyBudget > 0 && currentYearTotal > yearlyBudget ? '#ffcccc' : '#FFF', marginBottom: yearlyBudget > 0 && showYearlyBudget ? 16 : 0 }} numberOfLines={1} adjustsFontSizeToFit>
               {currency}{formatAmount(currentYearTotal)}
-            </Text>
+            </AppText>
             {yearlyBudget > 0 && showYearlyBudget && (
               <View style={{ height: 6, backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 3, width: '100%', overflow: 'hidden' }}>
                 <View style={{ height: '100%', backgroundColor: currentYearTotal > yearlyBudget ? '#ffcccc' : '#FFF', width: `${Math.min((currentYearTotal / yearlyBudget) * 100, 100)}%` }} />
@@ -90,12 +91,12 @@ export default function DashboardScreen() {
                 />
               </Svg>
               <View style={{ position: 'absolute', alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#FFF' }}>
+                <AppText style={{ fontSize: 15, fontWeight: 'bold', color: '#FFF' }}>
                   {`${String(((currentYearTotal / yearlyBudget) * 100).toFixed(2)).padStart(5, '0')}%`}
-                </Text>
-                <Text style={{ fontSize: 10, color: '#FFF', opacity: 0.8, marginTop: 2 }}>
+                </AppText>
+                <AppText style={{ fontSize: 10, color: '#FFF', opacity: 0.8, marginTop: 2 }}>
                   of {currency}{formatAmount(yearlyBudget)}
-                </Text>
+                </AppText>
               </View>
             </View>
           )}
@@ -117,3 +118,4 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   }
 });
+

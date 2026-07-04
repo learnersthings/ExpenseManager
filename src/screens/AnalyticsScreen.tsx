@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Dimensions, SafeAreaView, TouchableOpacity, Alert, Platform, ActivityIndicator } from 'react-native';
-import { useTheme } from '@react-navigation/native';
+import { useThemeColors } from '../hooks/useThemeColors';
+import { View, StyleSheet, ScrollView, Dimensions, SafeAreaView, TouchableOpacity, Alert, Platform, ActivityIndicator } from 'react-native';
+import AppText from '../components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { PieChart as GiftedPieChart, BarChart } from 'react-native-gifted-charts';
 import { Text as SvgText } from 'react-native-svg';
@@ -17,7 +18,7 @@ const screenWidth = Dimensions.get('window').width;
 type TimeFilter = 'This Month' | 'Last Month' | 'This Year' | 'All Time' | 'Custom';
 
 export default function AnalyticsScreen() {
-  const { colors } = useTheme();
+  const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
   const { expenses, categories, paymentModes, currency, downloadPathUri } = useExpenseContext();
   const [activeFilter, setActiveFilter] = useState<TimeFilter>('This Month');
@@ -177,13 +178,13 @@ export default function AnalyticsScreen() {
               style={[
                 styles.filterPill,
                 {
-                  backgroundColor: activeFilter === filter ? colors.primary : (isDarkTheme ? '#333' : '#e0e0e0'),
+                  backgroundColor: activeFilter === filter ? colors.primary : (colors.border),
                   marginRight: 10
                 }
               ]}
               onPress={() => setActiveFilter(filter)}
             >
-              <Text style={{ color: activeFilter === filter ? '#fff' : colors.text, fontWeight: '600' }}>{filter}</Text>
+              <AppText style={{ color: activeFilter === filter ? '#fff' : colors.text, fontWeight: '600' }}>{filter}</AppText>
             </TouchableOpacity>
           ))}
 
@@ -192,7 +193,7 @@ export default function AnalyticsScreen() {
             style={[
               styles.filterPill,
               {
-                backgroundColor: activeFilter === 'Custom' ? colors.primary : (isDarkTheme ? '#333' : '#e0e0e0'),
+                backgroundColor: activeFilter === 'Custom' ? colors.primary : (colors.border),
                 marginRight: 20,
                 flexDirection: 'row',
                 alignItems: 'center'
@@ -203,14 +204,14 @@ export default function AnalyticsScreen() {
               setIsFilterModalVisible(true);
             }}
           >
-            <Text style={{ color: activeFilter === 'Custom' ? '#fff' : colors.text, fontWeight: '600', marginRight: 4 }}>Custom</Text>
+            <AppText style={{ color: activeFilter === 'Custom' ? '#fff' : colors.text, fontWeight: '600', marginRight: 4 }}>Custom</AppText>
             <Ionicons name="filter" size={16} color={activeFilter === 'Custom' ? '#fff' : colors.text} />
           </TouchableOpacity>
         </ScrollView>
 
-        <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000' }]}>
+        <View style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.shadow }]}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={styles.cardLabel}>Total Spent ({activeFilter === 'Custom' ? 'Filtered' : activeFilter})</Text>
+            <AppText style={styles.cardLabel}>Total Spent ({activeFilter === 'Custom' ? 'Filtered' : activeFilter})</AppText>
             <TouchableOpacity onPress={handleDownloadPDF} style={{ padding: 4 }} disabled={isDownloading}>
               {isDownloading ? (
                 <ActivityIndicator size="small" color={colors.primary} />
@@ -219,20 +220,20 @@ export default function AnalyticsScreen() {
               )}
             </TouchableOpacity>
           </View>
-          <Text style={[styles.totalSpent, { color: colors.text }]}>{currency}{formatAmount(totalSpent)}</Text>
+          <AppText style={[styles.totalSpent, { color: colors.text }]}>{currency}{formatAmount(totalSpent)}</AppText>
         </View>
 
         {filteredExpenses.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No data for this period.</Text>
+            <AppText style={styles.emptyText}>No data for this period.</AppText>
           </View>
         ) : (
           <>
 
 
             {/* Category Breakdown */}
-            <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000', overflow: 'visible' }]}>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>Category Breakdown</Text>
+            <View style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.shadow, overflow: 'visible' }]}>
+              <AppText style={[styles.cardTitle, { color: colors.text }]}>Category Breakdown</AppText>
               <View style={{ alignItems: 'center', marginVertical: 30 }}>
                 <GiftedPieChart
                   data={pieChartData}
@@ -246,10 +247,10 @@ export default function AnalyticsScreen() {
                   <View key={index} style={styles.paymentModeRow}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <View style={[styles.colorDot, { backgroundColor: cat.color }]} />
-                      <Text style={{ color: colors.text, fontSize: 12 }}>{cat.name} ({cat.text})</Text>
+                      <AppText style={{ color: colors.text, fontSize: 12 }}>{cat.name} ({cat.text})</AppText>
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={{ color: colors.text, fontWeight: 'bold', fontSize: 12 }}>{currency}{formatAmount(cat.amount)}</Text>
+                      <AppText style={{ color: colors.text, fontWeight: 'bold', fontSize: 12 }}>{currency}{formatAmount(cat.amount)}</AppText>
                     </View>
                   </View>
                 ))}
@@ -257,8 +258,8 @@ export default function AnalyticsScreen() {
             </View>
 
             {/* Payment Modes */}
-            <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000', marginBottom: 40 }]}>
-              <Text style={[styles.cardTitle, { color: colors.text }]}>Payment Modes</Text>
+            <View style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.shadow, marginBottom: 40 }]}>
+              <AppText style={[styles.cardTitle, { color: colors.text }]}>Payment Modes</AppText>
 
               <View style={{ alignItems: 'center', marginVertical: 30 }}>
                 <GiftedPieChart
@@ -274,10 +275,10 @@ export default function AnalyticsScreen() {
                   <View key={index} style={styles.paymentModeRow}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                       <View style={[styles.colorDot, { backgroundColor: mode.color }]} />
-                      <Text style={{ color: colors.text, fontSize: 12 }}>{mode.name} ({mode.text})</Text>
+                      <AppText style={{ color: colors.text, fontSize: 12 }}>{mode.name} ({mode.text})</AppText>
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={{ color: colors.text, fontWeight: 'bold', fontSize: 12 }}>{currency}{formatAmount(mode.amount)}</Text>
+                      <AppText style={{ color: colors.text, fontWeight: 'bold', fontSize: 12 }}>{currency}{formatAmount(mode.amount)}</AppText>
                     </View>
                   </View>
                 ))}
@@ -409,3 +410,4 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
 });
+
