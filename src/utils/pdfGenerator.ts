@@ -178,7 +178,7 @@ export const generateAnalyticsPDFHTML = (
             <thead>
               <tr>
                 <th>Mode</th>
-                <th style="text-align: right;">%</th>
+                <th style="text-align: right;">Percentage (%)</th>
                 <th style="text-align: right;">Amount</th>
               </tr>
             </thead>

@@ -139,6 +139,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const storedExpenses = await AsyncStorage.getItem(storageKey);
       if (storedExpenses) {
         setExpenses(JSON.parse(storedExpenses));
+      } else {
+        setExpenses([]);
       }
 
       const storedCategories = await AsyncStorage.getItem(categoriesStorageKey);
@@ -162,6 +164,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const storedCurrency = await AsyncStorage.getItem(currencyStorageKey);
       if (storedCurrency) {
         setCurrency(storedCurrency);
+      } else {
+        setCurrency('$');
       }
 
       const storedBudgets = await AsyncStorage.getItem(budgetStorageKey);
@@ -169,13 +173,24 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const parsed = JSON.parse(storedBudgets);
         if (parsed.monthly) setMonthlyBudget(parsed.monthly);
         if (parsed.yearly) setYearlyBudget(parsed.yearly);
+      } else {
+        setMonthlyBudget(0);
+        setYearlyBudget(0);
       }
 
       const storedShowMonthly = await AsyncStorage.getItem(showMonthlyBudgetStorageKey);
-      if (storedShowMonthly !== null) setShowMonthlyBudget(storedShowMonthly === 'true');
+      if (storedShowMonthly !== null) {
+        setShowMonthlyBudget(storedShowMonthly === 'true');
+      } else {
+        setShowMonthlyBudget(true);
+      }
 
       const storedShowYearly = await AsyncStorage.getItem(showYearlyBudgetStorageKey);
-      if (storedShowYearly !== null) setShowYearlyBudget(storedShowYearly === 'true');
+      if (storedShowYearly !== null) {
+        setShowYearlyBudget(storedShowYearly === 'true');
+      } else {
+        setShowYearlyBudget(true);
+      }
 
       const storedDownloadPath = await AsyncStorage.getItem(downloadPathStorageKey);
       if (storedDownloadPath !== null) {

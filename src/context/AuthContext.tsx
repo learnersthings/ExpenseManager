@@ -36,6 +36,7 @@ export const useAuthContext = () => useContext(AuthContext);
 
 const AUTH_KEY = '@app_is_logged_in';
 const USER_CREDENTIALS_KEY = '@app_user_credentials';
+const ALL_USERS_KEY = '@app_all_users';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -44,10 +45,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loadAuthState = async () => {
     try {
+      const storedUser = await AsyncStorage.getItem(USER_CREDENTIALS_KEY);
+      
+      // Migration step: move existing user to all users list if needed
+      if (storedUser) {
+        const userObj = JSON.parse(storedUser);
+        const allUsers = await AsyncStorage.getItem(ALL_USERS_KEY);
+        if (!allUsers) {
+          await AsyncStorage.setItem(ALL_USERS_KEY, JSON.stringify({ [userObj.email]: userObj }));
+        }
+      }
+
       const storedAuth = await AsyncStorage.getItem(AUTH_KEY);
       if (storedAuth === 'true') {
         setIsLoggedIn(true);
-        const storedUser = await AsyncStorage.getItem(USER_CREDENTIALS_KEY);
         if (storedUser) {
           setUser(JSON.parse(storedUser));
         }
@@ -74,15 +85,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const formattedEmail = email.toLowerCase();
     
     // Check if user already exists with this email
-    const storedData = await AsyncStorage.getItem(USER_CREDENTIALS_KEY);
-    if (storedData) {
-      const storedUser = JSON.parse(storedData);
-      if (storedUser.email === formattedEmail) {
-        throw new Error('An account with this email already exists.');
-      }
+    const storedAllUsers = await AsyncStorage.getItem(ALL_USERS_KEY);
+    let allUsers = storedAllUsers ? JSON.parse(storedAllUsers) : {};
+    
+    if (allUsers[formattedEmail]) {
+      throw new Error('An account with this email already exists.');
     }
 
     const newUser = { firstName, lastName, email: formattedEmail, password };
+    allUsers[formattedEmail] = newUser;
+    
+    await AsyncStorage.setItem(ALL_USERS_KEY, JSON.stringify(allUsers));
     await AsyncStorage.setItem(USER_CREDENTIALS_KEY, JSON.stringify(newUser));
     
     // Auto login after register
@@ -96,14 +109,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error('Please enter both email and password.');
     }
 
-    const storedData = await AsyncStorage.getItem(USER_CREDENTIALS_KEY);
-    if (!storedData) {
+    const formattedEmail = email.toLowerCase();
+    const storedAllUsers = await AsyncStorage.getItem(ALL_USERS_KEY);
+    
+    if (!storedAllUsers) {
       throw new Error('Account does not exist. Please sign up first.');
     }
 
-    const storedUser = JSON.parse(storedData);
-    if (storedUser.email === email.toLowerCase() && storedUser.password === password) {
+    const allUsers = JSON.parse(storedAllUsers);
+    const storedUser = allUsers[formattedEmail];
+
+    if (!storedUser) {
+      throw new Error('Account does not exist. Please sign up first.');
+    }
+
+    if (storedUser.password === password) {
       await AsyncStorage.setItem(AUTH_KEY, 'true');
+      await AsyncStorage.setItem(USER_CREDENTIALS_KEY, JSON.stringify(storedUser));
       setUser(storedUser);
       setIsLoggedIn(true);
     } else {
@@ -117,6 +139,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const updatedUser = { ...user, firstName, lastName };
     await AsyncStorage.setItem(USER_CREDENTIALS_KEY, JSON.stringify(updatedUser));
+    
+    const storedAllUsers = await AsyncStorage.getItem(ALL_USERS_KEY);
+    if (storedAllUsers) {
+      const allUsers = JSON.parse(storedAllUsers);
+      allUsers[updatedUser.email] = updatedUser;
+      await AsyncStorage.setItem(ALL_USERS_KEY, JSON.stringify(allUsers));
+    }
+
     setUser(updatedUser);
   };
 
@@ -138,6 +168,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const updatedUser = { ...storedUser, password: newPassword };
     await AsyncStorage.setItem(USER_CREDENTIALS_KEY, JSON.stringify(updatedUser));
+    
+    const storedAllUsers = await AsyncStorage.getItem(ALL_USERS_KEY);
+    if (storedAllUsers) {
+      const allUsers = JSON.parse(storedAllUsers);
+      allUsers[updatedUser.email] = updatedUser;
+      await AsyncStorage.setItem(ALL_USERS_KEY, JSON.stringify(allUsers));
+    }
+
     setUser(updatedUser);
   };
 
