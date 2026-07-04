@@ -14,7 +14,7 @@ interface AuthContextType {
   login: (email?: string, password?: string) => Promise<void>;
   register: (firstName?: string, lastName?: string, email?: string, password?: string) => Promise<void>;
   logout: () => Promise<void>;
-  updateProfile: (firstName: string, lastName: string) => Promise<void>;
+  updateProfile: (firstName: string, lastName: string, email: string) => Promise<void>;
   changePassword: (oldPassword?: string, newPassword?: string) => Promise<void>;
   refreshAuth: () => Promise<void>;
   isAuthLoading: boolean;
@@ -133,17 +133,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const updateProfile = async (firstName: string, lastName: string) => {
-    if (!firstName.trim() || !lastName.trim()) throw new Error('Name fields cannot be empty.');
+  const updateProfile = async (firstName: string, lastName: string, email: string) => {
+    if (!firstName.trim() || !lastName.trim() || !email.trim()) throw new Error('Fields cannot be empty.');
     if (!user) throw new Error('User not logged in.');
 
-    const updatedUser = { ...user, firstName, lastName };
+    const formattedEmail = email.toLowerCase();
+    const storedAllUsers = await AsyncStorage.getItem(ALL_USERS_KEY);
+    let allUsers = storedAllUsers ? JSON.parse(storedAllUsers) : {};
+
+    if (formattedEmail !== user.email && allUsers[formattedEmail]) {
+      throw new Error('An account with this email already exists.');
+    }
+
+    const updatedUser = { ...user, firstName, lastName, email: formattedEmail };
     await AsyncStorage.setItem(USER_CREDENTIALS_KEY, JSON.stringify(updatedUser));
     
-    const storedAllUsers = await AsyncStorage.getItem(ALL_USERS_KEY);
     if (storedAllUsers) {
-      const allUsers = JSON.parse(storedAllUsers);
-      allUsers[updatedUser.email] = updatedUser;
+      if (formattedEmail !== user.email) {
+        delete allUsers[user.email];
+      }
+      allUsers[formattedEmail] = updatedUser;
       await AsyncStorage.setItem(ALL_USERS_KEY, JSON.stringify(allUsers));
     }
 

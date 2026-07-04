@@ -36,7 +36,7 @@ export default function DashboardScreen() {
               </View>
             )}
           </View>
-          
+
           {monthlyBudget > 0 && showMonthlyBudget && (
             <View style={{ alignItems: 'center', justifyContent: 'center' }}>
               <Svg width={120} height={120}>
@@ -66,7 +66,7 @@ export default function DashboardScreen() {
       <View style={[styles.card, { backgroundColor: colors.card, shadowColor: isDarkTheme ? '#00FFFF' : '#000', padding: 20 }]}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View style={{ flex: 1, paddingRight: 16 }}>
-            <Text style={{ fontSize: 14, color: colors.text, opacity: 0.7, marginBottom: 8, fontWeight: '600', textTransform: 'uppercase' }}>{currentYear} Total</Text>
+            <Text style={{ fontSize: 14, color: colors.text, opacity: 0.7, marginBottom: 8, fontWeight: '600', textTransform: 'uppercase' }}>{currentYear} Total Spending</Text>
             <Text style={{ fontSize: 32, fontWeight: 'bold', color: yearlyBudget > 0 && currentYearTotal > yearlyBudget ? '#ff4444' : colors.text, marginBottom: yearlyBudget > 0 && showYearlyBudget ? 16 : 0 }} numberOfLines={1} adjustsFontSizeToFit>
               {currency}{formatAmount(currentYearTotal)}
             </Text>
@@ -76,7 +76,7 @@ export default function DashboardScreen() {
               </View>
             )}
           </View>
-          
+
           {yearlyBudget > 0 && showYearlyBudget && (
             <View style={{ alignItems: 'center', justifyContent: 'center' }}>
               <Svg width={120} height={120}>

@@ -61,6 +61,7 @@ interface ExpenseContextType {
   updateDownloadPath: (uri: string | null) => Promise<void>;
   backupPathUri: string | null;
   updateBackupPath: (uri: string | null) => Promise<void>;
+  migrateUserEmail: (oldEmail: string, newEmail: string) => Promise<void>;
 }
 
 const ExpenseContext = createContext<ExpenseContextType>({
@@ -95,6 +96,7 @@ const ExpenseContext = createContext<ExpenseContextType>({
   updateDownloadPath: async () => {},
   backupPathUri: null,
   updateBackupPath: async () => {},
+  migrateUserEmail: async () => {},
 });
 
 export const useExpenseContext = () => useContext(ExpenseContext);
@@ -412,6 +414,24 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .reduce((total, expense) => total + expense.amount, 0);
   };
 
+  const migrateUserEmail = async (oldEmail: string, newEmail: string) => {
+    const keys = [
+      EXPENSES_KEY, CATEGORIES_KEY, PAYMENT_MODES_KEY, CURRENCY_KEY,
+      BUDGET_KEY, SHOW_MONTHLY_BUDGET_KEY, SHOW_YEARLY_BUDGET_KEY,
+      DOWNLOAD_PATH_KEY, BACKUP_PATH_KEY
+    ];
+
+    for (const key of keys) {
+      const oldKey = `${key}_${oldEmail}`;
+      const newKey = `${key}_${newEmail}`;
+      const data = await AsyncStorage.getItem(oldKey);
+      if (data !== null) {
+        await AsyncStorage.setItem(newKey, data);
+        await AsyncStorage.removeItem(oldKey);
+      }
+    }
+  };
+
   return (
     <ExpenseContext.Provider value={{ 
       expenses, categories, paymentModes, currency, monthlyBudget, yearlyBudget, 
@@ -424,7 +444,8 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
       getCurrentMonthTotal, getPreviousMonthTotal, 
       refreshExpenseData: loadData, isLoading,
       downloadPathUri, updateDownloadPath,
-      backupPathUri, updateBackupPath
+      backupPathUri, updateBackupPath,
+      migrateUserEmail
     }}>
       {children}
     </ExpenseContext.Provider>
