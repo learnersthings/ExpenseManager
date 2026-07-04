@@ -6,6 +6,7 @@ import { useTheme } from '@react-navigation/native';
 
 
 import DashboardScreen from '../screens/DashboardScreen';
+import TransactionsScreen from '../screens/TransactionsScreen';
 import AnalyticsScreen from '../screens/AnalyticsScreen';
 import SettingsStack from './SettingsStack';
 
@@ -27,6 +28,7 @@ export default function BottomTabs() {
         headerTitle: (props) => {
           let iconName: keyof typeof Ionicons.glyphMap;
           if (route.name === 'Dashboard') iconName = 'grid';
+          else if (route.name === 'Transactions') iconName = 'newspaper';
           else if (route.name === 'Analytics') iconName = 'stats-chart';
           else if (route.name === 'Settings') iconName = 'settings';
           else iconName = 'ellipse';
@@ -50,6 +52,8 @@ export default function BottomTabs() {
 
           if (route.name === 'Dashboard') {
             iconName = focused ? 'grid' : 'grid-outline';
+          } else if (route.name === 'Transactions') {
+            iconName = focused ? 'newspaper' : 'newspaper-outline';
           } else if (route.name === 'Analytics') {
             iconName = focused ? 'stats-chart' : 'stats-chart-outline';
           } else if (route.name === 'Settings') {
@@ -64,10 +68,11 @@ export default function BottomTabs() {
     >
 
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
+      <Tab.Screen name="Transactions" component={TransactionsScreen} />
       <Tab.Screen name="Analytics" component={AnalyticsScreen} />
-      <Tab.Screen 
-        name="Settings" 
-        component={SettingsStack} 
+      <Tab.Screen
+        name="Settings"
+        component={SettingsStack}
         options={{ headerShown: false }}
       />
     </Tab.Navigator>
