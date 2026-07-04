@@ -61,12 +61,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (storedTheme !== null) {
         setIsDarkTheme(JSON.parse(storedTheme));
       } else {
-        setIsDarkTheme(systemColorScheme === 'dark' || systemColorScheme == null);
+        const defaultTheme = systemColorScheme === 'dark' || systemColorScheme == null;
+        setIsDarkTheme(defaultTheme);
+        await AsyncStorage.setItem(themeKey, JSON.stringify(defaultTheme));
       }
 
       const storedAccent = await AsyncStorage.getItem(accentKey);
       if (storedAccent !== null) {
         setAccentColorState(storedAccent);
+      } else {
+        setAccentColorState(ACCENT_COLORS[0]);
+        await AsyncStorage.setItem(accentKey, ACCENT_COLORS[0]);
       }
     } catch (e) {
       console.error('Failed to load theme.', e);
