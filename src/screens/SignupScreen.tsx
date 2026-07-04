@@ -23,12 +23,14 @@ export default function SignupScreen({ navigation }: any) {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [generalError, setGeneralError] = useState('');
 
   const [firstNameError, setFirstNameError] = useState('');
   const [lastNameError, setLastNameError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
 
   const placeholderColor = isDarkTheme ? '#888' : '#aaa';
 
@@ -37,6 +39,7 @@ export default function SignupScreen({ navigation }: any) {
     setLastNameError('');
     setEmailError('');
     setPasswordError('');
+    setConfirmPasswordError('');
     setGeneralError('');
     let isValid = true;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -58,6 +61,13 @@ export default function SignupScreen({ navigation }: any) {
     }
     if (!password) {
       setPasswordError('Password is required');
+      isValid = false;
+    }
+    if (!confirmPassword) {
+      setConfirmPasswordError('Confirm Password is required');
+      isValid = false;
+    } else if (password && password !== confirmPassword) {
+      setConfirmPasswordError('Passwords do not match');
       isValid = false;
     }
 
@@ -151,6 +161,21 @@ export default function SignupScreen({ navigation }: any) {
             {passwordError ? <Text style={styles.errorText}>{passwordError}</Text> : null}
           </View>
 
+          <View style={styles.inputWrapper}>
+            <TextInput
+              style={[
+                styles.input, 
+                { backgroundColor: isDarkTheme ? '#1e1e1e' : '#f5f5f5', color: colors.text, borderColor: confirmPasswordError ? '#ff4444' : (isDarkTheme ? '#333' : '#e0e0e0') }
+              ]}
+              placeholder="Confirm Password"
+              placeholderTextColor={placeholderColor}
+              value={confirmPassword}
+              onChangeText={(text) => { setConfirmPassword(text); setConfirmPasswordError(''); setGeneralError(''); }}
+              secureTextEntry
+            />
+            {confirmPasswordError ? <Text style={styles.errorText}>{confirmPasswordError}</Text> : null}
+          </View>
+
           <TouchableOpacity 
             style={[styles.button, { backgroundColor: colors.primary }]} 
             onPress={handleSignup}
@@ -209,6 +234,12 @@ const styles = StyleSheet.create({
   },
   inputWrapper: {
     marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    marginBottom: 6,
+    color: '#888',
+    fontWeight: '500',
   },
   input: {
     height: 52,
