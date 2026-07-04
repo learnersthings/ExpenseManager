@@ -7,6 +7,7 @@ import { useExpenseContext } from '../context/ExpenseContext';
 import { formatAmount } from '../utils/format';
 import Svg, { Circle } from 'react-native-svg';
 import TransactionList from '../components/TransactionList';
+import PremiumCardBackground from '../components/PremiumCardBackground';
 
 export default function DashboardScreen() {
   const colors = useThemeColors();
@@ -24,7 +25,7 @@ export default function DashboardScreen() {
   const renderCards = () => (
     <View>
       {/* Monthly Spending Card */}
-      <View style={[styles.card, { backgroundColor: colors.primary, shadowColor: isDarkTheme ? '#00FFFF' : colors.primary, padding: 20 }]}>
+      <PremiumCardBackground color={colors.primary}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View style={{ flex: 1, paddingRight: 16 }}>
             <AppText style={{ fontSize: 14, color: '#FFF', opacity: 0.9, marginBottom: 8, fontWeight: '600', textTransform: 'uppercase' }}>{currentMonthName} Spending</AppText>
@@ -61,10 +62,10 @@ export default function DashboardScreen() {
             </View>
           )}
         </View>
-      </View>
+      </PremiumCardBackground>
 
       {/* Yearly Spending Card */}
-      <View style={[styles.card, { backgroundColor: colors.primary, shadowColor: isDarkTheme ? '#00FFFF' : colors.primary, padding: 20 }]}>
+      <PremiumCardBackground color={colors.primary}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <View style={{ flex: 1, paddingRight: 16 }}>
             <AppText style={{ fontSize: 14, color: '#FFF', opacity: 0.9, marginBottom: 8, fontWeight: '600', textTransform: 'uppercase' }}>{currentYear} Total Spending</AppText>
@@ -101,7 +102,7 @@ export default function DashboardScreen() {
             </View>
           )}
         </View>
-      </View>
+      </PremiumCardBackground>
     </View>
   );
 

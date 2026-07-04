@@ -15,14 +15,14 @@ export const ACCENT_COLORS = [
   '#3B82F6', // Royal Blue
   '#6366F1', // Indigo
   '#10B981', // Emerald Green
+  '#06B6D4', // Cyan
   '#8B5CF6', // Amethyst Purple
-  '#F43F5E', // Coral Red
   '#F59E0B', // Amber Orange
   '#14B8A6', // Teal
   '#EAB308', // Yellow
   '#64748B', // Slate Grey
   '#84CC16', // Lime Green
-  '#D946EF', // Fuchsia
+  '#8B4513', // Brown
   '#0EA5E9', // Sky Blue
   '#34D399', // Mint
   '#F97316', // Orange
