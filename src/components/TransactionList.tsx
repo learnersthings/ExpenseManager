@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Alert, TextInput, Platform, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Alert, TextInput, Platform, ActivityIndicator } from 'react-native';
+import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppText from '../components/AppText';
 import { useTheme, useNavigation } from '@react-navigation/native';
@@ -16,6 +17,10 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { generateDashboardPDFHTML } from '../utils/pdfGenerator';
 import Svg, { Circle, Text as SvgText } from 'react-native-svg';
 
+export type ListItem = 
+  | { type: 'header'; id: string; title: string }
+  | { type: 'expense'; id: string; expense: Expense };
+
 interface TransactionListProps {
   ListHeaderComponent?: React.ReactNode;
   hideTitle?: boolean;
@@ -26,13 +31,15 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
   const colors = useThemeColors();
   const navigation = useNavigation<any>();
   const { isDarkTheme } = useThemeContext();
-  const { getCurrentMonthTotal, getPreviousMonthTotal, expenses, categories, paymentModes, currency, monthlyBudget, yearlyBudget, bulkDeleteExpenses, showMonthlyBudget, showYearlyBudget, downloadPathUri } = useExpenseContext();
+  const { getCurrentMonthTotal, getPreviousMonthTotal, expenses, categories, paymentModes, currency, monthlyBudget, yearlyBudget, bulkDeleteExpenses, showMonthlyBudget, showYearlyBudget, downloadPathUri, reorderExpensesByDate } = useExpenseContext();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
   const [displayCount, setDisplayCount] = useState(10);
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedExpenseIds, setSelectedExpenseIds] = useState<string[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [draggedItemDate, setDraggedItemDate] = useState<string | null>(null);
+  const [flatDataState, setFlatDataState] = useState<ListItem[]>([]);
 
   // Search and Filter States
   const [searchQuery, setSearchQuery] = useState('');
@@ -213,204 +220,265 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
     }
   };
 
+  const derivedFlatData = useMemo(() => {
+    const visibleExpenses = filteredExpenses.slice(0, displayCount);
+    const data: ListItem[] = [];
+    let lastGroupTitle = '';
+    visibleExpenses.forEach(exp => {
+      const monthYear = new Date(exp.date).toLocaleString('default', { month: 'long', year: 'numeric' });
+      if (monthYear !== lastGroupTitle) {
+        data.push({ type: 'header', id: `header-${monthYear}`, title: monthYear });
+        lastGroupTitle = monthYear;
+      }
+      data.push({ type: 'expense', id: exp.id, expense: exp });
+    });
+    return data;
+  }, [filteredExpenses, displayCount]);
+
+  React.useEffect(() => {
+    setFlatDataState(derivedFlatData);
+  }, [derivedFlatData]);
+
+  const handleDragEnd = async ({ data, from, to }: { data: ListItem[], from: number, to: number }) => {
+    if (!draggedItemDate) return;
+    
+    if (from !== to) {
+      let crossedDifferentDate = false;
+      const minIdx = Math.min(from, to);
+      const maxIdx = Math.max(from, to);
+      
+      for (let i = minIdx; i <= maxIdx; i++) {
+        if (i === to) continue;
+        const item = data[i];
+        if (item.type === 'header') {
+          crossedDifferentDate = true;
+          break;
+        } else if (item.type === 'expense') {
+          if (new Date(item.expense.date).toDateString() !== draggedItemDate) {
+            crossedDifferentDate = true;
+            break;
+          }
+        }
+      }
+
+      if (crossedDifferentDate) {
+        Alert.alert("Invalid Move", "You can only reorder transactions within the same date.");
+        setFlatDataState(derivedFlatData); // Revert UI
+        setDraggedItemDate(null);
+        return;
+      }
+    }
+
+    setFlatDataState(data);
+    const reorderedDayExpenses = data
+      .filter(item => item.type === 'expense' && new Date((item as any).expense.date).toDateString() === draggedItemDate)
+      .map(item => (item as any).expense as Expense);
+    await reorderExpensesByDate(draggedItemDate, reorderedDayExpenses);
+    setDraggedItemDate(null);
+  };
+
+  const renderItem = ({ item, drag, isActive }: RenderItemParams<ListItem>) => {
+    if (item.type === 'header') {
+      return <AppText style={[styles.monthHeader, { color: colors.text }]}>{item.title}</AppText>;
+    }
+
+    const exp = item.expense;
+    const category = categories.find(c => c.id === exp.categoryId);
+    const paymentMode = paymentModes.find(m => m.id === exp.paymentModeId);
+
+    return (
+      <ScaleDecorator>
+        <TouchableOpacity
+          style={[styles.expenseRow, { backgroundColor: isActive ? colors.surface : colors.card, elevation: isActive ? 10 : 0 }]}
+          onPress={() => handleRowPress(exp)}
+          onLongPress={() => {
+            setDraggedItemDate(new Date(exp.date).toDateString());
+            drag();
+          }}
+          disabled={isActive}
+          activeOpacity={0.8}
+        >
+          <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+            {isSelectMode && (
+              <View style={[styles.checkbox, { borderColor: colors.primary, backgroundColor: selectedExpenseIds.includes(exp.id) ? colors.primary : 'transparent' }]}>
+                {selectedExpenseIds.includes(exp.id) && <Ionicons name="checkmark" size={16} color="#fff" />}
+              </View>
+            )}
+            {category ? (
+              <View style={[styles.expenseIcon, { backgroundColor: category.color }]}>
+                <Ionicons name={category.icon as any} size={20} color="#fff" />
+              </View>
+            ) : (
+              <View style={[styles.expenseIcon, { backgroundColor: isDarkTheme ? '#333' : '#eee' }]}>
+                <Ionicons name="cash-outline" size={20} color={colors.text} />
+              </View>
+            )}
+            <View style={{ flex: 1, paddingRight: 10 }}>
+              <AppText style={[styles.expenseDesc, { color: colors.text }]} numberOfLines={1}>{exp.description}</AppText>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                <AppText style={styles.expenseDate}>{new Date(exp.date).toLocaleDateString()}</AppText>
+                {paymentMode && (
+                  <>
+                    <AppText style={styles.dotSeparator}>•</AppText>
+                    <Ionicons name={paymentMode.icon as any} size={12} color={paymentMode.color} style={{ marginRight: 4 }} />
+                    <AppText style={[styles.paymentModeText, { color: paymentMode.color }]} numberOfLines={1}>{paymentMode.name}</AppText>
+                  </>
+                )}
+              </View>
+            </View>
+          </View>
+          <AppText style={[styles.expenseAmount, { color: '#ff4444' }]}>-{currency}{formatAmount(exp.amount)}</AppText>
+        </TouchableOpacity>
+      </ScaleDecorator>
+    );
+  };
+
+  const listHeader = (
+    <>
+      {ListHeaderComponent}
+
+      {!isTransactionsScreen && (
+        <View style={styles.sectionHeader}>
+          {!hideTitle && <AppText style={[styles.sectionTitle, { color: colors.text }]}>Recent Activity</AppText>}
+          {expenses.length > 0 && (
+            <TouchableOpacity onPress={() => navigation.navigate('Transactions')}>
+              <AppText style={{ color: colors.primary, fontWeight: '600' }}>See All</AppText>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+
+      {expenses.length > 0 && (
+        <View style={styles.searchFilterContainer}>
+          <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Ionicons name="search" size={20} color={colors.textMuted} style={styles.searchIcon} />
+            <TextInput
+              style={[styles.searchInput, { color: colors.text }]}
+              placeholder="Search Expense..."
+              placeholderTextColor={colors.textMuted}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Ionicons name="close-circle" size={20} color={colors.textMuted} />
+              </TouchableOpacity>
+            )}
+          </View>
+          {isTransactionsScreen && (
+            <>
+              <TouchableOpacity
+                style={[styles.filterButton, { backgroundColor: colors.surface, borderColor: colors.border, marginRight: 10 }]}
+                onPress={handleDownloadPDF}
+                disabled={isDownloading}
+              >
+                {isDownloading ? (
+                  <ActivityIndicator size="small" color={colors.text} />
+                ) : (
+                  <Ionicons name="download-outline" size={22} color={colors.text} />
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.filterButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                onPress={() => setIsFilterModalVisible(true)}
+              >
+                <Ionicons
+                  name="options-outline"
+                  size={22}
+                  color={(selectedYears.length > 0 || selectedMonths.length > 0 || selectedCategoryIds.length > 0 || selectedPaymentModeIds.length > 0) ? colors.primary : colors.text}
+                />
+                {(selectedYears.length > 0 || selectedMonths.length > 0 || selectedCategoryIds.length > 0 || selectedPaymentModeIds.length > 0) && (
+                  <View style={[styles.filterBadge, { backgroundColor: colors.primary }]} />
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.filterButton, { backgroundColor: colors.surface, borderColor: colors.border, marginLeft: 10 }]}
+                onPress={() => {
+                  if (isSelectMode) {
+                    setIsSelectMode(false);
+                    setSelectedExpenseIds([]);
+                  } else {
+                    setIsSelectMode(true);
+                  }
+                }}
+              >
+                <Ionicons
+                  name={isSelectMode ? "checkmark-circle" : "checkmark-circle-outline"}
+                  size={22}
+                  color={isSelectMode ? colors.primary : colors.text}
+                />
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      )}
+
+      {/* ACTION BAR FOR SELECTION */}
+      {isSelectMode && expenses.length > 0 && (
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, paddingHorizontal: 4 }}>
+          {/* Left Side: Select All */}
+          <TouchableOpacity onPress={handleSelectAll} style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Ionicons
+              name={selectedExpenseIds.length === filteredExpenses.slice(0, displayCount).length && filteredExpenses.length > 0 ? "checkmark-circle" : "ellipse-outline"}
+              size={22}
+              color={colors.primary}
+            />
+            <AppText style={{ marginLeft: 8, color: colors.primary, fontWeight: '600' }}>Select All</AppText>
+          </TouchableOpacity>
+
+          {/* Right Side: Actions */}
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableOpacity onPress={() => { setIsSelectMode(false); setSelectedExpenseIds([]); }} style={{ marginRight: 16 }}>
+              <AppText style={{ color: colors.textMuted, fontWeight: '500' }}>Cancel</AppText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleDeleteSelected}
+              disabled={selectedExpenseIds.length === 0}
+              style={{ opacity: selectedExpenseIds.length === 0 ? 0.5 : 1 }}
+            >
+              <AppText style={{ color: '#ff4444', fontWeight: '600' }}>Delete ({selectedExpenseIds.length})</AppText>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+    </>
+  );
+
+  const listFooter = (
+    <>
+      {filteredExpenses.length > displayCount && (
+        <TouchableOpacity
+          style={[styles.loadMoreButton, { backgroundColor: isDarkTheme ? '#2a2a2a' : '#f0f0f0' }]}
+          onPress={() => setDisplayCount(prev => prev + 20)}
+        >
+          <AppText style={[styles.loadMoreText, { color: colors.primary }]}>Load More</AppText>
+          <Ionicons name="chevron-down" size={16} color={colors.primary} />
+        </TouchableOpacity>
+      )}
+    </>
+  );
+
+  const listEmpty = (
+    <View style={styles.emptyState}>
+      <AppText style={styles.emptyStateText}>
+        {expenses.length === 0 ? "No expenses yet. Add one!" : "No expenses match your search or filters."}
+      </AppText>
+    </View>
+  );
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-
-        {ListHeaderComponent}
-
-        {!isTransactionsScreen && (
-          <View style={styles.sectionHeader}>
-            {!hideTitle && <AppText style={[styles.sectionTitle, { color: colors.text }]}>Recent Activity</AppText>}
-            {expenses.length > 0 && (
-              <TouchableOpacity onPress={() => navigation.navigate('Transactions')}>
-                <AppText style={{ color: colors.primary, fontWeight: '600' }}>See All</AppText>
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
-
-        {expenses.length > 0 && (
-          <View style={styles.searchFilterContainer}>
-            <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <Ionicons name="search" size={20} color={colors.textMuted} style={styles.searchIcon} />
-              <TextInput
-                style={[styles.searchInput, { color: colors.text }]}
-                placeholder="Search Expense..."
-                placeholderTextColor={colors.textMuted}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-              />
-              {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={() => setSearchQuery('')}>
-                  <Ionicons name="close-circle" size={20} color={colors.textMuted} />
-                </TouchableOpacity>
-              )}
-            </View>
-            {isTransactionsScreen && (
-              <>
-                <TouchableOpacity
-                  style={[styles.filterButton, { backgroundColor: colors.surface, borderColor: colors.border, marginRight: 10 }]}
-                  onPress={handleDownloadPDF}
-                  disabled={isDownloading}
-                >
-                  {isDownloading ? (
-                    <ActivityIndicator size="small" color={colors.text} />
-                  ) : (
-                    <Ionicons name="download-outline" size={22} color={colors.text} />
-                  )}
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.filterButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
-                  onPress={() => setIsFilterModalVisible(true)}
-                >
-                  <Ionicons
-                    name="options-outline"
-                    size={22}
-                    color={(selectedYears.length > 0 || selectedMonths.length > 0 || selectedCategoryIds.length > 0 || selectedPaymentModeIds.length > 0) ? colors.primary : colors.text}
-                  />
-                  {(selectedYears.length > 0 || selectedMonths.length > 0 || selectedCategoryIds.length > 0 || selectedPaymentModeIds.length > 0) && (
-                    <View style={[styles.filterBadge, { backgroundColor: colors.primary }]} />
-                  )}
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.filterButton, { backgroundColor: colors.surface, borderColor: colors.border, marginLeft: 10 }]}
-                  onPress={() => {
-                    if (isSelectMode) {
-                      setIsSelectMode(false);
-                      setSelectedExpenseIds([]);
-                    } else {
-                      setIsSelectMode(true);
-                    }
-                  }}
-                >
-                  <Ionicons
-                    name={isSelectMode ? "checkmark-circle" : "checkmark-circle-outline"}
-                    size={22}
-                    color={isSelectMode ? colors.primary : colors.text}
-                  />
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
-        )}
-
-        {/* ACTION BAR FOR SELECTION */}
-        {isSelectMode && expenses.length > 0 && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, paddingHorizontal: 4 }}>
-            {/* Left Side: Select All */}
-            <TouchableOpacity onPress={handleSelectAll} style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Ionicons
-                name={selectedExpenseIds.length === filteredExpenses.slice(0, displayCount).length && filteredExpenses.length > 0 ? "checkmark-circle" : "ellipse-outline"}
-                size={22}
-                color={colors.primary}
-              />
-              <AppText style={{ marginLeft: 8, color: colors.primary, fontWeight: '600' }}>Select All</AppText>
-            </TouchableOpacity>
-
-            {/* Right Side: Actions */}
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <TouchableOpacity onPress={() => { setIsSelectMode(false); setSelectedExpenseIds([]); }} style={{ marginRight: 16 }}>
-                <AppText style={{ color: colors.textMuted, fontWeight: '500' }}>Cancel</AppText>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleDeleteSelected}
-                disabled={selectedExpenseIds.length === 0}
-                style={{ opacity: selectedExpenseIds.length === 0 ? 0.5 : 1 }}
-              >
-                <AppText style={{ color: '#ff4444', fontWeight: '600' }}>Delete ({selectedExpenseIds.length})</AppText>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-
-        {expenses.length === 0 ? (
-          <View style={styles.emptyState}>
-            <AppText style={styles.emptyStateText}>No expenses yet. Add one!</AppText>
-          </View>
-        ) : filteredExpenses.length === 0 ? (
-          <View style={styles.emptyState}>
-            <AppText style={styles.emptyStateText}>No expenses match your search or filters.</AppText>
-          </View>
-        ) : (
-          <>
-            {(() => {
-              const visibleExpenses = filteredExpenses.slice(0, displayCount);
-              const groups: { title: string, data: typeof visibleExpenses }[] = [];
-              visibleExpenses.forEach(exp => {
-                const monthYear = new Date(exp.date).toLocaleString('default', { month: 'long', year: 'numeric' });
-                const lastGroup = groups[groups.length - 1];
-                if (lastGroup && lastGroup.title === monthYear) {
-                  lastGroup.data.push(exp);
-                } else {
-                  groups.push({ title: monthYear, data: [exp] });
-                }
-              });
-
-              return groups.map((group, groupIndex) => (
-                <View key={`group-${groupIndex}`}>
-                  <AppText style={[styles.monthHeader, { color: colors.text }]}>{group.title}</AppText>
-                  {group.data.map((exp) => {
-                    const category = categories.find(c => c.id === exp.categoryId);
-                    const paymentMode = paymentModes.find(m => m.id === exp.paymentModeId);
-
-                    return (
-                      <TouchableOpacity
-                        key={exp.id}
-                        style={[styles.expenseRow, { backgroundColor: colors.card }]}
-                        onPress={() => handleRowPress(exp)}
-                      >
-                        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                          {isSelectMode && (
-                            <View style={[styles.checkbox, { borderColor: colors.primary, backgroundColor: selectedExpenseIds.includes(exp.id) ? colors.primary : 'transparent' }]}>
-                              {selectedExpenseIds.includes(exp.id) && <Ionicons name="checkmark" size={16} color="#fff" />}
-                            </View>
-                          )}
-                          {category ? (
-                            <View style={[styles.expenseIcon, { backgroundColor: category.color }]}>
-                              <Ionicons name={category.icon as any} size={20} color="#fff" />
-                            </View>
-                          ) : (
-                            <View style={[styles.expenseIcon, { backgroundColor: isDarkTheme ? '#333' : '#eee' }]}>
-                              <Ionicons name="cash-outline" size={20} color={colors.text} />
-                            </View>
-                          )}
-                          <View style={{ flex: 1, paddingRight: 10 }}>
-                            <AppText style={[styles.expenseDesc, { color: colors.text }]} numberOfLines={1}>{exp.description}</AppText>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                              <AppText style={styles.expenseDate}>{new Date(exp.date).toLocaleDateString()}</AppText>
-                              {paymentMode && (
-                                <>
-                                  <AppText style={styles.dotSeparator}>•</AppText>
-                                  <Ionicons name={paymentMode.icon as any} size={12} color={paymentMode.color} style={{ marginRight: 4 }} />
-                                  <AppText style={[styles.paymentModeText, { color: paymentMode.color }]} numberOfLines={1}>{paymentMode.name}</AppText>
-                                </>
-                              )}
-                            </View>
-                          </View>
-                        </View>
-                        <AppText style={[styles.expenseAmount, { color: '#ff4444' }]}>-{currency}{formatAmount(exp.amount)}</AppText>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              ));
-            })()}
-
-            {filteredExpenses.length > displayCount && (
-              <TouchableOpacity
-                style={[styles.loadMoreButton, { backgroundColor: isDarkTheme ? '#2a2a2a' : '#f0f0f0' }]}
-                onPress={() => setDisplayCount(prev => prev + 20)}
-              >
-                <AppText style={[styles.loadMoreText, { color: colors.primary }]}>Load More</AppText>
-                <Ionicons name="chevron-down" size={16} color={colors.primary} />
-              </TouchableOpacity>
-            )}
-          </>
-        )}
-
-      </ScrollView>
+      <DraggableFlatList
+        data={flatDataState}
+        onDragEnd={handleDragEnd}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+        ListHeaderComponent={listHeader}
+        ListFooterComponent={listFooter}
+        ListEmptyComponent={listEmpty}
+        contentContainerStyle={styles.scrollContent}
+        activationDistance={20}
+      />
 
       {/* Floating Action Button */}
       <TouchableOpacity

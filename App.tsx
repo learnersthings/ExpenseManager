@@ -1,4 +1,6 @@
+import 'react-native-gesture-handler';
 import React from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ThemeProvider } from './src/context/ThemeContext';
 import { AuthProvider } from './src/context/AuthContext';
 import { ExpenseProvider } from './src/context/ExpenseContext';
@@ -19,12 +21,14 @@ export default function App() {
     return null;
   }
   return (
-    <AuthProvider>
-      <ExpenseProvider>
-        <ThemeProvider>
-          <RootNavigator />
-        </ThemeProvider>
-      </ExpenseProvider>
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <ExpenseProvider>
+          <ThemeProvider>
+            <RootNavigator />
+          </ThemeProvider>
+        </ExpenseProvider>
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }

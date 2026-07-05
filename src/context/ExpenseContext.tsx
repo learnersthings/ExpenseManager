@@ -41,6 +41,7 @@ interface ExpenseContextType {
   updateExpense: (id: string, amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   bulkDeleteExpenses: (ids: string[]) => Promise<void>;
+  reorderExpensesByDate: (dateStr: string, reorderedDayExpenses: Expense[]) => Promise<void>;
   
   addCategory: (name: string, icon: string, color: string) => Promise<void>;
   updateCategory: (id: string, name: string, icon: string, color: string) => Promise<void>;
@@ -86,6 +87,7 @@ const ExpenseContext = createContext<ExpenseContextType>({
   updateExpense: async () => {},
   deleteExpense: async () => {},
   bulkDeleteExpenses: async () => {},
+  reorderExpensesByDate: async () => {},
   addCategory: async () => {},
   updateCategory: async () => {},
   deleteCategory: async () => {},
@@ -303,6 +305,29 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await AsyncStorage.setItem(storageKey, JSON.stringify(updatedExpenses));
   };
 
+  const reorderExpensesByDate = async (dateStr: string, reorderedDayExpenses: Expense[]) => {
+    const otherExpenses = expenses.filter(e => new Date(e.date).toDateString() !== dateStr);
+    
+    const baseDate = new Date(dateStr);
+    
+    const updatedReordered = reorderedDayExpenses.map((exp, index) => {
+      const newDate = new Date(baseDate);
+      newDate.setHours(23, 59, 59, 0);
+      newDate.setSeconds(newDate.getSeconds() - index);
+      
+      return {
+        ...exp,
+        date: newDate.toISOString(),
+      };
+    });
+
+    const newExpenses = [...updatedReordered, ...otherExpenses];
+    newExpenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    
+    setExpenses(newExpenses);
+    await AsyncStorage.setItem(storageKey, JSON.stringify(newExpenses));
+  };
+
   const addCategory = async (name: string, icon: string, color: string) => {
     const newCat: Category = { id: Date.now().toString(), name, icon, color };
     const updated = [...categories, newCat].sort((a, b) => a.name.localeCompare(b.name));
@@ -493,7 +518,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     <ExpenseContext.Provider value={{ 
       expenses, categories, paymentModes, currency, monthlyBudget, yearlyBudget, 
       showMonthlyBudget, showYearlyBudget, showYearCard, analyticsChartType, chartStyle,
-      addExpense, updateExpense, deleteExpense, bulkDeleteExpenses,
+      addExpense, updateExpense, deleteExpense, bulkDeleteExpenses, reorderExpensesByDate,
       addCategory, updateCategory, deleteCategory,
       addPaymentMode, updatePaymentMode, deletePaymentMode,
       bulkImport,
