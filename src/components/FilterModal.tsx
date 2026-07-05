@@ -1,6 +1,7 @@
 import React from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, Modal, TouchableOpacity, ScrollView, SafeAreaView, Platform, StatusBar } from 'react-native';
+import { View, StyleSheet, Modal, TouchableOpacity, ScrollView, Platform, StatusBar } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AppText from '../components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeContext } from '../context/ThemeContext';

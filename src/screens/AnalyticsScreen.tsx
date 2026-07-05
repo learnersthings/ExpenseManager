@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
-import { View, StyleSheet, ScrollView, Dimensions, SafeAreaView, TouchableOpacity, Alert, Platform, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Alert, Platform, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AppText from '../components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { PieChart as GiftedPieChart, BarChart } from 'react-native-gifted-charts';
