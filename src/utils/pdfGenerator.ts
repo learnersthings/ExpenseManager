@@ -99,12 +99,18 @@ const generateSVGPieChart = (data: { amount: number; color: string }[]) => {
   `;
 };
 
+const generateSVGDonutChart = (data: { amount: number; color: string }[]) => {
+  const pieSVG = generateSVGPieChart(data);
+  return pieSVG.replace('</svg>', '<circle cx="0" cy="0" r="0.5" fill="#fff" /></svg>');
+};
+
 export const generateAnalyticsPDFHTML = (
   filterName: string,
   totalSpent: number,
   categoryData: { name: string; amount: number; color: string; text: string }[],
   paymentModeData: { name: string; amount: number; color: string; text: string }[],
-  currency: string
+  currency: string,
+  chartType: 'Pie' | 'Donut' = 'Pie'
 ) => {
   const catRows = categoryData.map(cat => `
     <tr>
@@ -156,7 +162,7 @@ export const generateAnalyticsPDFHTML = (
 
         <div class="card">
           <h2>Category Breakdown</h2>
-          ${generateSVGPieChart(categoryData)}
+          ${chartType === 'Pie' ? generateSVGPieChart(categoryData) : generateSVGDonutChart(categoryData)}
           <table>
             <thead>
               <tr>
@@ -173,7 +179,7 @@ export const generateAnalyticsPDFHTML = (
 
         <div class="card">
           <h2>Payment Mode</h2>
-          ${generateSVGPieChart(paymentModeData)}
+          ${chartType === 'Pie' ? generateSVGPieChart(paymentModeData) : generateSVGDonutChart(paymentModeData)}
           <table>
             <thead>
               <tr>

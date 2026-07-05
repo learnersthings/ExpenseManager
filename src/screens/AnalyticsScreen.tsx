@@ -3,7 +3,7 @@ import { useThemeColors } from '../hooks/useThemeColors';
 import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Alert, Platform, ActivityIndicator } from 'react-native';
 import AppText from '../components/AppText';
 import { Ionicons } from '@expo/vector-icons';
-import { PieChart as GiftedPieChart, BarChart } from 'react-native-gifted-charts';
+import { PieChart as GiftedPieChart } from 'react-native-gifted-charts';
 import { Text as SvgText } from 'react-native-svg';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext } from '../context/ExpenseContext';
@@ -147,7 +147,7 @@ export default function AnalyticsScreen() {
     try {
       setIsDownloading(true);
       const filterName = activeFilter === 'Custom' ? 'Custom Filter' : activeFilter;
-      const html = generateAnalyticsPDFHTML(filterName, totalSpent, fullCategoryData, paymentModeData, currency);
+      const html = generateAnalyticsPDFHTML(filterName, totalSpent, fullCategoryData, paymentModeData, currency, analyticsChartType);
       const { uri, base64 } = await Print.printToFileAsync({ html, base64: true });
       
       if (downloadPathUri && Platform.OS === 'android') {
@@ -234,6 +234,7 @@ export default function AnalyticsScreen() {
             {/* Category Breakdown */}
             <View style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.shadow, overflow: 'visible' }]}>
               <AppText style={[styles.cardTitle, { color: colors.text }]}>Category Breakdown</AppText>
+              
               <View style={{ alignItems: 'center', marginVertical: 30 }}>
                 <GiftedPieChart
                   data={pieChartData}
@@ -244,6 +245,7 @@ export default function AnalyticsScreen() {
                   showText={false}
                 />
               </View>
+
               <View style={{ marginTop: 20 }}>
                 {fullCategoryData.map((cat, index) => (
                   <View key={index} style={styles.paymentModeRow}>
