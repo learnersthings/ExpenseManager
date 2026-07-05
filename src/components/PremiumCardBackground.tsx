@@ -47,17 +47,17 @@ export default function PremiumCardBackground({ children, color, style }: Premiu
         {/* Abstract SVG Waves Overlay */}
         <View style={StyleSheet.absoluteFillObject}>
           <Svg height="100%" width="100%" viewBox="0 0 400 200" preserveAspectRatio="none">
-             {/* Bottom flowing waves */}
-             <Path d="M-50 250 C 100 100, 200 300, 450 50" stroke="rgba(255,255,255,0.25)" strokeWidth="1" fill="none" />
-             <Path d="M-50 260 C 110 110, 210 310, 450 60" stroke="rgba(255,255,255,0.2)" strokeWidth="1" fill="none" />
-             <Path d="M-50 270 C 120 120, 220 320, 450 70" stroke="rgba(255,255,255,0.15)" strokeWidth="1" fill="none" />
-             <Path d="M-50 280 C 130 130, 230 330, 450 80" stroke="rgba(255,255,255,0.1)" strokeWidth="1" fill="none" />
-             <Path d="M-50 290 C 140 140, 240 340, 450 90" stroke="rgba(255,255,255,0.05)" strokeWidth="1" fill="none" />
-             
-             {/* Top flowing waves */}
-             <Path d="M 450 -50 C 300 100, 200 -100, -50 150" stroke="rgba(255,255,255,0.15)" strokeWidth="1" fill="none" />
-             <Path d="M 450 -40 C 310 110, 210 -90, -50 160" stroke="rgba(255,255,255,0.1)" strokeWidth="1" fill="none" />
-             <Path d="M 450 -30 C 320 120, 220 -80, -50 170" stroke="rgba(255,255,255,0.05)" strokeWidth="1" fill="none" />
+            {/* Bottom flowing waves */}
+            <Path d="M-50 250 C 100 100, 200 300, 450 50" stroke="rgba(255,255,255,0.25)" strokeWidth="1" fill="none" />
+            <Path d="M-50 260 C 110 110, 210 310, 450 60" stroke="rgba(255,255,255,0.2)" strokeWidth="1" fill="none" />
+            <Path d="M-50 270 C 120 120, 220 320, 450 70" stroke="rgba(255,255,255,0.15)" strokeWidth="1" fill="none" />
+            <Path d="M-50 280 C 130 130, 230 330, 450 80" stroke="rgba(255,255,255,0.1)" strokeWidth="1" fill="none" />
+            <Path d="M-50 290 C 140 140, 240 340, 450 90" stroke="rgba(255,255,255,0.05)" strokeWidth="1" fill="none" />
+
+            {/* Top flowing waves */}
+            <Path d="M 450 -50 C 300 100, 200 -100, -50 150" stroke="rgba(255,255,255,0.15)" strokeWidth="1" fill="none" />
+            <Path d="M 450 -40 C 310 110, 210 -90, -50 160" stroke="rgba(255,255,255,0.1)" strokeWidth="1" fill="none" />
+            <Path d="M 450 -30 C 320 120, 220 -80, -50 170" stroke="rgba(255,255,255,0.05)" strokeWidth="1" fill="none" />
           </Svg>
         </View>
         <View style={styles.content}>
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: 16,
     overflow: 'hidden',
-    marginBottom: 20,
+    marginBottom: 10,
     elevation: 4,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
