@@ -8,7 +8,7 @@ import { useExpenseContext } from '../context/ExpenseContext';
 export default function BudgetScreen({ navigation }: any) {
   const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
-  const { currency, monthlyBudget, yearlyBudget, updateBudgets, showMonthlyBudget, showYearlyBudget, toggleShowMonthlyBudget, toggleShowYearlyBudget } = useExpenseContext();
+  const { currency, monthlyBudget, yearlyBudget, updateBudgets, showMonthlyBudget, showYearlyBudget, showYearCard, toggleShowMonthlyBudget, toggleShowYearlyBudget, toggleShowYearCard } = useExpenseContext();
 
   const [monthVal, setMonthVal] = useState(monthlyBudget > 0 ? monthlyBudget.toString() : '');
   const [yearVal, setYearVal] = useState(yearlyBudget > 0 ? yearlyBudget.toString() : '');
@@ -96,6 +96,17 @@ export default function BudgetScreen({ navigation }: any) {
                 ios_backgroundColor="#3e3e3e"
                 onValueChange={toggleShowYearlyBudget}
                 value={showYearlyBudget}
+              />
+            </View>
+
+            <View style={styles.toggleContainer}>
+              <AppText style={[styles.label, { color: colors.text, marginBottom: 0 }]}>Show Entire Year Card on Dashboard</AppText>
+              <Switch
+                trackColor={{ false: '#767577', true: colors.primary }}
+                thumbColor={showYearCard ? '#ffffff' : '#f4f3f4'}
+                ios_backgroundColor="#3e3e3e"
+                onValueChange={toggleShowYearCard}
+                value={showYearCard}
               />
             </View>
 

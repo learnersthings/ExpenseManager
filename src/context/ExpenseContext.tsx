@@ -34,6 +34,7 @@ interface ExpenseContextType {
   yearlyBudget: number;
   showMonthlyBudget: boolean;
   showYearlyBudget: boolean;
+  showYearCard: boolean;
   addExpense: (amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => Promise<void>;
   updateExpense: (id: string, amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
@@ -53,6 +54,7 @@ interface ExpenseContextType {
   updateBudgets: (monthly: number, yearly: number) => Promise<void>;
   toggleShowMonthlyBudget: (val: boolean) => Promise<void>;
   toggleShowYearlyBudget: (val: boolean) => Promise<void>;
+  toggleShowYearCard: (val: boolean) => Promise<void>;
   getCurrentMonthTotal: () => number;
   getPreviousMonthTotal: () => number;
   refreshExpenseData: () => Promise<void>;
@@ -73,6 +75,7 @@ const ExpenseContext = createContext<ExpenseContextType>({
   yearlyBudget: 0,
   showMonthlyBudget: true,
   showYearlyBudget: true,
+  showYearCard: true,
   addExpense: async () => {},
   updateExpense: async () => {},
   deleteExpense: async () => {},
@@ -88,6 +91,7 @@ const ExpenseContext = createContext<ExpenseContextType>({
   updateBudgets: async () => {},
   toggleShowMonthlyBudget: async () => {},
   toggleShowYearlyBudget: async () => {},
+  toggleShowYearCard: async () => {},
   getCurrentMonthTotal: () => 0,
   getPreviousMonthTotal: () => 0,
   refreshExpenseData: async () => {},
@@ -108,6 +112,7 @@ const CURRENCY_KEY = '@app_currency';
 const BUDGET_KEY = '@app_budgets';
 const SHOW_MONTHLY_BUDGET_KEY = '@app_show_monthly_budget';
 const SHOW_YEARLY_BUDGET_KEY = '@app_show_yearly_budget';
+const SHOW_YEAR_CARD_KEY = '@app_show_year_card';
 const DOWNLOAD_PATH_KEY = '@app_download_path';
 const BACKUP_PATH_KEY = '@app_backup_path';
 
@@ -120,6 +125,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [yearlyBudget, setYearlyBudget] = useState(0);
   const [showMonthlyBudget, setShowMonthlyBudget] = useState(true);
   const [showYearlyBudget, setShowYearlyBudget] = useState(true);
+  const [showYearCard, setShowYearCard] = useState(true);
   const [downloadPathUri, setDownloadPathUri] = useState<string | null>(null);
   const [backupPathUri, setBackupPathUri] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -132,6 +138,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const budgetStorageKey = user ? `${BUDGET_KEY}_${user.email}` : BUDGET_KEY;
   const showMonthlyBudgetStorageKey = user ? `${SHOW_MONTHLY_BUDGET_KEY}_${user.email}` : SHOW_MONTHLY_BUDGET_KEY;
   const showYearlyBudgetStorageKey = user ? `${SHOW_YEARLY_BUDGET_KEY}_${user.email}` : SHOW_YEARLY_BUDGET_KEY;
+  const showYearCardStorageKey = user ? `${SHOW_YEAR_CARD_KEY}_${user.email}` : SHOW_YEAR_CARD_KEY;
   const downloadPathStorageKey = user ? `${DOWNLOAD_PATH_KEY}_${user.email}` : DOWNLOAD_PATH_KEY;
   const backupPathStorageKey = user ? `${BACKUP_PATH_KEY}_${user.email}` : BACKUP_PATH_KEY;
 
@@ -194,6 +201,13 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setShowYearlyBudget(true);
       }
 
+      const storedShowYearCard = await AsyncStorage.getItem(showYearCardStorageKey);
+      if (storedShowYearCard !== null) {
+        setShowYearCard(storedShowYearCard === 'true');
+      } else {
+        setShowYearCard(true);
+      }
+
       const storedDownloadPath = await AsyncStorage.getItem(downloadPathStorageKey);
       if (storedDownloadPath !== null) {
         setDownloadPathUri(storedDownloadPath);
@@ -216,7 +230,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   useEffect(() => {
     loadData();
-  }, [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, showYearlyBudgetStorageKey, downloadPathStorageKey, backupPathStorageKey]);
+  }, [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, downloadPathStorageKey, backupPathStorageKey]);
 
   const addExpense = async (amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => {
     const newExpense: Expense = {
@@ -369,6 +383,11 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await AsyncStorage.setItem(showYearlyBudgetStorageKey, val.toString());
   };
 
+  const toggleShowYearCard = async (val: boolean) => {
+    setShowYearCard(val);
+    await AsyncStorage.setItem(showYearCardStorageKey, val.toString());
+  };
+
   const updateDownloadPath = async (uri: string | null) => {
     setDownloadPathUri(uri);
     if (uri) {
@@ -417,7 +436,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const migrateUserEmail = async (oldEmail: string, newEmail: string) => {
     const keys = [
       EXPENSES_KEY, CATEGORIES_KEY, PAYMENT_MODES_KEY, CURRENCY_KEY,
-      BUDGET_KEY, SHOW_MONTHLY_BUDGET_KEY, SHOW_YEARLY_BUDGET_KEY,
+      BUDGET_KEY, SHOW_MONTHLY_BUDGET_KEY, SHOW_YEARLY_BUDGET_KEY, SHOW_YEAR_CARD_KEY,
       DOWNLOAD_PATH_KEY, BACKUP_PATH_KEY
     ];
 
@@ -435,12 +454,12 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   return (
     <ExpenseContext.Provider value={{ 
       expenses, categories, paymentModes, currency, monthlyBudget, yearlyBudget, 
-      showMonthlyBudget, showYearlyBudget,
+      showMonthlyBudget, showYearlyBudget, showYearCard,
       addExpense, updateExpense, deleteExpense, bulkDeleteExpenses,
       addCategory, updateCategory, deleteCategory,
       addPaymentMode, updatePaymentMode, deletePaymentMode,
       bulkImport,
-      updateCurrency, updateBudgets, toggleShowMonthlyBudget, toggleShowYearlyBudget, 
+      updateCurrency, updateBudgets, toggleShowMonthlyBudget, toggleShowYearlyBudget, toggleShowYearCard,
       getCurrentMonthTotal, getPreviousMonthTotal, 
       refreshExpenseData: loadData, isLoading,
       downloadPathUri, updateDownloadPath,
