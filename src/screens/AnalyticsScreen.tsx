@@ -20,7 +20,7 @@ type TimeFilter = 'This Month' | 'Last Month' | 'This Year' | 'All Time' | 'Cust
 export default function AnalyticsScreen() {
   const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
-  const { expenses, categories, paymentModes, currency, downloadPathUri } = useExpenseContext();
+  const { expenses, categories, paymentModes, currency, downloadPathUri, analyticsChartType } = useExpenseContext();
   const [activeFilter, setActiveFilter] = useState<TimeFilter>('This Month');
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
   const [selectedYears, setSelectedYears] = useState<number[]>([]);
@@ -238,7 +238,9 @@ export default function AnalyticsScreen() {
                 <GiftedPieChart
                   data={pieChartData}
                   radius={150}
-                  innerRadius={0}
+                  innerRadius={analyticsChartType === 'Donut' ? 70 : 0}
+                  innerCircleColor={colors.card}
+                  donut={analyticsChartType === 'Donut'}
                   showText={false}
                 />
               </View>
@@ -265,7 +267,9 @@ export default function AnalyticsScreen() {
                 <GiftedPieChart
                   data={paymentModeData}
                   radius={150}
-                  innerRadius={0}
+                  innerRadius={analyticsChartType === 'Donut' ? 70 : 0}
+                  innerCircleColor={colors.card}
+                  donut={analyticsChartType === 'Donut'}
                   showText={false}
                 />
               </View>

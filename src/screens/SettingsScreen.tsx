@@ -19,7 +19,7 @@ export default function SettingsScreen({ navigation }: any) {
   const [isImportModalVisible, setIsImportModalVisible] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isAccentExpanded, setIsAccentExpanded] = useState(false);
-  const { currency, refreshExpenseData, downloadPathUri, updateDownloadPath, backupPathUri, updateBackupPath } = useExpenseContext();
+  const { currency, refreshExpenseData, downloadPathUri, updateDownloadPath, backupPathUri, updateBackupPath, analyticsChartType } = useExpenseContext();
 
   const handleSetDownloadPath = async () => {
     if (Platform.OS !== 'android') {
@@ -269,6 +269,20 @@ export default function SettingsScreen({ navigation }: any) {
             <AppText style={[styles.text, { color: colors.text }]}>Manage Categories</AppText>
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.text} />
+        </TouchableOpacity>
+        <View style={styles.divider} />
+        <TouchableOpacity 
+          style={styles.row}
+          onPress={() => navigation.navigate('AnalyticsChartSettings')}
+        >
+          <View style={styles.rowLeft}>
+            <Ionicons name="bar-chart-outline" size={22} color={colors.primary} style={styles.icon} />
+            <AppText style={[styles.text, { color: colors.text }]}>Analytics Chart</AppText>
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <AppText style={{ color: colors.text, fontSize: 14, marginRight: 8, opacity: 0.7 }}>{analyticsChartType}</AppText>
+            <Ionicons name="chevron-forward" size={20} color={colors.text} />
+          </View>
         </TouchableOpacity>
         <View style={styles.divider} />
         <TouchableOpacity 

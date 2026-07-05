@@ -35,6 +35,7 @@ interface ExpenseContextType {
   showMonthlyBudget: boolean;
   showYearlyBudget: boolean;
   showYearCard: boolean;
+  analyticsChartType: 'Pie' | 'Donut';
   addExpense: (amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => Promise<void>;
   updateExpense: (id: string, amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
@@ -55,6 +56,7 @@ interface ExpenseContextType {
   toggleShowMonthlyBudget: (val: boolean) => Promise<void>;
   toggleShowYearlyBudget: (val: boolean) => Promise<void>;
   toggleShowYearCard: (val: boolean) => Promise<void>;
+  updateAnalyticsChartType: (type: 'Pie' | 'Donut') => Promise<void>;
   getCurrentMonthTotal: () => number;
   getPreviousMonthTotal: () => number;
   refreshExpenseData: () => Promise<void>;
@@ -76,6 +78,7 @@ const ExpenseContext = createContext<ExpenseContextType>({
   showMonthlyBudget: true,
   showYearlyBudget: true,
   showYearCard: true,
+  analyticsChartType: 'Pie',
   addExpense: async () => {},
   updateExpense: async () => {},
   deleteExpense: async () => {},
@@ -92,6 +95,7 @@ const ExpenseContext = createContext<ExpenseContextType>({
   toggleShowMonthlyBudget: async () => {},
   toggleShowYearlyBudget: async () => {},
   toggleShowYearCard: async () => {},
+  updateAnalyticsChartType: async () => {},
   getCurrentMonthTotal: () => 0,
   getPreviousMonthTotal: () => 0,
   refreshExpenseData: async () => {},
@@ -113,6 +117,7 @@ const BUDGET_KEY = '@app_budgets';
 const SHOW_MONTHLY_BUDGET_KEY = '@app_show_monthly_budget';
 const SHOW_YEARLY_BUDGET_KEY = '@app_show_yearly_budget';
 const SHOW_YEAR_CARD_KEY = '@app_show_year_card';
+const ANALYTICS_CHART_TYPE_KEY = '@app_analytics_chart_type';
 const DOWNLOAD_PATH_KEY = '@app_download_path';
 const BACKUP_PATH_KEY = '@app_backup_path';
 
@@ -126,6 +131,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [showMonthlyBudget, setShowMonthlyBudget] = useState(true);
   const [showYearlyBudget, setShowYearlyBudget] = useState(true);
   const [showYearCard, setShowYearCard] = useState(true);
+  const [analyticsChartType, setAnalyticsChartType] = useState<'Pie' | 'Donut'>('Pie');
   const [downloadPathUri, setDownloadPathUri] = useState<string | null>(null);
   const [backupPathUri, setBackupPathUri] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -139,6 +145,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const showMonthlyBudgetStorageKey = user ? `${SHOW_MONTHLY_BUDGET_KEY}_${user.email}` : SHOW_MONTHLY_BUDGET_KEY;
   const showYearlyBudgetStorageKey = user ? `${SHOW_YEARLY_BUDGET_KEY}_${user.email}` : SHOW_YEARLY_BUDGET_KEY;
   const showYearCardStorageKey = user ? `${SHOW_YEAR_CARD_KEY}_${user.email}` : SHOW_YEAR_CARD_KEY;
+  const analyticsChartTypeStorageKey = user ? `${ANALYTICS_CHART_TYPE_KEY}_${user.email}` : ANALYTICS_CHART_TYPE_KEY;
   const downloadPathStorageKey = user ? `${DOWNLOAD_PATH_KEY}_${user.email}` : DOWNLOAD_PATH_KEY;
   const backupPathStorageKey = user ? `${BACKUP_PATH_KEY}_${user.email}` : BACKUP_PATH_KEY;
 
@@ -208,6 +215,13 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setShowYearCard(true);
       }
 
+      const storedChartType = await AsyncStorage.getItem(analyticsChartTypeStorageKey);
+      if (storedChartType === 'Pie' || storedChartType === 'Donut') {
+        setAnalyticsChartType(storedChartType);
+      } else {
+        setAnalyticsChartType('Pie');
+      }
+
       const storedDownloadPath = await AsyncStorage.getItem(downloadPathStorageKey);
       if (storedDownloadPath !== null) {
         setDownloadPathUri(storedDownloadPath);
@@ -230,7 +244,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   useEffect(() => {
     loadData();
-  }, [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, downloadPathStorageKey, backupPathStorageKey]);
+  }, [storageKey, categoriesStorageKey, paymentModesStorageKey, currencyStorageKey, budgetStorageKey, showMonthlyBudgetStorageKey, showYearlyBudgetStorageKey, showYearCardStorageKey, analyticsChartTypeStorageKey, downloadPathStorageKey, backupPathStorageKey]);
 
   const addExpense = async (amount: number, description: string, date: Date, categoryId?: string, paymentModeId?: string) => {
     const newExpense: Expense = {
@@ -388,6 +402,11 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     await AsyncStorage.setItem(showYearCardStorageKey, val.toString());
   };
 
+  const updateAnalyticsChartType = async (type: 'Pie' | 'Donut') => {
+    setAnalyticsChartType(type);
+    await AsyncStorage.setItem(analyticsChartTypeStorageKey, type);
+  };
+
   const updateDownloadPath = async (uri: string | null) => {
     setDownloadPathUri(uri);
     if (uri) {
@@ -437,7 +456,7 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const keys = [
       EXPENSES_KEY, CATEGORIES_KEY, PAYMENT_MODES_KEY, CURRENCY_KEY,
       BUDGET_KEY, SHOW_MONTHLY_BUDGET_KEY, SHOW_YEARLY_BUDGET_KEY, SHOW_YEAR_CARD_KEY,
-      DOWNLOAD_PATH_KEY, BACKUP_PATH_KEY
+      ANALYTICS_CHART_TYPE_KEY, DOWNLOAD_PATH_KEY, BACKUP_PATH_KEY
     ];
 
     for (const key of keys) {
@@ -454,12 +473,12 @@ export const ExpenseProvider: React.FC<{ children: React.ReactNode }> = ({ child
   return (
     <ExpenseContext.Provider value={{ 
       expenses, categories, paymentModes, currency, monthlyBudget, yearlyBudget, 
-      showMonthlyBudget, showYearlyBudget, showYearCard,
+      showMonthlyBudget, showYearlyBudget, showYearCard, analyticsChartType,
       addExpense, updateExpense, deleteExpense, bulkDeleteExpenses,
       addCategory, updateCategory, deleteCategory,
       addPaymentMode, updatePaymentMode, deletePaymentMode,
       bulkImport,
-      updateCurrency, updateBudgets, toggleShowMonthlyBudget, toggleShowYearlyBudget, toggleShowYearCard,
+      updateCurrency, updateBudgets, toggleShowMonthlyBudget, toggleShowYearlyBudget, toggleShowYearCard, updateAnalyticsChartType,
       getCurrentMonthTotal, getPreviousMonthTotal, 
       refreshExpenseData: loadData, isLoading,
       downloadPathUri, updateDownloadPath,
