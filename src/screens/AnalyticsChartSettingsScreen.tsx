@@ -7,10 +7,14 @@ import { Ionicons } from '@expo/vector-icons';
 
 export default function AnalyticsChartSettingsScreen() {
   const colors = useThemeColors();
-  const { analyticsChartType, updateAnalyticsChartType } = useExpenseContext();
+  const { analyticsChartType, updateAnalyticsChartType, chartStyle, updateChartStyle } = useExpenseContext();
 
-  const handleSelect = (type: 'Pie' | 'Donut') => {
+  const handleSelectType = (type: 'Pie' | 'Donut') => {
     updateAnalyticsChartType(type);
+  };
+
+  const handleSelectStyle = (style: 'Classic' | '3D' | 'Spaced' | 'Semi-Circle') => {
+    updateChartStyle(style);
   };
 
   return (
@@ -21,7 +25,7 @@ export default function AnalyticsChartSettingsScreen() {
 
         <TouchableOpacity 
           style={[styles.optionRow, { borderBottomColor: colors.border }]} 
-          onPress={() => handleSelect('Pie')}
+          onPress={() => handleSelectType('Pie')}
         >
           <View style={styles.optionLeft}>
             <Ionicons name="pie-chart-outline" size={24} color={colors.primary} style={styles.icon} />
@@ -32,13 +36,62 @@ export default function AnalyticsChartSettingsScreen() {
 
         <TouchableOpacity 
           style={[styles.optionRow, { borderBottomWidth: 0 }]} 
-          onPress={() => handleSelect('Donut')}
+          onPress={() => handleSelectType('Donut')}
         >
           <View style={styles.optionLeft}>
             <Ionicons name="aperture-outline" size={24} color={colors.primary} style={styles.icon} />
             <AppText style={[styles.optionText, { color: colors.text }]}>Donut Chart</AppText>
           </View>
           {analyticsChartType === 'Donut' && <Ionicons name="checkmark-circle" size={24} color={colors.primary} />}
+        </TouchableOpacity>
+      </View>
+
+      <View style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.shadow, marginTop: 20 }]}>
+        <AppText style={[styles.title, { color: colors.text }]}>Select Chart Style</AppText>
+        <AppText style={styles.subtitle}>Customize the visual appearance of your charts.</AppText>
+
+        <TouchableOpacity 
+          style={[styles.optionRow, { borderBottomColor: colors.border }]} 
+          onPress={() => handleSelectStyle('Classic')}
+        >
+          <View style={styles.optionLeft}>
+            <Ionicons name="color-palette-outline" size={24} color={colors.primary} style={styles.icon} />
+            <AppText style={[styles.optionText, { color: colors.text }]}>Classic</AppText>
+          </View>
+          {chartStyle === 'Classic' && <Ionicons name="checkmark-circle" size={24} color={colors.primary} />}
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.optionRow, { borderBottomColor: colors.border }]} 
+          onPress={() => handleSelectStyle('3D')}
+        >
+          <View style={styles.optionLeft}>
+            <Ionicons name="cube-outline" size={24} color={colors.primary} style={styles.icon} />
+            <AppText style={[styles.optionText, { color: colors.text }]}>3D Effect</AppText>
+          </View>
+          {chartStyle === '3D' && <Ionicons name="checkmark-circle" size={24} color={colors.primary} />}
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.optionRow, { borderBottomColor: colors.border }]} 
+          onPress={() => handleSelectStyle('Spaced')}
+        >
+          <View style={styles.optionLeft}>
+            <Ionicons name="grid-outline" size={24} color={colors.primary} style={styles.icon} />
+            <AppText style={[styles.optionText, { color: colors.text }]}>Spaced</AppText>
+          </View>
+          {chartStyle === 'Spaced' && <Ionicons name="checkmark-circle" size={24} color={colors.primary} />}
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.optionRow, { borderBottomWidth: 0 }]} 
+          onPress={() => handleSelectStyle('Semi-Circle')}
+        >
+          <View style={styles.optionLeft}>
+            <Ionicons name="speedometer-outline" size={24} color={colors.primary} style={styles.icon} />
+            <AppText style={[styles.optionText, { color: colors.text }]}>Semi-Circle</AppText>
+          </View>
+          {chartStyle === 'Semi-Circle' && <Ionicons name="checkmark-circle" size={24} color={colors.primary} />}
         </TouchableOpacity>
       </View>
     </ScrollView>

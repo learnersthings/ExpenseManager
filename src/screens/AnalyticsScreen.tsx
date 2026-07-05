@@ -7,6 +7,7 @@ import { PieChart as GiftedPieChart } from 'react-native-gifted-charts';
 import { Text as SvgText } from 'react-native-svg';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext } from '../context/ExpenseContext';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import FilterModal from '../components/FilterModal';
 import { formatAmount } from '../utils/format';
 import * as Print from 'expo-print';
@@ -20,7 +21,10 @@ type TimeFilter = 'This Month' | 'Last Month' | 'This Year' | 'All Time' | 'Cust
 export default function AnalyticsScreen() {
   const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
-  const { expenses, categories, paymentModes, currency, downloadPathUri, analyticsChartType } = useExpenseContext();
+  const { 
+    expenses, categories, paymentModes, currency, 
+    analyticsChartType, chartStyle, downloadPathUri
+  } = useExpenseContext();
   const [activeFilter, setActiveFilter] = useState<TimeFilter>('This Month');
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
   const [selectedYears, setSelectedYears] = useState<number[]>([]);
@@ -147,7 +151,7 @@ export default function AnalyticsScreen() {
     try {
       setIsDownloading(true);
       const filterName = activeFilter === 'Custom' ? 'Custom Filter' : activeFilter;
-      const html = generateAnalyticsPDFHTML(filterName, totalSpent, fullCategoryData, paymentModeData, currency, analyticsChartType);
+      const html = generateAnalyticsPDFHTML(filterName, totalSpent, fullCategoryData, paymentModeData, currency, analyticsChartType, chartStyle);
       const { uri, base64 } = await Print.printToFileAsync({ html, base64: true });
       
       if (downloadPathUri && Platform.OS === 'android') {
@@ -235,14 +239,18 @@ export default function AnalyticsScreen() {
             <View style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.shadow, overflow: 'visible' }]}>
               <AppText style={[styles.cardTitle, { color: colors.text }]}>Category Breakdown</AppText>
               
-              <View style={{ alignItems: 'center', marginVertical: 30 }}>
+              <View style={{ alignItems: 'center', marginVertical: chartStyle === 'Semi-Circle' ? 10 : 30 }}>
                 <GiftedPieChart
                   data={pieChartData}
                   radius={150}
-                  innerRadius={analyticsChartType === 'Donut' ? 70 : 0}
+                  innerRadius={analyticsChartType === 'Donut' ? (chartStyle === '3D' ? 60 : 70) : 0}
                   innerCircleColor={colors.card}
                   donut={analyticsChartType === 'Donut'}
                   showText={false}
+                  isThreeD={chartStyle === '3D'}
+                  semiCircle={chartStyle === 'Semi-Circle'}
+                  strokeWidth={chartStyle === 'Spaced' ? 4 : 0}
+                  strokeColor={colors.card}
                 />
               </View>
 
@@ -265,14 +273,18 @@ export default function AnalyticsScreen() {
             <View style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.shadow, marginBottom: 40 }]}>
               <AppText style={[styles.cardTitle, { color: colors.text }]}>Payment Modes</AppText>
 
-              <View style={{ alignItems: 'center', marginVertical: 30 }}>
+              <View style={{ alignItems: 'center', marginVertical: chartStyle === 'Semi-Circle' ? 10 : 30 }}>
                 <GiftedPieChart
                   data={paymentModeData}
                   radius={150}
-                  innerRadius={analyticsChartType === 'Donut' ? 70 : 0}
+                  innerRadius={analyticsChartType === 'Donut' ? (chartStyle === '3D' ? 60 : 70) : 0}
                   innerCircleColor={colors.card}
                   donut={analyticsChartType === 'Donut'}
                   showText={false}
+                  isThreeD={chartStyle === '3D'}
+                  semiCircle={chartStyle === 'Semi-Circle'}
+                  strokeWidth={chartStyle === 'Spaced' ? 4 : 0}
+                  strokeColor={colors.card}
                 />
               </View>
 

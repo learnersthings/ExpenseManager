@@ -61,47 +61,74 @@ export const generateDashboardPDFHTML = (
   `;
 };
 
-const generateSVGPieChart = (data: { amount: number; color: string }[]) => {
+const generateSVGChart = (
+  data: { amount: number; color: string }[], 
+  chartType: 'Pie' | 'Donut', 
+  chartStyle: 'Classic' | '3D' | 'Spaced' | 'Semi-Circle'
+) => {
   const total = data.reduce((sum, item) => sum + item.amount, 0);
   if (total === 0) {
     return `<div style="text-align: center; margin: 20px 0;"><svg width="200" height="200" viewBox="-1.1 -1.1 2.2 2.2"><circle cx="0" cy="0" r="1" fill="#eee" /></svg></div>`;
   }
 
+  const isSemi = chartStyle === 'Semi-Circle';
+  const isDonut = chartType === 'Donut';
+  const isSpaced = chartStyle === 'Spaced';
+  
   let svgContent = '';
   let cumulativePercent = 0;
+
+  const angleMultiplier = isSemi ? 1 : 2;
 
   data.forEach((slice) => {
     if (slice.amount === 0) return;
     const percent = slice.amount / total;
 
     if (percent === 1) {
-      svgContent += `<circle cx="0" cy="0" r="1" fill="${slice.color}" />`;
+      if (isSemi) {
+        // Draw a half circle
+        svgContent += `<path d="M 1 0 A 1 1 0 0 1 -1 0 Z" fill="${slice.color}" />`;
+      } else {
+        svgContent += `<circle cx="0" cy="0" r="1" fill="${slice.color}" />`;
+      }
       return;
     }
 
-    const startX = Math.cos(2 * Math.PI * cumulativePercent);
-    const startY = Math.sin(2 * Math.PI * cumulativePercent);
+    const startX = Math.cos(angleMultiplier * Math.PI * cumulativePercent);
+    const startY = Math.sin(angleMultiplier * Math.PI * cumulativePercent);
     cumulativePercent += percent;
-    const endX = Math.cos(2 * Math.PI * cumulativePercent);
-    const endY = Math.sin(2 * Math.PI * cumulativePercent);
+    const endX = Math.cos(angleMultiplier * Math.PI * cumulativePercent);
+    const endY = Math.sin(angleMultiplier * Math.PI * cumulativePercent);
 
-    const largeArcFlag = percent > 0.5 ? 1 : 0;
+    const largeArcFlag = isSemi ? 0 : (percent > 0.5 ? 1 : 0);
 
-    svgContent += `<path d="M 0 0 L ${startX} ${startY} A 1 1 0 ${largeArcFlag} 1 ${endX} ${endY} Z" fill="${slice.color}" />`;
+    const strokeAttr = isSpaced ? 'stroke="#ffffff" stroke-width="0.05"' : '';
+    svgContent += `<path d="M 0 0 L ${startX} ${startY} A 1 1 0 ${largeArcFlag} 1 ${endX} ${endY} Z" fill="${slice.color}" ${strokeAttr} />`;
   });
+
+  const maskDef = isDonut ? `
+    <defs>
+      <mask id="donut-mask">
+        <rect x="-1.5" y="-1.5" width="3" height="3" fill="white" />
+        <circle cx="0" cy="0" r="0.5" fill="black" />
+      </mask>
+    </defs>
+  ` : '';
+
+  const groupAttr = isDonut ? `mask="url(#donut-mask)"` : '';
+  const transformAttr = isSemi ? `rotate(180)` : `rotate(-90)`;
+  const filterAttr = chartStyle === '3D' ? `filter: drop-shadow(3px 3px 2px rgba(0,0,0,0.3));` : ``;
 
   return `
     <div style="text-align: center; margin: 20px 0;">
-      <svg width="200" height="200" viewBox="-1.1 -1.1 2.2 2.2" style="transform: rotate(-90deg);">
-        ${svgContent}
+      <svg width="200" height="${isSemi ? 100 : 200}" viewBox="-1.1 -1.1 2.2 ${isSemi ? 1.1 : 2.2}" style="${filterAttr}">
+        ${maskDef}
+        <g transform="${transformAttr}" ${groupAttr}>
+          ${svgContent}
+        </g>
       </svg>
     </div>
   `;
-};
-
-const generateSVGDonutChart = (data: { amount: number; color: string }[]) => {
-  const pieSVG = generateSVGPieChart(data);
-  return pieSVG.replace('</svg>', '<circle cx="0" cy="0" r="0.5" fill="#fff" /></svg>');
 };
 
 export const generateAnalyticsPDFHTML = (
@@ -110,7 +137,8 @@ export const generateAnalyticsPDFHTML = (
   categoryData: { name: string; amount: number; color: string; text: string }[],
   paymentModeData: { name: string; amount: number; color: string; text: string }[],
   currency: string,
-  chartType: 'Pie' | 'Donut' = 'Pie'
+  chartType: 'Pie' | 'Donut' = 'Pie',
+  chartStyle: 'Classic' | '3D' | 'Spaced' | 'Semi-Circle' = 'Classic'
 ) => {
   const catRows = categoryData.map(cat => `
     <tr>
@@ -162,7 +190,7 @@ export const generateAnalyticsPDFHTML = (
 
         <div class="card">
           <h2>Category Breakdown</h2>
-          ${chartType === 'Pie' ? generateSVGPieChart(categoryData) : generateSVGDonutChart(categoryData)}
+          ${generateSVGChart(categoryData, chartType, chartStyle)}
           <table>
             <thead>
               <tr>
@@ -179,7 +207,7 @@ export const generateAnalyticsPDFHTML = (
 
         <div class="card">
           <h2>Payment Mode</h2>
-          ${chartType === 'Pie' ? generateSVGPieChart(paymentModeData) : generateSVGDonutChart(paymentModeData)}
+          ${generateSVGChart(paymentModeData, chartType, chartStyle)}
           <table>
             <thead>
               <tr>
