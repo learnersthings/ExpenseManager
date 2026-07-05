@@ -129,20 +129,6 @@ const generateSVGChart = (
   const layers = is3D ? 15 : 1;
   const shiftPerLayer = 0.02; // in user units (viewBox is 2.2 tall)
   
-  let layeredContent = '';
-  for (let i = layers - 1; i >= 0; i--) {
-    const isTop = i === 0;
-    const shiftY = i * shiftPerLayer;
-    let currentLayer = '';
-    
-    paths.forEach(p => {
-      const color = isTop ? p.color : darkenColor(p.color, 40);
-      currentLayer += `<path d="${p.d}" fill="${color}" ${p.strokeAttr} />`;
-    });
-    
-    layeredContent += `<g transform="translate(0, ${shiftY})">${currentLayer}</g>`;
-  }
-
   const maskDef = isDonut ? `
     <defs>
       <mask id="donut-mask">
@@ -156,13 +142,35 @@ const generateSVGChart = (
   const transformAttr = isSemi ? `rotate(180)` : `rotate(-90)`;
   const filterAttr = is3D ? `transform: rotateX(60deg);` : ``;
 
+  let layeredContent = '';
+  for (let i = layers - 1; i >= 0; i--) {
+    const isTop = i === 0;
+    const shiftY = i * shiftPerLayer;
+    let currentLayer = '';
+    
+    paths.forEach(p => {
+      const color = isTop ? p.color : darkenColor(p.color, 40);
+      currentLayer += `<path d="${p.d}" fill="${color}" ${p.strokeAttr} />`;
+    });
+    
+    // The translation must happen outside the rotation!
+    layeredContent += `
+      <g transform="translate(0, ${shiftY})">
+        <g transform="${transformAttr}" ${groupAttr}>
+          ${currentLayer}
+        </g>
+      </g>
+    `;
+  }
+
+  const viewBoxHeight = isSemi ? 1.1 : (is3D ? 2.5 : 2.2);
+  const svgHeight = isSemi ? 100 : (is3D ? 230 : 200);
+  
   return `
     <div style="text-align: center; margin: 20px 0; display: flex; justify-content: center;">
-      <svg width="200" height="${isSemi ? 100 : 200}" viewBox="-1.1 -1.1 2.2 ${isSemi ? 1.1 : 2.2}" style="${filterAttr}">
+      <svg width="200" height="${svgHeight}" viewBox="-1.1 -1.1 2.2 ${viewBoxHeight}" style="${filterAttr}">
         ${maskDef}
-        <g transform="${transformAttr}" ${groupAttr}>
-          ${layeredContent}
-        </g>
+        ${layeredContent}
       </svg>
     </div>
   `;

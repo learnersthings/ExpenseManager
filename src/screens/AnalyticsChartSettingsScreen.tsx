@@ -23,8 +23,8 @@ export default function AnalyticsChartSettingsScreen() {
         <AppText style={[styles.title, { color: colors.text }]}>Select Chart Type</AppText>
         <AppText style={styles.subtitle}>Choose how you want your analytics data to be visualized.</AppText>
 
-        <TouchableOpacity 
-          style={[styles.optionRow, { borderBottomColor: colors.border }]} 
+        <TouchableOpacity
+          style={[styles.optionRow, { borderBottomColor: colors.border }]}
           onPress={() => handleSelectType('Pie')}
         >
           <View style={styles.optionLeft}>
@@ -34,8 +34,8 @@ export default function AnalyticsChartSettingsScreen() {
           {analyticsChartType === 'Pie' && <Ionicons name="checkmark-circle" size={24} color={colors.primary} />}
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={[styles.optionRow, { borderBottomWidth: 0 }]} 
+        <TouchableOpacity
+          style={[styles.optionRow, { borderBottomWidth: 0 }]}
           onPress={() => handleSelectType('Donut')}
         >
           <View style={styles.optionLeft}>
@@ -50,19 +50,19 @@ export default function AnalyticsChartSettingsScreen() {
         <AppText style={[styles.title, { color: colors.text }]}>Select Chart Style</AppText>
         <AppText style={styles.subtitle}>Customize the visual appearance of your charts.</AppText>
 
-        <TouchableOpacity 
-          style={[styles.optionRow, { borderBottomColor: colors.border }]} 
+        <TouchableOpacity
+          style={[styles.optionRow, { borderBottomColor: colors.border }]}
           onPress={() => handleSelectStyle('Classic')}
         >
           <View style={styles.optionLeft}>
-            <Ionicons name="color-palette-outline" size={24} color={colors.primary} style={styles.icon} />
+            <Ionicons name="disc-outline" size={24} color={colors.primary} style={styles.icon} />
             <AppText style={[styles.optionText, { color: colors.text }]}>Classic</AppText>
           </View>
           {chartStyle === 'Classic' && <Ionicons name="checkmark-circle" size={24} color={colors.primary} />}
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={[styles.optionRow, { borderBottomColor: colors.border }]} 
+        <TouchableOpacity
+          style={[styles.optionRow, { borderBottomColor: colors.border }]}
           onPress={() => handleSelectStyle('3D')}
         >
           <View style={styles.optionLeft}>
@@ -72,8 +72,8 @@ export default function AnalyticsChartSettingsScreen() {
           {chartStyle === '3D' && <Ionicons name="checkmark-circle" size={24} color={colors.primary} />}
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={[styles.optionRow, { borderBottomColor: colors.border }]} 
+        <TouchableOpacity
+          style={[styles.optionRow, { borderBottomColor: colors.border }]}
           onPress={() => handleSelectStyle('Spaced')}
         >
           <View style={styles.optionLeft}>
@@ -83,8 +83,8 @@ export default function AnalyticsChartSettingsScreen() {
           {chartStyle === 'Spaced' && <Ionicons name="checkmark-circle" size={24} color={colors.primary} />}
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={[styles.optionRow, { borderBottomWidth: 0 }]} 
+        <TouchableOpacity
+          style={[styles.optionRow, { borderBottomWidth: 0 }]}
           onPress={() => handleSelectStyle('Semi-Circle')}
         >
           <View style={styles.optionLeft}>

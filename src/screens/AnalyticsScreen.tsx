@@ -1,10 +1,10 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Alert, Platform, ActivityIndicator } from 'react-native';
 import AppText from '../components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { PieChart as GiftedPieChart } from 'react-native-gifted-charts';
-import { Text as SvgText } from 'react-native-svg';
+import { Svg, G, Path, Defs, Mask, Rect, Circle, Text as SvgText } from 'react-native-svg';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext } from '../context/ExpenseContext';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -14,7 +14,6 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
 import { generateAnalyticsPDFHTML } from '../utils/pdfGenerator';
-import { captureRef } from 'react-native-view-shot';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -47,9 +46,6 @@ export default function AnalyticsScreen() {
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [selectedPaymentModeIds, setSelectedPaymentModeIds] = useState<string[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
-
-  const categoryChartRef = useRef(null);
-  const paymentChartRef = useRef(null);
 
   // Compute available filter options dynamically from expenses
   const availableYears = useMemo(() => {
@@ -168,34 +164,8 @@ export default function AnalyticsScreen() {
   const handleDownloadPDF = async () => {
     try {
       setIsDownloading(true);
-      
-      let categoryChartBase64 = '';
-      let paymentChartBase64 = '';
-      
-      try {
-        if (categoryChartRef.current) {
-          categoryChartBase64 = await captureRef(categoryChartRef, {
-            format: 'png',
-            quality: 1,
-            result: 'base64'
-          });
-        }
-        if (paymentChartRef.current) {
-          paymentChartBase64 = await captureRef(paymentChartRef, {
-            format: 'png',
-            quality: 1,
-            result: 'base64'
-          });
-        }
-      } catch (e) {
-        console.warn('Failed to capture charts', e);
-      }
-
       const filterName = activeFilter === 'Custom' ? 'Custom Filter' : activeFilter;
-      const html = generateAnalyticsPDFHTML(
-        filterName, totalSpent, fullCategoryData, paymentModeData, currency, 
-        analyticsChartType, chartStyle, categoryChartBase64, paymentChartBase64
-      );
+      const html = generateAnalyticsPDFHTML(filterName, totalSpent, fullCategoryData, paymentModeData, currency, analyticsChartType, chartStyle);
       const { uri, base64 } = await Print.printToFileAsync({ html, base64: true });
 
       if (downloadPathUri && Platform.OS === 'android') {
@@ -219,7 +189,7 @@ export default function AnalyticsScreen() {
     const baseProps = {
       radius: 150,
       innerRadius: isDonut ? (chartStyle === '3D' ? 60 : 70) : 0,
-      innerCircleColor: colors.card,
+      innerCircleColor: chartStyle === '3D' ? 'transparent' : colors.card,
       donut: isDonut,
       showText: false,
       semiCircle: chartStyle === 'Semi-Circle',
@@ -229,25 +199,62 @@ export default function AnalyticsScreen() {
 
     if (chartStyle === '3D') {
       const layers = 15;
+
+      const total = data.reduce((sum, slice) => sum + slice.value, 0);
+      let cumulativePercent = 0;
+      const paths: { d: string, color: string }[] = [];
+
+      data.forEach(slice => {
+        const percent = total > 0 ? slice.value / total : 0;
+        if (percent === 0) return;
+
+        if (percent === 1) {
+          paths.push({ d: `M 0 0 m -150, 0 a 150,150 0 1,0 300,0 a 150,150 0 1,0 -300,0`, color: slice.color });
+          return;
+        }
+
+        const startX = 150 * Math.cos(2 * Math.PI * cumulativePercent);
+        const startY = 150 * Math.sin(2 * Math.PI * cumulativePercent);
+        cumulativePercent += percent;
+        const endX = 150 * Math.cos(2 * Math.PI * cumulativePercent);
+        const endY = 150 * Math.sin(2 * Math.PI * cumulativePercent);
+
+        const largeArcFlag = percent > 0.5 ? 1 : 0;
+        paths.push({ d: `M 0 0 L ${startX} ${startY} A 150 150 0 ${largeArcFlag} 1 ${endX} ${endY} Z`, color: slice.color });
+      });
+
       return (
-        <View style={{ alignItems: 'center', marginTop: -10, marginBottom: 50, height: 160, justifyContent: 'center' }}>
-          {Array.from({ length: layers }).map((_, i) => (
-            <View key={i} style={{ position: 'absolute', top: (i * 2) - 70 }}>
-              <GiftedPieChart
-                {...baseProps}
-                data={i === 0 ? data : data.map(d => ({ ...d, color: darkenColor(d.color, 40) }))}
-                isThreeD={true}
-                tiltAngle="60deg"
-                shadow={false}
-              />
-            </View>
-          )).reverse()}
+        <View style={{ alignItems: 'center', marginVertical: 0, height: 160, justifyContent: 'center', overflow: 'visible', marginTop: 20 }}>
+          <View style={{ transform: [{ scaleY: 0.5 }] }}>
+            <Svg width={300} height={400} viewBox="-150 -150 300 400">
+              <Defs>
+                <Mask id="donut-mask">
+                  <Rect x="-150" y="-150" width="300" height="400" fill="white" />
+                  <Circle cx="0" cy="0" r="75" fill="black" />
+                </Mask>
+              </Defs>
+
+              {Array.from({ length: layers }).map((_, i) => {
+                const shiftY = i * 4;
+                const isTop = i === 0;
+                return (
+                  <G key={i} y={shiftY}>
+                    <G rotation="-90" mask={isDonut ? "url(#donut-mask)" : undefined}>
+                      {paths.map((p, j) => (
+                        <Path key={j} d={p.d} fill={isTop ? p.color : darkenColor(p.color, 40)} />
+                      ))}
+                    </G>
+                  </G>
+                );
+              }).reverse()}
+            </Svg>
+          </View>
         </View>
       );
     }
 
     return (
-      <View style={{ alignItems: 'center', marginVertical: chartStyle === 'Semi-Circle' ? 10 : 30, marginTop: 10, marginBottom: 10 }}>
+      <View style={{ alignItems: 'center', marginVertical: chartStyle === 'Semi-Circle' ? 10 : 30 }}>
         <GiftedPieChart
           {...baseProps}
           data={data}
@@ -325,10 +332,8 @@ export default function AnalyticsScreen() {
             {/* Category Breakdown */}
             <View style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.shadow, overflow: 'visible' }]}>
               <AppText style={[styles.cardTitle, { color: colors.text }]}>Category Breakdown</AppText>
-              
-              <View ref={categoryChartRef} collapsable={false} style={{ backgroundColor: colors.card }}>
-                {renderChart(pieChartData)}
-              </View>
+
+              {renderChart(pieChartData)}
 
               <View style={{ marginTop: 20 }}>
                 {fullCategoryData.map((cat, index) => (
@@ -349,9 +354,7 @@ export default function AnalyticsScreen() {
             <View style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.shadow, marginBottom: 40 }]}>
               <AppText style={[styles.cardTitle, { color: colors.text }]}>Payment Modes</AppText>
 
-              <View ref={paymentChartRef} collapsable={false} style={{ backgroundColor: colors.card }}>
-                {renderChart(paymentModeData)}
-              </View>
+              {renderChart(paymentModeData)}
 
               <View style={{ marginTop: 20 }}>
                 {paymentModeData.map((mode, index) => (
