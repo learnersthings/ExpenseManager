@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import AppText from '../components/AppText';
 import { useThemeContext } from '../context/ThemeContext';
 import { useExpenseContext, PaymentMode } from '../context/ExpenseContext';
@@ -27,7 +26,7 @@ export default function PaymentModesScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scroll}>
         
         <View style={styles.header}>
@@ -70,7 +69,7 @@ export default function PaymentModesScreen() {
         onClose={() => setIsModalVisible(false)}
         modeToEdit={selectedMode}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

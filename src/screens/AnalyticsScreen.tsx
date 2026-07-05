@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Alert, Platform, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import AppText from '../components/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { PieChart as GiftedPieChart, BarChart } from 'react-native-gifted-charts';
@@ -168,7 +167,7 @@ export default function AnalyticsScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
 
         {/* Filter Pills */}
@@ -306,7 +305,7 @@ export default function AnalyticsScreen() {
         setSelectedPaymentModeIds={setSelectedPaymentModeIds}
         onClearAll={() => setActiveFilter('This Month')}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

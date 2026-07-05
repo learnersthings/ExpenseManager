@@ -214,7 +214,7 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
 
         {ListHeaderComponent}
@@ -300,10 +300,10 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, paddingHorizontal: 4 }}>
             {/* Left Side: Select All */}
             <TouchableOpacity onPress={handleSelectAll} style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Ionicons 
-                name={selectedExpenseIds.length === filteredExpenses.slice(0, displayCount).length && filteredExpenses.length > 0 ? "checkmark-circle" : "ellipse-outline"} 
-                size={22} 
-                color={colors.primary} 
+              <Ionicons
+                name={selectedExpenseIds.length === filteredExpenses.slice(0, displayCount).length && filteredExpenses.length > 0 ? "checkmark-circle" : "ellipse-outline"}
+                size={22}
+                color={colors.primary}
               />
               <AppText style={{ marginLeft: 8, color: colors.primary, fontWeight: '600' }}>Select All</AppText>
             </TouchableOpacity>
@@ -313,9 +313,9 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
               <TouchableOpacity onPress={() => { setIsSelectMode(false); setSelectedExpenseIds([]); }} style={{ marginRight: 16 }}>
                 <AppText style={{ color: colors.textMuted, fontWeight: '500' }}>Cancel</AppText>
               </TouchableOpacity>
-              <TouchableOpacity 
-                onPress={handleDeleteSelected} 
-                disabled={selectedExpenseIds.length === 0} 
+              <TouchableOpacity
+                onPress={handleDeleteSelected}
+                disabled={selectedExpenseIds.length === 0}
                 style={{ opacity: selectedExpenseIds.length === 0 ? 0.5 : 1 }}
               >
                 <AppText style={{ color: '#ff4444', fontWeight: '600' }}>Delete ({selectedExpenseIds.length})</AppText>
@@ -443,7 +443,7 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
         setSelectedPaymentModeIds={setSelectedPaymentModeIds}
       />
 
-    </SafeAreaView>
+    </View>
   );
 }
 
