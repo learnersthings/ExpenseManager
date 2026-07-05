@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { View, StyleSheet, ScrollView, Dimensions, TouchableOpacity, Alert, Platform, ActivityIndicator } from 'react-native';
 import AppText from '../components/AppText';
@@ -14,15 +14,30 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system/legacy';
 import { generateAnalyticsPDFHTML } from '../utils/pdfGenerator';
+import { captureRef } from 'react-native-view-shot';
+
 const screenWidth = Dimensions.get('window').width;
+
+const darkenColor = (color: string, amount: number) => {
+  let hex = color.replace('#', '');
+  if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+  if (hex.length !== 6) return color;
+  let r = parseInt(hex.substring(0, 2), 16) - amount;
+  let g = parseInt(hex.substring(2, 4), 16) - amount;
+  let b = parseInt(hex.substring(4, 6), 16) - amount;
+  r = Math.max(0, Math.min(255, r));
+  g = Math.max(0, Math.min(255, g));
+  b = Math.max(0, Math.min(255, b));
+  return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+};
 
 type TimeFilter = 'This Month' | 'Last Month' | 'This Year' | 'All Time' | 'Custom';
 
 export default function AnalyticsScreen() {
   const colors = useThemeColors();
   const { isDarkTheme } = useThemeContext();
-  const { 
-    expenses, categories, paymentModes, currency, 
+  const {
+    expenses, categories, paymentModes, currency,
     analyticsChartType, chartStyle, downloadPathUri
   } = useExpenseContext();
   const [activeFilter, setActiveFilter] = useState<TimeFilter>('This Month');
@@ -32,6 +47,9 @@ export default function AnalyticsScreen() {
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [selectedPaymentModeIds, setSelectedPaymentModeIds] = useState<string[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
+
+  const categoryChartRef = useRef(null);
+  const paymentChartRef = useRef(null);
 
   // Compute available filter options dynamically from expenses
   const availableYears = useMemo(() => {
@@ -150,10 +168,36 @@ export default function AnalyticsScreen() {
   const handleDownloadPDF = async () => {
     try {
       setIsDownloading(true);
-      const filterName = activeFilter === 'Custom' ? 'Custom Filter' : activeFilter;
-      const html = generateAnalyticsPDFHTML(filterName, totalSpent, fullCategoryData, paymentModeData, currency, analyticsChartType, chartStyle);
-      const { uri, base64 } = await Print.printToFileAsync({ html, base64: true });
       
+      let categoryChartBase64 = '';
+      let paymentChartBase64 = '';
+      
+      try {
+        if (categoryChartRef.current) {
+          categoryChartBase64 = await captureRef(categoryChartRef, {
+            format: 'png',
+            quality: 1,
+            result: 'base64'
+          });
+        }
+        if (paymentChartRef.current) {
+          paymentChartBase64 = await captureRef(paymentChartRef, {
+            format: 'png',
+            quality: 1,
+            result: 'base64'
+          });
+        }
+      } catch (e) {
+        console.warn('Failed to capture charts', e);
+      }
+
+      const filterName = activeFilter === 'Custom' ? 'Custom Filter' : activeFilter;
+      const html = generateAnalyticsPDFHTML(
+        filterName, totalSpent, fullCategoryData, paymentModeData, currency, 
+        analyticsChartType, chartStyle, categoryChartBase64, paymentChartBase64
+      );
+      const { uri, base64 } = await Print.printToFileAsync({ html, base64: true });
+
       if (downloadPathUri && Platform.OS === 'android') {
         const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(downloadPathUri, `Analytics_Report_${new Date().getTime()}.pdf`, 'application/pdf');
         if (base64) {
@@ -168,6 +212,49 @@ export default function AnalyticsScreen() {
     } finally {
       setIsDownloading(false);
     }
+  };
+
+  const renderChart = (data: any[]) => {
+    const isDonut = analyticsChartType === 'Donut';
+    const baseProps = {
+      radius: 150,
+      innerRadius: isDonut ? (chartStyle === '3D' ? 60 : 70) : 0,
+      innerCircleColor: colors.card,
+      donut: isDonut,
+      showText: false,
+      semiCircle: chartStyle === 'Semi-Circle',
+      strokeWidth: chartStyle === 'Spaced' ? 4 : 0,
+      strokeColor: colors.card,
+    };
+
+    if (chartStyle === '3D') {
+      const layers = 15;
+      return (
+        <View style={{ alignItems: 'center', marginTop: -10, marginBottom: 50, height: 160, justifyContent: 'center' }}>
+          {Array.from({ length: layers }).map((_, i) => (
+            <View key={i} style={{ position: 'absolute', top: (i * 2) - 70 }}>
+              <GiftedPieChart
+                {...baseProps}
+                data={i === 0 ? data : data.map(d => ({ ...d, color: darkenColor(d.color, 40) }))}
+                isThreeD={true}
+                tiltAngle="60deg"
+                shadow={false}
+              />
+            </View>
+          )).reverse()}
+        </View>
+      );
+    }
+
+    return (
+      <View style={{ alignItems: 'center', marginVertical: chartStyle === 'Semi-Circle' ? 10 : 30, marginTop: 10, marginBottom: 10 }}>
+        <GiftedPieChart
+          {...baseProps}
+          data={data}
+          isThreeD={false}
+        />
+      </View>
+    );
   };
 
   return (
@@ -239,19 +326,8 @@ export default function AnalyticsScreen() {
             <View style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.shadow, overflow: 'visible' }]}>
               <AppText style={[styles.cardTitle, { color: colors.text }]}>Category Breakdown</AppText>
               
-              <View style={{ alignItems: 'center', marginVertical: chartStyle === 'Semi-Circle' ? 10 : 30 }}>
-                <GiftedPieChart
-                  data={pieChartData}
-                  radius={150}
-                  innerRadius={analyticsChartType === 'Donut' ? (chartStyle === '3D' ? 60 : 70) : 0}
-                  innerCircleColor={colors.card}
-                  donut={analyticsChartType === 'Donut'}
-                  showText={false}
-                  isThreeD={chartStyle === '3D'}
-                  semiCircle={chartStyle === 'Semi-Circle'}
-                  strokeWidth={chartStyle === 'Spaced' ? 4 : 0}
-                  strokeColor={colors.card}
-                />
+              <View ref={categoryChartRef} collapsable={false} style={{ backgroundColor: colors.card }}>
+                {renderChart(pieChartData)}
               </View>
 
               <View style={{ marginTop: 20 }}>
@@ -273,19 +349,8 @@ export default function AnalyticsScreen() {
             <View style={[styles.card, { backgroundColor: colors.card, shadowColor: colors.shadow, marginBottom: 40 }]}>
               <AppText style={[styles.cardTitle, { color: colors.text }]}>Payment Modes</AppText>
 
-              <View style={{ alignItems: 'center', marginVertical: chartStyle === 'Semi-Circle' ? 10 : 30 }}>
-                <GiftedPieChart
-                  data={paymentModeData}
-                  radius={150}
-                  innerRadius={analyticsChartType === 'Donut' ? (chartStyle === '3D' ? 60 : 70) : 0}
-                  innerCircleColor={colors.card}
-                  donut={analyticsChartType === 'Donut'}
-                  showText={false}
-                  isThreeD={chartStyle === '3D'}
-                  semiCircle={chartStyle === 'Semi-Circle'}
-                  strokeWidth={chartStyle === 'Spaced' ? 4 : 0}
-                  strokeColor={colors.card}
-                />
+              <View ref={paymentChartRef} collapsable={false} style={{ backgroundColor: colors.card }}>
+                {renderChart(paymentModeData)}
               </View>
 
               <View style={{ marginTop: 20 }}>

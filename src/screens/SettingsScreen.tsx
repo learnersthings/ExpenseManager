@@ -254,7 +254,7 @@ export default function SettingsScreen({ navigation }: any) {
           onPress={() => navigation.navigate('Budget')}
         >
           <View style={styles.rowLeft}>
-            <Ionicons name="pie-chart-outline" size={22} color={colors.primary} style={styles.icon} />
+            <Ionicons name="wallet-outline" size={22} color={colors.primary} style={styles.icon} />
             <AppText style={[styles.text, { color: colors.text }]}>Budget</AppText>
           </View>
           <Ionicons name="chevron-forward" size={20} color={colors.text} />
