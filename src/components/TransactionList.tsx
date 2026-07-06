@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { useThemeColors } from '../hooks/useThemeColors';
 import { View, StyleSheet, TouchableOpacity, Alert, TextInput, Platform, ActivityIndicator } from 'react-native';
 import DraggableFlatList, { ScaleDecorator, RenderItemParams } from 'react-native-draggable-flatlist';
@@ -38,8 +38,9 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedExpenseIds, setSelectedExpenseIds] = useState<string[]>([]);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [draggedItemDate, setDraggedItemDate] = useState<string | null>(null);
+  const draggedItemDateRef = useRef<string | null>(null);
   const [flatDataState, setFlatDataState] = useState<ListItem[]>([]);
+  const [listKey, setListKey] = useState(0);
 
   // Search and Filter States
   const [searchQuery, setSearchQuery] = useState('');
@@ -240,7 +241,8 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
   }, [derivedFlatData]);
 
   const handleDragEnd = async ({ data, from, to }: { data: ListItem[], from: number, to: number }) => {
-    if (!draggedItemDate) return;
+    const draggedDate = draggedItemDateRef.current;
+    if (!draggedDate) return;
     
     if (from !== to) {
       let crossedDifferentDate = false;
@@ -254,7 +256,7 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
           crossedDifferentDate = true;
           break;
         } else if (item.type === 'expense') {
-          if (new Date(item.expense.date).toDateString() !== draggedItemDate) {
+          if (new Date(item.expense.date).toDateString() !== draggedDate) {
             crossedDifferentDate = true;
             break;
           }
@@ -262,22 +264,33 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
       }
 
       if (crossedDifferentDate) {
-        Alert.alert("Invalid Move", "You can only reorder transactions within the same date.");
-        setFlatDataState(derivedFlatData); // Revert UI
-        setDraggedItemDate(null);
+        Alert.alert(
+          "Invalid Move", 
+          "You can only reorder transactions within the same date.",
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                setFlatDataState([...derivedFlatData]); // Revert UI
+                setListKey(prev => prev + 1);
+                draggedItemDateRef.current = null;
+              }
+            }
+          ]
+        );
         return;
       }
     }
 
     setFlatDataState(data);
     const reorderedDayExpenses = data
-      .filter(item => item.type === 'expense' && new Date((item as any).expense.date).toDateString() === draggedItemDate)
+      .filter(item => item.type === 'expense' && new Date((item as any).expense.date).toDateString() === draggedDate)
       .map(item => (item as any).expense as Expense);
-    await reorderExpensesByDate(draggedItemDate, reorderedDayExpenses);
-    setDraggedItemDate(null);
+    await reorderExpensesByDate(draggedDate, reorderedDayExpenses);
+    draggedItemDateRef.current = null;
   };
 
-  const renderItem = ({ item, drag, isActive }: RenderItemParams<ListItem>) => {
+  const renderItem = useCallback(({ item, drag, isActive }: RenderItemParams<ListItem>) => {
     if (item.type === 'header') {
       return <AppText style={[styles.monthHeader, { color: colors.text }]}>{item.title}</AppText>;
     }
@@ -292,7 +305,7 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
           style={[styles.expenseRow, { backgroundColor: isActive ? colors.surface : colors.card, elevation: isActive ? 10 : 0 }]}
           onPress={() => handleRowPress(exp)}
           onLongPress={() => {
-            setDraggedItemDate(new Date(exp.date).toDateString());
+            draggedItemDateRef.current = new Date(exp.date).toDateString();
             drag();
           }}
           disabled={isActive}
@@ -331,7 +344,7 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
         </TouchableOpacity>
       </ScaleDecorator>
     );
-  };
+  }, [categories, paymentModes, colors, isDarkTheme, isSelectMode, selectedExpenseIds, currency]);
 
   const listHeader = (
     <>
@@ -469,6 +482,7 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <DraggableFlatList
+        key={listKey.toString()}
         data={flatDataState}
         onDragEnd={handleDragEnd}
         keyExtractor={(item) => item.id}
