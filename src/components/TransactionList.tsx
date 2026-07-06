@@ -40,7 +40,6 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
   const [isDownloading, setIsDownloading] = useState(false);
   const draggedItemDateRef = useRef<string | null>(null);
   const [flatDataState, setFlatDataState] = useState<ListItem[]>([]);
-  const [listKey, setListKey] = useState(0);
 
   // Search and Filter States
   const [searchQuery, setSearchQuery] = useState('');
@@ -264,6 +263,8 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
       }
 
       if (crossedDifferentDate) {
+        // Temporarily accept the invalid data so the list internal state syncs up
+        setFlatDataState(data);
         Alert.alert(
           "Invalid Move", 
           "You can only reorder transactions within the same date.",
@@ -272,7 +273,6 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
               text: "OK",
               onPress: () => {
                 setFlatDataState([...derivedFlatData]); // Revert UI
-                setListKey(prev => prev + 1);
                 draggedItemDateRef.current = null;
               }
             }
@@ -482,7 +482,6 @@ export default function TransactionList({ ListHeaderComponent, hideTitle, isTran
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <DraggableFlatList
-        key={listKey.toString()}
         data={flatDataState}
         onDragEnd={handleDragEnd}
         keyExtractor={(item) => item.id}
