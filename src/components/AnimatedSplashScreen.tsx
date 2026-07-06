@@ -63,7 +63,7 @@ export default function AnimatedSplashScreen({ accentColor }: AnimatedSplashScre
     inputRange: [0, 1],
     outputRange: [1, 1.2],
   });
-  
+
   const bgScale2 = pulseAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [1.2, 1],
@@ -81,33 +81,33 @@ export default function AnimatedSplashScreen({ accentColor }: AnimatedSplashScre
     >
       {/* Animated Background Effects */}
       <Animated.View style={[
-        styles.bgCircle, 
-        { 
-          backgroundColor: accentColor, 
-          top: -height * 0.2, 
-          left: -width * 0.3, 
-          transform: [{ scale: bgScale1 }], 
-          opacity: bgOpacity 
+        styles.bgCircle,
+        {
+          backgroundColor: accentColor,
+          top: -height * 0.2,
+          left: -width * 0.3,
+          transform: [{ scale: bgScale1 }],
+          opacity: bgOpacity
         }
       ]} />
       <Animated.View style={[
-        styles.bgCircle, 
-        { 
-          backgroundColor: accentColor, 
-          bottom: -height * 0.2, 
-          right: -width * 0.4, 
-          transform: [{ scale: bgScale2 }], 
-          opacity: bgOpacity 
+        styles.bgCircle,
+        {
+          backgroundColor: accentColor,
+          bottom: -height * 0.2,
+          right: -width * 0.4,
+          transform: [{ scale: bgScale2 }],
+          opacity: bgOpacity
         }
       ]} />
 
       <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }], alignItems: 'center', width: '100%' }}>
         <Image
           source={require('../../assets/icon.png')}
-          style={styles.logo}
+          style={[styles.logo, { borderRadius: 20, width: 200, height: 200 }]}
           resizeMode="contain"
         />
-        
+
         {/* Loading Bar */}
         <View style={styles.progressBarContainer}>
           <Animated.View style={[styles.progressBar, { backgroundColor: accentColor, width: progressWidth }]} />
